@@ -1,0 +1,184 @@
+/* Custom Styles beyond Tailwind */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Slow-motion spin animation */
+.animate-spin-slow {
+    animation: spinSlow 12s linear infinite;
+}
+@keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================
+   PREMIUM DARK MODE OVERRIDES
+   ========================================== */
+
+/* Smooth transitions for theme switching */
+html, body, nav, aside, main, div, input, select, textarea, button, a, h1, h2, h3, h4, p, span, table, th, td {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Dark mode theme variables applied globally */
+html.dark body {
+    background-color: #090d16 !important;
+    color: #e2e8f0 !important;
+}
+
+html.dark main {
+    background-color: #090d16 !important;
+}
+
+/* Store page wrapper background gradients */
+html.dark .bg-gradient-to-b {
+    background-image: linear-gradient(to bottom, #090d16, #0c1220, #090d16) !important;
+}
+
+/* Navbar */
+html.dark nav {
+    background-color: rgba(15, 23, 42, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark nav a {
+    color: #94a3b8 !important;
+}
+
+html.dark nav a:hover {
+    color: #f1f5f9 !important;
+}
+
+html.dark nav a.text-primary {
+    color: #a5b4fc !important;
+}
+
+/* Cards & Containers */
+html.dark .bg-white {
+    background-color: #0f172a !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .bg-slate-50, 
+html.dark .bg-gray-50, 
+html.dark .bg-indigo-50\/20, 
+html.dark .bg-indigo-50\/50 {
+    background-color: #0c1220 !important;
+}
+
+html.dark .border-gray-100, 
+html.dark .border-gray-50, 
+html.dark .border-slate-100,
+html.dark .border-indigo-100\/30 {
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Text Overrides */
+html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6 {
+    color: #ffffff !important;
+}
+
+html.dark .text-gray-900, 
+html.dark .text-gray-800, 
+html.dark .text-gray-700, 
+html.dark .text-slate-800,
+html.dark .text-slate-900 {
+    color: #f1f5f9 !important;
+}
+
+html.dark .text-gray-600, 
+html.dark .text-gray-500, 
+html.dark .text-slate-500, 
+html.dark .text-slate-400 {
+    color: #94a3b8 !important;
+}
+
+/* Custom Text Primary/Secondary Legibility */
+html.dark .text-primary {
+    color: #818cf8 !important;
+}
+
+html.dark .text-secondary {
+    color: #f472b6 !important;
+}
+
+/* Inputs & Form Elements (Number, text, selects) */
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: #0b0f19 !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark input::placeholder, 
+html.dark textarea::placeholder {
+    color: #475569 !important;
+}
+
+/* Buttons */
+html.dark .bg-gray-50:hover {
+    background-color: #1e293b !important;
+}
+
+/* Dropdowns & Modals */
+html.dark [x-show="openMember"],
+html.dark [x-show="openNotif"] {
+    background-color: #0f172a !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Specific elements on catalog sidebar */
+html.dark aside .bg-white\/40 {
+    background-color: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark aside a.bg-white {
+    background-color: #0f172a !important;
+}
+
+html.dark aside a.bg-white:hover {
+    background-color: #1e293b !important;
+    color: #818cf8 !important;
+}
+
+/* Wishlist background in dark mode */
+html.dark .bg-white\/90 {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0 !important;
+}
+
+/* Membership Progress Bar Track */
+html.dark .bg-gray-200 {
+    background-color: #1e293b !important;
+}
+
+/* Tables */
+html.dark table th {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+}
+
+html.dark table td {
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Glassmorphism adjustments */
+html.dark .glass {
+    background: rgba(15, 23, 42, 0.7) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
