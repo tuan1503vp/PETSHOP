@@ -99,23 +99,9 @@ PETSHOP/
 3. Tạo cơ sở dữ liệu MySQL:
    - Truy cập `http://localhost/phpmyadmin/`.
    - Tạo cơ sở dữ liệu mới tên là `petshop_db`.
-   - Import file `database.sql` và `advanced_features.sql` (nếu có) vào cơ sở dữ liệu vừa tạo.
+   - Import file `database.sql` và `advanced_features.sql` vào cơ sở dữ liệu vừa tạo.
 
-### 3. Cấu hình bảo mật khóa API (Secrets Setup)
-
-Để bảo vệ mã nguồn khi đẩy lên các kho lưu trữ công cộng như GitHub, các khóa API đã được tách riêng. Bạn cần cấu hình như sau:
-
-1. Trong thư mục `app/config/`, tạo một file mới tên là `secrets.php`.
-2. Dán nội dung cấu hình sau vào và nhập các API key của bạn:
-   ```php
-   <?php
-   // Cấu hình các API key và mật khẩu bảo mật
-   define('OPENROUTER_API_KEY', 'NHẬP_KEY_OPENROUTER_CỦA_BẠN');
-   define('RESEND_API_KEY', 'NHẬP_KEY_RESEND_CỦA_BẠN');
-   define('SMTP_PASS', 'NHẬP_MẬT_KHẨU_ỨNG_DỤNG_GMAIL');
-   ```
-
-### 4. Trải nghiệm ứng dụng
+### 3. Trải nghiệm ứng dụng
 
 Mở trình duyệt web và truy cập địa chỉ:
 https://pet.kesug.com/
