@@ -9,18 +9,19 @@
  */
 class VNPayController extends Controller {
 
-    // ──────────────────────────────────────────────────────────
-    // CẤU HÌNH VNPAY SANDBOX
-    // Đăng ký tài khoản merchant tại: https://sandbox.vnpayment.vn/devreg/
-    // Sau khi đăng ký → thay thế các giá trị bên dưới bằng thông tin thực
-    // ──────────────────────────────────────────────────────────
-    const VNP_TMNCODE    = 'DEMOV210';                          // Mã Terminal
-    const VNP_HASHSECRET = 'RAOEXHYVSDDIIENYWSLDIIZTANLLFQFR'; // Chuỗi bí mật
+    // ══════════════════════════════════════════════════════════
+    // CẤU HÌNH VNPAY SANDBOX (Thông tin chính thức từ VNPay)
+    // Merchant Admin: https://sandbox.vnpayment.vn/merchantv2/
+    // Tài liệu: https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html
+    // ⚠️  Chỉ dùng môi trường TEST – KHÔNG dùng cho giao dịch thật
+    // ══════════════════════════════════════════════════════════
+    const VNP_TMNCODE    = '4VCHK58N';                          // Terminal ID (Mã Website)
+    const VNP_HASHSECRET = 'AB22YEY4K4530OHAEA5HTKOSKCY2JS9T'; // Secret Key (Chuỗi bí mật)
     const VNP_URL        = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
     const VNP_API_URL    = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction';
     const VNP_LOCALE     = 'vn';
     const VNP_CURR_CODE  = 'VND';
-    // ──────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════
 
     private $orderModel;
 
