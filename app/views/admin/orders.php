@@ -196,8 +196,8 @@
                     <?php else: ?>
                         <?php foreach($data['orders'] as $order):
                             $isPendingTransfer = ($order->payment_method === 'transfer' && $order->status === 'pending');
-                            $isVNPayPaid       = ($order->payment_method === 'vnpay'    && in_array($order->status, ['shipping','completed']));
-                            $isVNPayPending    = ($order->payment_method === 'vnpay'    && $order->status === 'pending');
+                            $isVNPayPaid       = ($order->payment_method === 'vnpay'    && ($order->paid_amount >= $order->total_amount || in_array($order->status, ['shipping','completed'])));
+                            $isVNPayPending    = ($order->payment_method === 'vnpay'    && $order->status === 'pending' && ($order->paid_amount == 0 || $order->paid_amount === null));
                             $rowClass = '';
                             if ($isPendingTransfer) $rowClass = 'bg-blue-50/40 border-l-4 border-l-blue-400';
                             elseif ($isVNPayPaid)   $rowClass = 'bg-indigo-50/30 border-l-4 border-l-indigo-400';
@@ -280,8 +280,8 @@
                                     <?php
                                     // Xác định trạng thái thanh toán thực tế
                                     $isPaidOrder = false;
-                                    if ($order->payment_method === 'vnpay' && in_array($order->status, ['shipping','completed'])) {
-                                        $isPaidOrder = true;
+                                    if ($order->payment_method === 'vnpay' && ($order->paid_amount >= $order->total_amount || in_array($order->status, ['shipping','completed']))) {
+                                         $isPaidOrder = true;
                                     } elseif ($order->payment_method === 'transfer' && $order->status !== 'pending') {
                                         $isPaidOrder = true;
                                     } elseif (in_array($order->payment_method, ['cash','cod']) && $order->status === 'completed') {
@@ -471,8 +471,8 @@
                         <div class="bg-gray-50 rounded-xl p-3 text-center">
                             <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Đã thanh toán</p>
                             <span class="text-xs font-black px-2 py-0.5 rounded-full"
-                                  :class="(selectedOrder?.payment_method === 'vnpay' && ['shipping','completed'].includes(selectedOrder?.status)) || (selectedOrder?.payment_method === 'transfer' && selectedOrder?.status !== 'pending') || selectedOrder?.payment_method === 'cash' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'"
-                                  x-text="(selectedOrder?.payment_method === 'vnpay' && ['shipping','completed'].includes(selectedOrder?.status)) || (selectedOrder?.payment_method === 'transfer' && selectedOrder?.status !== 'pending') || selectedOrder?.payment_method === 'cash' ? '✓ Đã thanh toán' : '⏳ Chưa thanh toán'"></span>
+                                  :class="(selectedOrder?.payment_method === 'vnpay' && (parseFloat(selectedOrder?.paid_amount) > 0 || ['shipping','completed'].includes(selectedOrder?.status))) || (selectedOrder?.payment_method === 'transfer' && selectedOrder?.status !== 'pending') || selectedOrder?.payment_method === 'cash' || (selectedOrder?.payment_method === 'cod' && selectedOrder?.status === 'completed') ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'"
+                                  x-text="(selectedOrder?.payment_method === 'vnpay' && (parseFloat(selectedOrder?.paid_amount) > 0 || ['shipping','completed'].includes(selectedOrder?.status))) || (selectedOrder?.payment_method === 'transfer' && selectedOrder?.status !== 'pending') || selectedOrder?.payment_method === 'cash' || (selectedOrder?.payment_method === 'cod' && selectedOrder?.status === 'completed') ? '✓ Đã thanh toán' : '⏳ Chưa thanh toán'"></span>
                         </div>
                         <div class="bg-gray-50 rounded-xl p-3 text-center">
                             <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Trạng thái</p>

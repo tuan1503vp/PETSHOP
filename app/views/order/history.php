@@ -156,7 +156,7 @@
                                 <?php echo $item->type == 'order' ? ($item->order_type == 'pos' ? 'Mua tại cửa hàng' : 'Mua trực tuyến') : 'Dịch vụ tại trung tâm'; ?>
                             </span>
                             <div class="flex gap-2 items-center">
-                                <?php if($item->type == 'order' && $item->status == 'cancelled' && $item->payment_method == 'transfer'): ?>
+                                <?php if($item->type == 'order' && $item->status == 'cancelled' && in_array($item->payment_method, ['transfer', 'vnpay'])): ?>
                                     <?php if($item->refund_status == 'none'): ?>
                                         <button @click="openRefundModal(<?php echo $item->id; ?>)" class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-600 hover:text-white transition shadow-sm border border-red-100">Yêu cầu hoàn tiền</button>
                                     <?php elseif($item->refund_status == 'pending'): ?>

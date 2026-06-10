@@ -86,6 +86,14 @@ class Order {
         return $this->db->execute();
     }
 
+    // Cập nhật số tiền thực nhận (cho VNPay hoặc thanh toán tự động)
+    public function updatePaidAmount($order_id, $paid_amount) {
+        $this->db->query('UPDATE orders SET paid_amount = :paid_amount WHERE id = :id');
+        $this->db->bind(':paid_amount', $paid_amount);
+        $this->db->bind(':id', $order_id);
+        return $this->db->execute();
+    }
+
     // Duyệt đơn hàng (có số tiền thực nhận và ghi chú)
     public function approveOrder($order_id, $paid_amount, $admin_note) {
         $this->db->query('UPDATE orders SET status = "shipping", paid_amount = :paid_amount, admin_note = :admin_note WHERE id = :id');

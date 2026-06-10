@@ -192,9 +192,11 @@ class VnpayController extends Controller {
         file_put_contents(dirname(APPROOT) . '/vnpay_debug.log', $logMsg, FILE_APPEND);
 
         if ($isValid && $isSuccess && $order_id) {
-            // Thanh toán thành công → chuyển sang 'shipping' (đã thanh toán, đang chuẩn bị giao hàng)
-            // Admin sẽ chuyển sang 'completed' khi giao hàng xong và xác nhận
-            $this->orderModel->updateStatus($order_id, 'shipping');
+            // Thanh toán thành công → cập nhật số tiền đã thanh toán (đơn hàng vẫn giữ trạng thái 'pending' để admin xác nhận)
+            $order = $this->orderModel->getOrderById($order_id);
+            if ($order) {
+                $this->orderModel->updatePaidAmount($order_id, $order->total_amount);
+            }
 
             // Xoá giỏ hàng
             unset($_SESSION['cart'], $_SESSION['vnpay_order_id']);
@@ -277,8 +279,8 @@ class VnpayController extends Controller {
 
         $responseCode = $_GET['vnp_ResponseCode'] ?? '';
         if ($responseCode === '00') {
-            // IPN xác nhận thành công → shipping (đang giao hàng)
-            $this->orderModel->updateStatus($order_id, 'shipping');
+            // IPN xác nhận thành công → cập nhật số tiền đã thanh toán (đơn hàng vẫn giữ trạng thái 'pending' để admin xác nhận)
+            $this->orderModel->updatePaidAmount($order_id, $order->total_amount);
         } else {
             $this->orderModel->updateStatus($order_id, 'cancelled');
         }

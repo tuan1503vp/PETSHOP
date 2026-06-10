@@ -13,7 +13,7 @@ $orderModel = new Order();
 $order      = $orderModel->getOrderById($data['order_id']);
 $isTransfer = ($order && $order->payment_method === 'transfer');
 $isVNPay    = ($order && $order->payment_method === 'vnpay');
-$isPaid     = ($order && in_array($order->status, ['completed', 'shipping']));
+$isPaid     = ($order && (in_array($order->status, ['completed', 'shipping']) || ($order->payment_method === 'vnpay' && $order->paid_amount > 0)));
 $orderId    = $data['order_id'];
 $paddedId   = str_pad($orderId, 6, '0', STR_PAD_LEFT);
 $transfer_content = 'PETSHOP ' . $paddedId;
