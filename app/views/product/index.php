@@ -2,7 +2,7 @@
 
 <?php
 if (!function_exists('buildProductUrl')) {
-    function buildProductUrl($changes = [], $data) {
+    function buildProductUrl($data, $changes = []) {
         $params = $data['params'];
         foreach ($changes as $key => $val) {
             $params[$key] = $val;
@@ -27,10 +27,10 @@ if (!function_exists('buildProductUrl')) {
     <div id="catalog" class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         
         <!-- Search & Filter Bar -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between pb-8 mb-8 gap-4 border-b border-gray-100">
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-8 mb-8 gap-4 border-b border-gray-100 dark:border-slate-800">
             <div>
-                <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Duyệt sản phẩm</p>
-                <h2 class="text-2xl font-black text-gray-800 tracking-tight">Tìm Kiếm & Lọc</h2>
+                <p class="text-xs font-black text-gray-400 dark:text-slate-400 uppercase tracking-widest mb-1">Duyệt sản phẩm</p>
+                <h2 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight">Tìm Kiếm & Lọc</h2>
             </div>
             
             <form id="searchForm" action="<?php echo URLROOT; ?>/product" method="GET" class="flex w-full md:w-auto gap-3">
@@ -41,11 +41,11 @@ if (!function_exists('buildProductUrl')) {
                 <input type="hidden" name="price_max" id="filter_price_max" value="<?php echo htmlspecialchars($data['params']['price_max']); ?>">
                 
                 <div class="relative flex-1 md:w-72">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 dark:text-slate-400 pointer-events-none">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
                     <input type="text" name="search" id="searchInput" value="<?php echo htmlspecialchars($data['params']['search']); ?>"
-                           class="block w-full pl-12 pr-12 py-3.5 border border-gray-200 rounded-2xl bg-white/80 backdrop-blur-sm text-sm text-gray-850 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-inner" 
+                           class="block w-full pl-12 pr-12 py-3.5 border border-gray-200 dark:border-slate-700 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-sm text-gray-800 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-inner" 
                            placeholder="Tìm tên sản phẩm...">
                     
                     <?php if(!empty($data['params']['search'])): ?>
@@ -162,20 +162,20 @@ if (!function_exists('buildProductUrl')) {
         <div id="catalog-content" class="flex flex-col lg:flex-row gap-10 transition-opacity duration-300">
             <!-- Sidebar Filters -->
             <aside class="w-full lg:w-64 flex-shrink-0">
-                <div class="space-y-6 sticky top-24 bg-white/60 backdrop-blur-md p-5 rounded-3xl border border-gray-100 shadow-sm overflow-y-auto" style="max-height: calc(100vh - 7rem);">
+                <div class="space-y-6 sticky top-24 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md p-5 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-y-auto" style="max-height: calc(100vh - 7rem);">
                     
                     <!-- Categories -->
                     <div>
-                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+                        <h3 class="text-xs font-black text-gray-400 dark:text-slate-400 uppercase tracking-widest mb-3">
                             <i class="fa-solid fa-tags text-primary mr-1"></i> Danh Mục
                         </h3>
                         <div class="flex flex-wrap gap-2">
-                            <a href="<?php echo buildProductUrl(['category' => ''], $data); ?>" 
+                            <a href="<?php echo buildProductUrl($data, ['category' => '']); ?>" 
                                class="px-3 py-1.5 rounded-full text-xs font-bold transition-all border <?php echo empty($data['params']['category']) ? 'bg-primary text-white border-primary shadow-md shadow-primary/30' : 'bg-white text-gray-600 hover:border-primary hover:text-primary border-gray-200'; ?>">
                                 Tất cả
                             </a>
                             <?php foreach($data['categories'] as $cat): ?>
-                                <a href="<?php echo buildProductUrl(['category' => $cat->id], $data); ?>" 
+                                <a href="<?php echo buildProductUrl($data, ['category' => $cat->id]); ?>" 
                                    class="px-3 py-1.5 rounded-full text-xs font-bold transition-all border <?php echo $data['params']['category'] == $cat->id ? 'bg-primary text-white border-primary shadow-md shadow-primary/30' : 'bg-white text-gray-600 hover:border-primary hover:text-primary border-gray-200'; ?>">
                                     <?php echo $cat->name; ?>
                                 </a>
@@ -186,7 +186,7 @@ if (!function_exists('buildProductUrl')) {
 
                     <!-- Price Range (Khoảng Giá) -->
                     <div>
-                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">
+                        <h3 class="text-xs font-black text-gray-400 dark:text-slate-400 uppercase tracking-widest mb-4">
                             <i class="fa-solid fa-coins text-primary mr-1"></i> Khoảng Giá
                         </h3>
                         <div class="flex flex-wrap lg:flex-col gap-2">
@@ -194,7 +194,7 @@ if (!function_exists('buildProductUrl')) {
                             <?php 
                                 $isAllPrices = empty($data['params']['price_min']) && empty($data['params']['price_max']);
                             ?>
-                            <a href="<?php echo buildProductUrl(['price_min' => '', 'price_max' => ''], $data); ?>"
+                            <a href="<?php echo buildProductUrl($data, ['price_min' => '', 'price_max' => '']); ?>"
                                class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center justify-between group <?php echo $isAllPrices ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl shadow-primary/20' : 'bg-white text-gray-600 hover:bg-indigo-50/50 hover:text-primary border border-gray-100 shadow-sm'; ?>">
                                 <span>Mọi mức giá</span>
                                 <?php if($isAllPrices): ?><i class="fa-solid fa-check text-[10px]"></i><?php endif; ?>
@@ -203,7 +203,7 @@ if (!function_exists('buildProductUrl')) {
                             <?php 
                                 $isUnder100k = $data['params']['price_min'] === '0' && $data['params']['price_max'] === '100000';
                             ?>
-                            <a href="<?php echo buildProductUrl(['price_min' => '0', 'price_max' => '100000'], $data); ?>"
+                            <a href="<?php echo buildProductUrl($data, ['price_min' => '0', 'price_max' => '100000']); ?>"
                                class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center justify-between group <?php echo $isUnder100k ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl shadow-primary/20' : 'bg-white text-gray-600 hover:bg-indigo-50/50 hover:text-primary border border-gray-100 shadow-sm'; ?>">
                                 <span>Dưới 100.000đ</span>
                                 <?php if($isUnder100k): ?><i class="fa-solid fa-check text-[10px]"></i><?php endif; ?>
@@ -212,7 +212,7 @@ if (!function_exists('buildProductUrl')) {
                             <?php 
                                 $is100to500 = $data['params']['price_min'] === '100000' && $data['params']['price_max'] === '500000';
                             ?>
-                            <a href="<?php echo buildProductUrl(['price_min' => '100000', 'price_max' => '500000'], $data); ?>"
+                            <a href="<?php echo buildProductUrl($data, ['price_min' => '100000', 'price_max' => '500000']); ?>"
                                class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center justify-between group <?php echo $is100to500 ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl shadow-primary/20' : 'bg-white text-gray-600 hover:bg-indigo-50/50 hover:text-primary border border-gray-100 shadow-sm'; ?>">
                                 <span>100.000đ - 500.000đ</span>
                                 <?php if($is100to500): ?><i class="fa-solid fa-check text-[10px]"></i><?php endif; ?>
@@ -221,7 +221,7 @@ if (!function_exists('buildProductUrl')) {
                             <?php 
                                 $isOver500 = $data['params']['price_min'] === '500000' && empty($data['params']['price_max']);
                             ?>
-                            <a href="<?php echo buildProductUrl(['price_min' => '500000', 'price_max' => ''], $data); ?>"
+                            <a href="<?php echo buildProductUrl($data, ['price_min' => '500000', 'price_max' => '']); ?>"
                                class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center justify-between group <?php echo $isOver500 ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl shadow-primary/20' : 'bg-white text-gray-600 hover:bg-indigo-50/50 hover:text-primary border border-gray-100 shadow-sm'; ?>">
                                 <span>Trên 500.000đ</span>
                                 <?php if($isOver500): ?><i class="fa-solid fa-check text-[10px]"></i><?php endif; ?>
@@ -295,58 +295,40 @@ if (!function_exists('buildProductUrl')) {
                 <?php else: ?>
                     <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                         <?php foreach($data['products'] as $product): ?>
-                            <div class="group relative flex flex-col bg-white border border-gray-100/80 rounded-[32px] shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden reveal">
+                            <div class="group relative flex flex-col bg-white border border-gray-100/80 rounded-[32px] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden reveal">
                                 
                                 <!-- Image Container -->
                                 <div class="relative w-full aspect-square overflow-hidden bg-slate-50 border-b border-gray-50">
-                                    <img src="<?php echo !empty($product->image) ? URLROOT . '/public/images/' . $product->image : 'https://placehold.co/400x400?text=' . urlencode($product->name); ?>" 
-                                         alt="<?php echo $product->name; ?>" 
-                                         class="w-full h-full object-center object-cover group-hover:scale-108 transition-transform duration-700">
+                                    <a href="<?php echo URLROOT; ?>/product/show/<?php echo $product->id; ?>">
+                                        <img src="<?php echo !empty($product->image) ? URLROOT . '/public/images/' . $product->image : 'https://placehold.co/400x400?text=' . urlencode($product->name); ?>" 
+                                             alt="<?php echo $product->name; ?>" 
+                                             class="w-full h-full object-center object-cover group-hover:scale-105 transition-transform duration-500">
+                                    </a>
                                     
-                                    <!-- Badges -->
-                                    <div class="absolute top-4 left-4 flex flex-col gap-2">
-                                        <span class="px-3.5 py-1.5 bg-white/90 backdrop-blur-sm text-[9px] font-black uppercase tracking-widest text-slate-800 rounded-full shadow-sm">
+                                    <!-- Category Badge (top-right) -->
+                                    <div class="absolute top-3 right-3">
+                                        <span class="px-3 py-1 bg-white/90 backdrop-blur-sm text-[9px] font-black uppercase tracking-widest text-slate-700 rounded-full shadow-sm">
                                             <?php echo $product->category_name ?? 'Phổ biến'; ?>
                                         </span>
                                     </div>
 
-                                    <!-- Quick Wishlist Button -->
+                                    <!-- Wishlist Button (top-left) -->
                                     <?php if(isLoggedIn()): ?>
-                                    <div class="absolute top-4 right-4 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
-                                        <?php 
-                                            $isWished = isset($_SESSION['wishlist']) && in_array($product->id, $_SESSION['wishlist']);
-                                        ?>
+                                    <?php $isWished = isset($_SESSION['wishlist']) && in_array($product->id, $_SESSION['wishlist']); ?>
+                                    <div class="absolute top-3 left-3">
                                         <button onclick="toggleStoreWishlist(<?php echo $product->id; ?>, this)" 
-                                                class="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 <?php echo $isWished ? 'text-red-500' : 'text-gray-400 hover:text-red-500'; ?>" title="Yêu thích">
+                                                class="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110 active:scale-95 <?php echo $isWished ? 'text-red-500' : 'text-gray-400 hover:text-red-500'; ?>"
+                                                title="<?php echo $isWished ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'; ?>">
                                             <i class="<?php echo $isWished ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-base transition-all duration-300"></i>
                                         </button>
                                     </div>
                                     <?php endif; ?>
                                 </div>
 
-                                <!-- Hover Overlay Info -->
-                                <div class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col p-6 translate-y-8 group-hover:translate-y-0 pointer-events-none group-hover:pointer-events-auto">
-                                    <h3 class="text-lg font-black text-gray-900 dark:text-white mb-2 line-clamp-2">
-                                        <?php echo $product->name; ?>
-                                    </h3>
-                                    <div class="overflow-y-auto flex-1 mb-4 pr-2">
-                                        <p class="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                                            <?php echo $product->description; ?>
-                                        </p>
-                                    </div>
-                                    <div class="pt-4 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between mt-auto">
-                                        <p class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                                            <?php echo number_format($product->price, 0, ',', '.'); ?> <span class="text-xs">đ</span>
-                                        </p>
-                                        <a href="<?php echo URLROOT; ?>/product/show/<?php echo $product->id; ?>" class="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-indigo-600 transition-colors shadow-lg shadow-primary/30">
-                                            Xem chi tiết
-                                        </a>
-                                    </div>
-                                </div>
-
                                 <!-- Info -->
-                                <div class="p-6 flex flex-col flex-1 justify-between gap-4 bg-white">
-                                    <div class="space-y-2">
+                                <div class="p-5 flex flex-col flex-1 gap-3">
+                                    <!-- Name & Description -->
+                                    <div class="space-y-1.5 flex-1">
                                         <h3 class="text-base font-black text-gray-800 group-hover:text-primary transition-colors line-clamp-1">
                                             <a href="<?php echo URLROOT; ?>/product/show/<?php echo $product->id; ?>">
                                                 <?php echo $product->name; ?>
@@ -355,34 +337,45 @@ if (!function_exists('buildProductUrl')) {
                                         <p class="text-xs text-slate-400 font-medium leading-relaxed line-clamp-2">
                                             <?php echo $product->description; ?>
                                         </p>
-                                        <div class="flex items-center text-yellow-400 text-[10px] gap-0.5">
+                                        <div class="flex items-center text-yellow-400 text-[10px] gap-0.5 pt-0.5">
                                             <i class="fa-solid fa-star"></i>
                                             <i class="fa-solid fa-star"></i>
                                             <i class="fa-solid fa-star"></i>
                                             <i class="fa-solid fa-star"></i>
                                             <i class="fa-solid fa-star"></i>
-                                            <span class="text-slate-400 font-bold ml-1.5">(4.8)</span>
+                                            <span class="text-slate-400 font-bold ml-1">(4.8)</span>
                                         </div>
                                     </div>
-                                    
-                                    <div class="flex items-center justify-between pt-4 border-t border-gray-50 bg-white">
-                                        <p class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                                            <?php echo number_format($product->price, 0, ',', '.'); ?> <span class="text-xs">đ</span>
-                                        </p>
-                                        
+
+                                    <!-- Price -->
+                                    <p class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                                        <?php echo number_format($product->price, 0, ',', '.'); ?> <span class="text-xs">đ</span>
+                                    </p>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex gap-2 pt-1 border-t border-gray-50">
+                                        <!-- View Detail -->
+                                        <a href="<?php echo URLROOT; ?>/product/show/<?php echo $product->id; ?>"
+                                           class="flex-1 py-2.5 text-center text-xs font-bold text-primary border border-primary/30 rounded-xl hover:bg-primary hover:text-white transition-all duration-200">
+                                            <i class="fa-solid fa-eye mr-1"></i> Xem chi tiết
+                                        </a>
+
+                                        <!-- Add to Cart -->
                                         <?php if(isLoggedIn()): ?>
-                                            <form action="<?php echo URLROOT; ?>/cart/add/<?php echo $product->id; ?>" method="POST">
-                                                <input type="hidden" name="quantity" value="1">
-                                                <button type="submit" 
-                                                        class="w-12 h-12 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-2xl flex items-center justify-center hover:scale-110 hover:-rotate-6 transition-all duration-300 shadow-md shadow-primary/10 group/cart hover:shadow-primary/30"
-                                                        title="Thêm vào giỏ hàng">
-                                                    <i class="fa-solid fa-cart-plus text-base group-hover/cart:animate-bounce"></i>
-                                                </button>
-                                            </form>
+                                        <form action="<?php echo URLROOT; ?>/cart/add/<?php echo $product->id; ?>" method="POST">
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" 
+                                                    class="w-10 h-10 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-200 shadow-md shadow-primary/20"
+                                                    title="Thêm vào giỏ hàng">
+                                                <i class="fa-solid fa-cart-plus text-sm"></i>
+                                            </button>
+                                        </form>
                                         <?php else: ?>
-                                            <a href="<?php echo URLROOT; ?>/auth/login" class="text-xs font-black text-primary hover:underline flex items-center gap-1">
-                                                <i class="fa-solid fa-right-to-bracket text-xs"></i> Đăng nhập mua
-                                            </a>
+                                        <a href="<?php echo URLROOT; ?>/auth/login"
+                                           class="w-10 h-10 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200"
+                                           title="Đăng nhập để mua">
+                                            <i class="fa-solid fa-cart-plus text-sm"></i>
+                                        </a>
                                         <?php endif; ?>
                                     </div>
                                 </div>

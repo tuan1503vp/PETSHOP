@@ -60,24 +60,69 @@
                 </div>
 
                 <?php if(isLoggedIn()): ?>
-                <form action="<?php echo URLROOT; ?>/cart/add/<?php echo $product->id; ?>" method="POST" class="mt-8 flex sm:flex-col1">
-                    <div class="flex items-center border border-gray-300 rounded-md">
-                        <button type="button" onclick="document.getElementById('quantity').stepDown()" class="px-4 py-2 text-gray-600 hover:text-gray-900 focus:outline-none"><i class="fa-solid fa-minus"></i></button>
-                        <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $product->stock_quantity; ?>" class="w-16 text-center border-none focus:ring-0 text-gray-900 font-medium">
-                        <button type="button" onclick="document.getElementById('quantity').stepUp()" class="px-4 py-2 text-gray-600 hover:text-gray-900 focus:outline-none"><i class="fa-solid fa-plus"></i></button>
-                    </div>
+                <?php $isWished = isset($_SESSION['wishlist']) && in_array($product->id, $_SESSION['wishlist']); ?>
+                <div class="mt-8 flex flex-col sm:flex-row gap-3">
+                    <!-- Add to Cart form -->
+                    <form action="<?php echo URLROOT; ?>/cart/add/<?php echo $product->id; ?>" method="POST" class="flex items-center gap-3 flex-1">
+                        <div class="flex items-center border border-gray-300 rounded-md">
+                            <button type="button" onclick="document.getElementById('quantity').stepDown()" class="px-4 py-2 text-gray-600 hover:text-gray-900 focus:outline-none"><i class="fa-solid fa-minus"></i></button>
+                            <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $product->stock_quantity; ?>" class="w-16 text-center border-none focus:ring-0 text-gray-900 font-medium">
+                            <button type="button" onclick="document.getElementById('quantity').stepUp()" class="px-4 py-2 text-gray-600 hover:text-gray-900 focus:outline-none"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <button type="submit" class="flex-1 bg-primary border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 shadow-md hover:shadow-lg">
+                            <i class="fa-solid fa-cart-plus mr-2"></i> Thêm vào giỏ
+                        </button>
+                    </form>
 
-                    <button type="submit" class="ml-4 flex-1 bg-primary border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:w-full transition duration-300 shadow-md hover:shadow-lg">
-                        <i class="fa-solid fa-cart-plus mr-2"></i> Thêm vào giỏ
+                    <!-- Wishlist Button -->
+                    <button id="wishlist-btn-detail" onclick="toggleDetailWishlist(<?php echo $product->id; ?>)"
+                            class="flex items-center justify-center gap-2 px-6 py-3 rounded-md border-2 font-bold text-base transition-all duration-300 <?php echo $isWished ? 'border-red-400 bg-red-50 text-red-500 hover:bg-red-100' : 'border-gray-300 text-gray-500 hover:border-red-400 hover:text-red-500 hover:bg-red-50'; ?>">
+                        <i id="wishlist-icon-detail" class="<?php echo $isWished ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-lg"></i>
+                        <span id="wishlist-label-detail"><?php echo $isWished ? 'Đã yêu thích' : 'Yêu thích'; ?></span>
                     </button>
-                </form>
+                </div>
+
                 <?php else: ?>
-                <div class="mt-8">
-                    <a href="<?php echo URLROOT; ?>/auth/login" class="w-full bg-primary border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 transition duration-300 shadow-md hover:shadow-lg">
+                <div class="mt-8 flex flex-col sm:flex-row gap-3">
+                    <a href="<?php echo URLROOT; ?>/auth/login" class="flex-1 bg-primary border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 transition duration-300 shadow-md hover:shadow-lg">
                         <i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng nhập để mua hàng
+                    </a>
+                    <a href="<?php echo URLROOT; ?>/auth/login"
+                       class="flex items-center justify-center gap-2 px-6 py-3 rounded-md border-2 border-gray-300 text-gray-500 font-bold hover:border-red-400 hover:text-red-500 hover:bg-red-50 transition-all duration-300">
+                        <i class="fa-regular fa-heart text-lg"></i>
+                        <span>Yêu thích</span>
                     </a>
                 </div>
                 <?php endif; ?>
+
+                <script>
+                async function toggleDetailWishlist(id) {
+                    const btn  = document.getElementById('wishlist-btn-detail');
+                    const icon = document.getElementById('wishlist-icon-detail');
+                    const lbl  = document.getElementById('wishlist-label-detail');
+                    try {
+                        const res  = await fetch(`<?php echo URLROOT; ?>/wishlist/toggle/${id}`);
+                        const data = await res.json();
+
+                        // Update navbar badge
+                        const badge = document.getElementById('wishlist-badge');
+                        if (badge) {
+                            badge.innerText = data.count;
+                            data.count === 0 ? badge.classList.add('hidden') : badge.classList.remove('hidden');
+                        }
+
+                        if (data.status === 'added') {
+                            icon.className = 'fa-solid fa-heart text-lg';
+                            lbl.textContent = 'Đã yêu thích';
+                            btn.className = btn.className.replace('border-gray-300 text-gray-500 hover:border-red-400 hover:text-red-500 hover:bg-red-50', 'border-red-400 bg-red-50 text-red-500 hover:bg-red-100');
+                        } else {
+                            icon.className = 'fa-regular fa-heart text-lg';
+                            lbl.textContent = 'Yêu thích';
+                            btn.className = btn.className.replace('border-red-400 bg-red-50 text-red-500 hover:bg-red-100', 'border-gray-300 text-gray-500 hover:border-red-400 hover:text-red-500 hover:bg-red-50');
+                        }
+                    } catch(e) { console.error(e); }
+                }
+                </script>
 
                 <!-- Additional details -->
                 <section aria-labelledby="details-heading" class="mt-12">

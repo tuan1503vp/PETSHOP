@@ -107,9 +107,7 @@
                         ?>
                         <a href="<?php echo URLROOT; ?>/cart" class="text-gray-500 hover:text-primary relative" title="Giỏ hàng">
                             <i class="fa-solid fa-cart-shopping text-xl"></i>
-                            <?php if($cartCountMobile > 0): ?>
-                                <span class="absolute -top-1 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white bg-indigo-600 rounded-full"><?php echo $cartCountMobile; ?></span>
-                            <?php endif; ?>
+                            <span id="cart-badge-mobile" class="absolute -top-1 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white bg-indigo-600 rounded-full <?php echo $cartCountMobile == 0 ? 'hidden' : ''; ?>"><?php echo $cartCountMobile; ?></span>
                         </a>
                         <?php endif; ?>
                         <button @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); if(darkMode) { document.documentElement.classList.add('dark') } else { document.documentElement.classList.remove('dark') }" 
@@ -185,19 +183,24 @@
 
                         <a href="<?php echo URLROOT; ?>/cart" class="text-gray-500 hover:text-primary relative px-3 py-2 transition-colors ml-2" title="Giỏ hàng">
                             <i class="fa-solid fa-cart-shopping text-xl"></i>
-                            <?php if($cartCount > 0): ?>
-                                <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-indigo-600 rounded-full"><?php echo $cartCount; ?></span>
-                            <?php endif; ?>
+                            <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-indigo-600 rounded-full <?php echo $cartCount == 0 ? 'hidden' : ''; ?>"><?php echo $cartCount; ?></span>
                         </a>
                     <?php endif; ?>
                     
                     <?php if(isLoggedIn()) : 
                         require_once APPROOT . '/models/User.php';
                         $userModel = new User();
-                        $membershipInfo = $userModel->getMembershipFullInfo($_SESSION['user_id']);
-                        $stats = $membershipInfo['stats'];
-                        $member = $membershipInfo['member'];
-                        $level = $member->membership_level ?? 'Đồng';
+                        $stats = null;
+                        $member = null;
+                        $level = 'Đồng';
+                        try {
+                            $membershipInfo = $userModel->getMembershipFullInfo($_SESSION['user_id']);
+                            $stats = $membershipInfo['stats'];
+                            $member = $membershipInfo['member'];
+                            $level = $member->membership_level ?? 'Đồng';
+                        } catch (Exception $e) {
+                            // Cơ sở dữ liệu ngoại tuyến, sử dụng cấp độ mặc định
+                        }
                         
                         $badgeClass = "bg-orange-100 text-orange-700"; // Đồng
                         if ($level == 'Bạc') $badgeClass = "bg-slate-100 text-slate-700";
@@ -251,9 +254,15 @@
 
                             <!-- Notification Bell -->
                             <?php 
-                                $notifModel = $this->model('Notification');
-                                $notifications = $notifModel->getNotificationsByUser($_SESSION['user_id']);
-                                $unreadCount = $notifModel->getUnreadCount($_SESSION['user_id']);
+                                $notifications = [];
+                                $unreadCount = 0;
+                                try {
+                                    $notifModel = $this->model('Notification');
+                                    $notifications = $notifModel->getNotificationsByUser($_SESSION['user_id']);
+                                    $unreadCount = $notifModel->getUnreadCount($_SESSION['user_id']);
+                                } catch (Exception $e) {
+                                    // Cơ sở dữ liệu ngoại tuyến, bỏ qua việc tải thông báo
+                                }
                             ?>
                             <div class="relative mr-4" x-data="{ 
                                 openNotif: false, 
@@ -276,7 +285,7 @@
                                                 this.notifications = data.notifications;
                                             }
                                         } catch (e) {}
-                                    }, 5000);
+                                    }, 60000); // Tăng lên 60 giây để tránh bị host giới hạn truy vấn
                                 },
 
                                 async markAsRead(notif) {
@@ -422,7 +431,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-3 mr-6 group cursor-pointer" @click.stop="openMember = true">
+                            <div class="flex items-center gap-3 mr-6 group cursor-pointer bg-slate-50 hover:bg-slate-100 border border-slate-100 p-2 pr-3 rounded-2xl transition-all" @click.stop="openMember = !openMember">
                                 <div class="text-right">
                                     <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none mb-1">Xin chào,</p>
                                     <p class="text-sm font-black text-gray-800 leading-none"><?php echo $_SESSION['user_name']; ?></p>
@@ -430,6 +439,7 @@
                                 <span class="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter <?php echo $badgeClass; ?>">
                                     <?php echo $level; ?>
                                 </span>
+                                <i class="fa-solid fa-chevron-down text-xs text-gray-400 group-hover:text-primary transition-transform duration-300" :class="{'rotate-180': openMember}"></i>
                             </div>
 
                             <!-- Member Info Dropdown -->
@@ -483,16 +493,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-2 gap-3 mb-6">
-                                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng chi</p>
-                                            <p class="text-sm font-black text-gray-800"><?php echo number_format($stats->total_spent, 0, ',', '.'); ?>đ</p>
-                                        </div>
-                                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tháng này</p>
-                                            <p class="text-sm font-black text-primary"><?php echo number_format($stats->monthly_spent, 0, ',', '.'); ?>đ</p>
-                                        </div>
-                                    </div>
+
                                     
                                     <div class="mb-6">
                                         <p class="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3 flex items-center">
@@ -505,16 +506,29 @@
                                         </div>
                                     </div>
 
-                                    <a href="<?php echo URLROOT; ?>/order/history" class="block w-full py-3 bg-gray-50 text-gray-700 text-center text-xs font-black rounded-xl hover:bg-gray-100 transition border border-gray-100">
-                                        <i class="fa-solid fa-receipt mr-2 opacity-50"></i> Xem chi tiết hoạt động
-                                    </a>
+                                    <div class="space-y-2 mt-2">
+                                        <a href="<?php echo URLROOT; ?>/order/history" class="flex items-center justify-between w-full p-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-xl transition border border-gray-100 shadow-sm group">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                                </div>
+                                                Lịch sử mua hàng
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right text-xs text-gray-300 group-hover:translate-x-1 transition-transform"></i>
+                                        </a>
+                                        
+                                        <a href="<?php echo URLROOT; ?>/auth/logout" class="flex items-center justify-between w-full p-3 bg-white hover:bg-red-50 text-red-600 text-sm font-bold rounded-xl transition border border-red-50 shadow-sm group">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                                </div>
+                                                Đăng xuất
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right text-xs text-red-200 group-hover:translate-x-1 transition-transform"></i>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-
-                            <a href="<?php echo URLROOT; ?>/order/history" class="text-gray-500 hover:text-primary mr-6 text-sm font-bold transition flex items-center group">
-                                <i class="fa-solid fa-history mr-1 group-hover:rotate-[-45deg] transition-transform"></i> Lịch sử
-                            </a>
-                            <a href="<?php echo URLROOT; ?>/auth/logout" class="bg-red-50 text-red-600 hover:bg-red-700 hover:text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all border border-red-100 shadow-sm">Đăng xuất</a>
                         </div>
                     <?php else : ?>
                         <a href="<?php echo URLROOT; ?>/auth/login" class="text-gray-600 hover:text-primary px-3 py-2 rounded-full text-sm font-bold transition-colors">Đăng nhập</a>

@@ -4,6 +4,7 @@ class ServiceController extends Controller {
     private $appointmentModel;
 
     public function __construct() {
+        redirectManagement();
         $this->serviceModel = $this->model('Service');
         $this->appointmentModel = $this->model('Appointment');
     }
@@ -46,7 +47,7 @@ class ServiceController extends Controller {
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
 
             $data = [
                 'customer_id' => $_SESSION['user_id'],

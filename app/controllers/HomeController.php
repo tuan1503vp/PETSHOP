@@ -1,6 +1,7 @@
 <?php
 class HomeController extends Controller {
     public function __construct() {
+        redirectManagement();
         // Init models if needed
     }
 

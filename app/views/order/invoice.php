@@ -28,7 +28,7 @@
                 <p class="text-gray-500 text-sm mt-2 font-medium">Hệ thống chăm sóc thú cưng toàn diện</p>
                 <div class="mt-4 text-xs text-gray-400 leading-relaxed font-medium">
                     <p>Địa chỉ: Số 3, Vũ Công Đán, P.Tứ Minh, Hải Phòng</p>
-                    <p>Hotline: 0947647052 | Email: petshop@gmail.com</p>
+                    <p>Hotline: 0947647052 | Email: nmtvp11223311@gmail.com</p>
                 </div>
             </div>
             <div class="text-right">

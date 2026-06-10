@@ -445,8 +445,7 @@ class AdminController extends Controller {
     public function product_add() {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
             
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -484,7 +483,7 @@ class AdminController extends Controller {
     public function product_edit($id) {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
             
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -637,6 +636,33 @@ class AdminController extends Controller {
                 $order->status,
                 $order->order_type == 'online' ? 'Trực tuyến' : 'Tại quầy (POS)',
                 $order->created_at
+            ]);
+        }
+        fclose($output);
+        exit();
+    }
+
+    public function export_products() {
+        $this->checkAccess();
+        $productModel = $this->model('Product');
+        $products = $productModel->getAllProducts();
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=petshop_products_' . date('Ymd') . '.csv');
+        
+        $output = fopen('php://output', 'w');
+        // Thêm BOM cho tiếng Việt (Excel)
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        fputcsv($output, ['Mã SP', 'Tên sản phẩm', 'Danh mục', 'Giá bán', 'Tồn kho']);
+        
+        foreach ($products as $product) {
+            fputcsv($output, [
+                '#SP-' . str_pad($product->id, 4, '0', STR_PAD_LEFT),
+                $product->name,
+                $product->category_name ?? 'Chưa phân loại',
+                $product->price,
+                $product->stock_quantity
             ]);
         }
         fclose($output);
@@ -837,7 +863,7 @@ class AdminController extends Controller {
         $this->checkAccess();
         $serviceModel = $this->model('Service');
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
             
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -876,7 +902,7 @@ class AdminController extends Controller {
         $this->checkAccess();
         $serviceModel = $this->model('Service');
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
             
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -967,7 +993,7 @@ class AdminController extends Controller {
     public function employee_add() {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
             
             $userModel = $this->model('User');
             $employeeModel = $this->model('Employee');

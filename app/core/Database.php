@@ -23,12 +23,15 @@ class Database {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
-            echo $this->error;
+            $this->dbh = null;
         }
     }
 
     // Prepare statement with query
     public function query($sql) {
+        if (is_null($this->dbh)) {
+            throw new PDOException("Không thể kết nối cơ sở dữ liệu: " . ($this->error ?? "Lỗi không xác định"));
+        }
         $this->stmt = $this->dbh->prepare($sql);
     }
 

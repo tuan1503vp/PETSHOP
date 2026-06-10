@@ -3,9 +3,14 @@
 <div class="p-6">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
-        <a href="<?php echo URLROOT; ?>/admin/product_add" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition flex items-center">
-            <i class="fa-solid fa-plus mr-2"></i> Thêm sản phẩm mới
-        </a>
+        <div class="flex gap-3">
+            <a href="<?php echo URLROOT; ?>/admin/export_products" class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition flex items-center">
+                <i class="fa-solid fa-download mr-2 text-green-600"></i> Xuất Excel (CSV)
+            </a>
+            <a href="<?php echo URLROOT; ?>/admin/product_add" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition flex items-center">
+                <i class="fa-solid fa-plus mr-2"></i> Thêm sản phẩm mới
+            </a>
+        </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

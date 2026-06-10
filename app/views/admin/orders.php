@@ -484,7 +484,7 @@
                                     <td class="px-4 py-3">
                                         <div class="flex items-center gap-3">
                                             <div class="h-10 w-10 rounded-lg bg-white border border-gray-100 overflow-hidden flex-shrink-0">
-                                                <img :src="item.image ? '<?php echo URLROOT; ?>/public/images/' + item.image : 'https://placehold.co/100x100?text=' + item.name" class="w-full h-full object-cover">
+                                                <img :src="item.image ? '<?php echo URLROOT; ?>/public/images/' + item.image : 'https://placehold.co/100x100?text=' + item.name" class="w-full h-full object-cover" loading="lazy">
                                             </div>
                                             <span class="font-bold text-gray-800 truncate max-w-[200px]" x-text="item.name"></span>
                                         </div>

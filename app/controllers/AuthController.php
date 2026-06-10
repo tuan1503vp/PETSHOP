@@ -22,8 +22,7 @@ class AuthController extends Controller {
 
         // Kiểm tra phương thức POST
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Xử lý form
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Xử lý form (Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1)
 
             $data = [
                 'fullname' => trim($_POST['fullname']),
@@ -119,8 +118,7 @@ class AuthController extends Controller {
 
         // Kiểm tra phương thức POST
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Xử lý form
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Xử lý form (Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1)
 
             $data = [
                 'email' => trim($_POST['email']),
@@ -175,8 +173,8 @@ class AuthController extends Controller {
     }
 
     public function createUserSession($user) {
-        // Regenerate session ID on successful login to prevent session fixation and reset chat session storage key
-        session_regenerate_id(true);
+        // Tắt session_regenerate_id(true) trên host dùng chung để tránh mất session khi chuyển hướng
+        // session_regenerate_id(true);
         
         $_SESSION['user_id'] = $user->id;
         $_SESSION['user_email'] = $user->email;
@@ -205,8 +203,8 @@ class AuthController extends Controller {
         unset($_SESSION['user_name']);
         unset($_SESSION['user_role']);
         
-        // Invalidate old session ID
-        session_regenerate_id(true);
+        // Tắt session_regenerate_id(true) trên host dùng chung để tránh lỗi mất cookie
+        // session_regenerate_id(true);
         session_destroy();
         header('Location: ' . URLROOT . '/auth/login');
     }

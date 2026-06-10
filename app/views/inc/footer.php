@@ -3,7 +3,7 @@
     <!-- Footer -->
     <footer class="bg-gray-800 text-white">
         <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div>
                     <h3 class="text-xl font-bold mb-4 flex items-center">
                         <i class="fa-solid fa-paw text-secondary mr-2"></i> PETSHOP
@@ -21,10 +21,28 @@
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Liên hệ</h3>
                     <ul class="space-y-2 text-gray-300">
-                        <li><i class="fa-solid fa-location-dot mr-2"></i> Số 3, Vũ Công Đán, P.Tứ Minh, Hải Phòng</li>
+                        <li>
+                            <i class="fa-solid fa-location-dot mr-2"></i> 
+                            <a href="https://maps.google.com/?q=Số+3,+Vũ+Công+Đán,+P.Tứ+Minh,+Hải+Phòng" target="_blank" class="hover:text-white hover:underline transition">Số 3, Vũ Công Đán, P.Tứ Minh, Hải Phòng</a>
+                        </li>
                         <li><i class="fa-solid fa-phone mr-2"></i> <a href="tel:0947647052" class="hover:text-white hover:underline transition">0947647052</a></li>
-                        <li><i class="fa-solid fa-envelope mr-2"></i> <a href="mailto:petshop@gmail.com" class="hover:text-white hover:underline transition">petshop@gmail.com</a></li>
+                        <li><i class="fa-solid fa-envelope mr-2"></i> <a href="mailto:nmtvp11223311@gmail.com" class="hover:text-white hover:underline transition">nmtvp11223311@gmail.com</a></li>
                     </ul>
+                </div>
+                <!-- Cột Bản đồ -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Bản đồ</h3>
+                    <div class="w-full h-40 rounded-xl overflow-hidden border border-gray-700 shadow-inner">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3725.302322316239!2d106.29749591493181!3d20.94038448604618!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31359b3bc9190173%3A0x64e62ad783516086!2zMyBWxakgQ8O0bmcgxJDDoW4sIFThu6kgTWluaCwgSOG6o2kgRMawxqFuZywgVmnhu4d0IE5hbQ!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s" 
+                            width="100%" 
+                            height="100%" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
                 </div>
             </div>
             <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">

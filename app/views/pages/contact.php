@@ -40,7 +40,7 @@
                         </div>
                         <div class="flex items-center">
                             <i class="fa-solid fa-envelope text-xl text-primary-light opacity-80 w-6"></i>
-                            <span class="ml-4 text-sm">support@petshop.vn</span>
+                            <span class="ml-4 text-sm">nmtvp11223311@gmail.com</span>
                         </div>
                     </div>
                 </div>

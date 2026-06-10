@@ -232,6 +232,57 @@
                         Có, PetShop hỗ trợ giao hàng toàn quốc. Freeship cho các đơn hàng từ 500.000đ trở lên tại khu vực nội thành.
                     </div>
                 </div>
+                <!-- FAQ Item 5 -->
+                <div class="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden group">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-gray-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                        <span class="font-bold text-gray-800 dark:text-slate-200">
+                            <i class="fa-solid fa-crown text-yellow-500 mr-2"></i>
+                            Hệ thống hạng hội viên của PETSHOP gồm những hạng nào?
+                        </span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 dark:text-slate-500 group-hover:text-primary transition-colors"></i>
+                    </button>
+                    <div class="hidden px-6 py-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-700">
+                        PETSHOP có <strong>4 hạng hội viên</strong>:
+                        <ul class="mt-3 space-y-2">
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-400"></span> <strong class="text-slate-500">Thành viên</strong> — Mặc định khi đăng ký tài khoản (0đ)</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-600"></span> <strong class="text-yellow-700">Đồng</strong> — Tích lũy từ 500.000đ</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-500"></span> <strong class="text-slate-600">Bạc</strong> — Tích lũy từ 2.000.000đ</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-400"></span> <strong class="text-yellow-600">Vàng</strong> — Tích lũy từ 5.000.000đ</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- FAQ Item 6 -->
+                <div class="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden group">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-gray-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                        <span class="font-bold text-gray-800 dark:text-slate-200">
+                            <i class="fa-solid fa-arrow-trend-up text-green-500 mr-2"></i>
+                            Làm thế nào để nâng hạng hội viên?
+                        </span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 dark:text-slate-500 group-hover:text-primary transition-colors"></i>
+                    </button>
+                    <div class="hidden px-6 py-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-700">
+                        Hạng hội viên được <strong>tự động nâng cấp</strong> dựa trên tổng chi tiêu tích lũy của bạn tại PETSHOP (bao gồm cả mua sản phẩm và đặt dịch vụ). Hệ thống sẽ kiểm tra và cập nhật hạng ngay sau mỗi đơn hàng hoàn thành — bạn không cần thao tác gì thêm!
+                    </div>
+                </div>
+                <!-- FAQ Item 7 -->
+                <div class="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden group">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-gray-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                        <span class="font-bold text-gray-800 dark:text-slate-200">
+                            <i class="fa-solid fa-gift text-pink-500 mr-2"></i>
+                            Hội viên được hưởng ưu đãi gì?
+                        </span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 dark:text-slate-500 group-hover:text-primary transition-colors"></i>
+                    </button>
+                    <div class="hidden px-6 py-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-700">
+                        Mỗi hạng hội viên nhận ưu đãi khác nhau:
+                        <ul class="mt-3 space-y-2">
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-600"></span> <strong class="text-yellow-700">Đồng:</strong> Giảm 3% tổng đơn hàng, freeship nội thành</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-500"></span> <strong class="text-slate-600">Bạc:</strong> Giảm 5% + ưu tiên đặt lịch dịch vụ</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-400"></span> <strong class="text-yellow-600">Vàng:</strong> Giảm 10% + quà sinh nhật thú cưng + tư vấn bác sĩ miễn phí</li>
+                        </ul>
+                        <p class="mt-3 text-sm text-primary font-medium">✨ Đăng nhập và xem hạng hội viên của bạn trong trang <a href="<?php echo URLROOT; ?>/profile" class="underline">Tài khoản</a>.</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Customer Care Info -->
@@ -260,7 +311,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider">Email</p>
-                                <p class="text-lg font-black text-gray-800 dark:text-slate-200">petshop@gmail.com</p>
+                                <p class="text-lg font-black text-gray-800 dark:text-slate-200">nmtvp11223311@gmail.com</p>
                             </div>
                         </div>
                         

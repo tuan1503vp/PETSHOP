@@ -27,3 +27,14 @@ function isLoggedIn() {
         return false;
     }
 }
+
+// Tự động chuyển hướng tài khoản quản lý sang trang quản lý khi truy cập giao diện khách hàng
+function redirectManagement() {
+    if (isLoggedIn() && isset($_SESSION['user_role'])) {
+        $managementRoles = ['admin', 'staff', 'doctor', 'cashier', 'manager'];
+        if (in_array($_SESSION['user_role'], $managementRoles)) {
+            header('Location: ' . URLROOT . '/admin');
+            exit;
+        }
+    }
+}

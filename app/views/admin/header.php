@@ -39,6 +39,16 @@
             }
         }
     </script>
+    <style>
+        /* Ẩn thanh trượt (scrollbar) cho Sidebar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans flex h-screen overflow-hidden">
     <!-- Sidebar -->
@@ -96,7 +106,7 @@
             </div>
             <span class="text-xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">PETSHOP</span>
         </div>
-        <div class="p-4 flex-1 overflow-y-auto">
+        <div class="p-4 flex-1 overflow-y-auto no-scrollbar">
             <ul class="space-y-2">
                 <?php if(!in_array($_SESSION['user_role'], ['doctor', 'cashier', 'manager', 'staff'])): ?>
                 <li>

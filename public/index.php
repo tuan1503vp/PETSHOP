@@ -1,10 +1,24 @@
 <?php
+// Bật hiển thị lỗi để debug trên Host (Tạm thời)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 // Cấu hình Session Cookie tự động hết hạn khi đóng trình duyệt (0)
+// Loại bỏ thiết lập 'domain' cố định để tránh lỗi trên localhost kèm cổng và tự động khớp domain chuẩn.
+$isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+            || ($_SERVER['SERVER_PORT'] ?? 80) == 443 
+            || (strcasecmp($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '', 'https') === 0);
+
+// Xác định domain cho cookie (loại bỏ cổng nếu có, ví dụ localhost:8080 -> localhost)
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$domain = parse_url('http://' . $host, PHP_URL_HOST);
+$cookieDomain = ($domain === 'localhost' || $domain === '127.0.0.1') ? null : $domain;
+
 session_set_cookie_params([
-    'lifetime' => 0, // 0 = Hết hạn khi đóng trình duyệt
+    'lifetime' => 0, 
     'path' => '/',
-    'domain' => $_SERVER['HTTP_HOST'],
-    'secure' => isset($_SERVER['HTTPS']),
+    'domain' => $cookieDomain,
+    'secure' => $isSecure,
     'httponly' => true,
     'samesite' => 'Lax'
 ]);

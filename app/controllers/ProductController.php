@@ -4,6 +4,7 @@ class ProductController extends Controller {
     private $reviewModel;
 
     public function __construct() {
+        redirectManagement();
         $this->productModel = $this->model('Product');
         $this->reviewModel = $this->model('Review');
     }
@@ -77,6 +78,7 @@ class ProductController extends Controller {
                 flash('review_error', 'Đã có lỗi xảy ra, vui lòng thử lại!', 'error');
             }
         }
-        redirect('/product/show/' . $product_id);
+        header('Location: ' . URLROOT . '/product/show/' . $product_id);
+        exit();
     }
 }

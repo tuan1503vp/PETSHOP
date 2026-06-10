@@ -7,7 +7,7 @@ class Review {
     }
 
     public function getReviewsByProductId($product_id) {
-        $this->db->query("SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.product_id = :product_id ORDER BY r.created_at DESC");
+        $this->db->query("SELECT r.*, u.fullname as user_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.product_id = :product_id ORDER BY r.created_at DESC");
         $this->db->bind(':product_id', $product_id);
         return $this->db->resultSet();
     }

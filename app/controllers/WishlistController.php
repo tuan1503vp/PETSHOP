@@ -3,6 +3,7 @@ class WishlistController extends Controller {
     private $productModel;
 
     public function __construct() {
+        redirectManagement();
         $this->productModel = $this->model('Product');
         if(!isset($_SESSION['wishlist'])) {
             $_SESSION['wishlist'] = [];

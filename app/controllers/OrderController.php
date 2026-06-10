@@ -178,7 +178,7 @@ class OrderController extends Controller {
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
 
             $order = $this->orderModel->getOrderById($order_id);
             if (!$order || $order->customer_id != $_SESSION['user_id'] || $order->status != 'cancelled' || $order->payment_method != 'transfer') {
