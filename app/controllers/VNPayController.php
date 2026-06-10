@@ -29,6 +29,52 @@ class VNPayController extends Controller {
         $this->orderModel = $this->model('Order');
     }
 
+    // ─────────────────────────────────────────────────────────
+    // HELPER: Build chuỗi hash đúng chuẩn VNPay
+    // Chỉ lấy tham số bắt đầu bằng "vnp_", loại bỏ SecureHash,
+    // sort alphabet, rồi join theo urlencode($key)=urlencode($value)
+    // ─────────────────────────────────────────────────────────
+    private function buildHashData(array $data): string {
+        // 1. Chỉ giữ tham số vnp_* (tránh bị ô nhiễm bởi tham số router như url=vnpay/return)
+        $filtered = [];
+        foreach ($data as $key => $value) {
+            if (substr($key, 0, 4) === 'vnp_') {
+                $filtered[$key] = $value;
+            }
+        }
+
+        // 2. Loại bỏ SecureHash và SecureHashType
+        unset($filtered['vnp_SecureHash'], $filtered['vnp_SecureHashType']);
+
+        // 3. Sắp xếp theo alphabet (bắt buộc của VNPay)
+        ksort($filtered);
+
+        // 4. Build chuỗi theo đúng cách của VNPay: urlencode(key)=urlencode(value)&...
+        $hashParts = [];
+        foreach ($filtered as $key => $value) {
+            $hashParts[] = urlencode($key) . '=' . urlencode($value);
+        }
+
+        return implode('&', $hashParts);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // HELPER: Tạo chữ ký HMAC-SHA512
+    // ─────────────────────────────────────────────────────────
+    private function generateHmac(string $data): string {
+        return hash_hmac('sha512', $data, self::VNP_HASHSECRET);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // HELPER: Xác minh chữ ký từ VNPay trả về
+    // ─────────────────────────────────────────────────────────
+    private function verifyHash(array $vnpParams): bool {
+        $receivedHash = $vnpParams['vnp_SecureHash'] ?? '';
+        $hashData     = $this->buildHashData($vnpParams);
+        $computedHash = $this->generateHmac($hashData);
+        return hash_equals($computedHash, $receivedHash);
+    }
+
     /**
      * Bước 1: Nhận dữ liệu form checkout → tạo đơn hàng "pending" → chuyển hướng sang VNPay
      */
@@ -38,19 +84,18 @@ class VNPayController extends Controller {
             return;
         }
 
-        // ── Validate giỏ hàng ──────────────────────────────
         if (empty($_SESSION['cart'])) {
             header('Location: ' . URLROOT . '/product');
             return;
         }
 
-        // ── Tính tổng tiền ─────────────────────────────────
+        // Tính tổng tiền
         $total_amount = 0;
         foreach ($_SESSION['cart'] as $item) {
             $total_amount += $item['price'] * $item['quantity'];
         }
 
-        // ── Tạo đơn hàng với payment_method = 'vnpay' ─────
+        // Tạo đơn hàng với status = 'pending'
         $orderData = [
             'customer_id'      => $_SESSION['user_id'],
             'total_amount'     => $total_amount,
@@ -58,7 +103,7 @@ class VNPayController extends Controller {
             'shipping_name'    => trim($_POST['fullname'] ?? ''),
             'shipping_phone'   => trim($_POST['phone'] ?? ''),
             'shipping_address' => trim($_POST['address'] ?? ''),
-            'status'           => 'pending',  // chờ VNPay xác nhận
+            'status'           => 'pending',
             'order_type'       => 'online',
         ];
 
@@ -67,20 +112,19 @@ class VNPayController extends Controller {
             die('Có lỗi khi tạo đơn hàng. Vui lòng thử lại.');
         }
 
-        // ── Lưu chi tiết sản phẩm vào đơn hàng ────────────
+        // Lưu chi tiết sản phẩm
         foreach ($_SESSION['cart'] as $item) {
             $this->orderModel->addOrderItem($order_id, $item['id'], $item['quantity'], $item['price']);
         }
 
-        // ── Lưu order_id vào session để xác minh khi VNPay return ──
+        // Lưu order_id vào session
         $_SESSION['vnpay_order_id'] = $order_id;
 
-        // ── Build tham số VNPay ────────────────────────────
-        $vnp_TxnRef    = $order_id . '_' . time();   // mã giao dịch duy nhất
-        $vnp_OrderInfo = 'PETSHOP Thanh toan don hang #' . str_pad($order_id, 6, '0', STR_PAD_LEFT);
-        $vnp_ReturnUrl = URLROOT . '/vnpay/return';
-        $vnp_IpnUrl    = URLROOT . '/vnpay/ipn';
-        $vnp_Amount    = $total_amount * 100; // VNPay tính theo đơn vị 1/100 đồng
+        // Build tham số gửi sang VNPay
+        // Lưu ý: vnp_OrderInfo KHÔNG dùng ký tự đặc biệt (#, &, =, ...)
+        $vnp_TxnRef    = $order_id . '_' . time();
+        $vnp_OrderInfo = 'PETSHOP don hang ' . str_pad($order_id, 6, '0', STR_PAD_LEFT);
+        $vnp_Amount    = (int)($total_amount * 100); // VNPay tính x100
         $vnp_IpAddr    = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
         $inputData = [
@@ -94,26 +138,32 @@ class VNPayController extends Controller {
             'vnp_Locale'     => self::VNP_LOCALE,
             'vnp_OrderInfo'  => $vnp_OrderInfo,
             'vnp_OrderType'  => 'other',
-            'vnp_ReturnUrl'  => $vnp_ReturnUrl,
+            'vnp_ReturnUrl'  => URLROOT . '/vnpay/return',
             'vnp_TxnRef'     => $vnp_TxnRef,
             'vnp_ExpireDate' => date('YmdHis', strtotime('+15 minutes')),
         ];
 
-        // Sắp xếp theo thứ tự alphabet (bắt buộc của VNPay)
+        // Build hash string đúng chuẩn VNPay rồi tạo SecureHash
         ksort($inputData);
+        $hashParts = [];
+        foreach ($inputData as $key => $value) {
+            $hashParts[] = urlencode($key) . '=' . urlencode($value);
+        }
+        $hashData   = implode('&', $hashParts);
+        $secureHash = $this->generateHmac($hashData);
 
-        // Build query string và tạo chữ ký HMAC-SHA512
-        $query     = http_build_query($inputData, '', '&');
-        $hmac      = hash_hmac('sha512', $query, self::VNP_HASHSECRET);
-        $paymentUrl = self::VNP_URL . '?' . $query . '&vnp_SecureHash=' . $hmac;
+        // Build URL thanh toán
+        $paymentUrl = self::VNP_URL . '?' . http_build_query($inputData, '', '&') . '&vnp_SecureHash=' . $secureHash;
 
-        // ── Chuyển hướng sang trang thanh toán VNPay ───────
         header('Location: ' . $paymentUrl);
         exit;
     }
 
     /**
      * Bước 2: VNPay redirect về sau khi người dùng hoàn thành / huỷ thanh toán
+     *
+     * QUAN TRỌNG: $_GET có thể chứa tham số "url" từ router .htaccess (url=vnpay/return)
+     * → phải lọc chỉ lấy tham số bắt đầu bằng "vnp_" trước khi tính hash
      */
     public function return() {
         if (!isLoggedIn()) {
@@ -121,33 +171,26 @@ class VNPayController extends Controller {
             return;
         }
 
-        $vnpData       = $_GET;
-        $vnp_SecureHash = $vnpData['vnp_SecureHash'] ?? '';
-        unset($vnpData['vnp_SecureHash'], $vnpData['vnp_SecureHashType']);
-
-        ksort($vnpData);
-        $query    = http_build_query($vnpData, '', '&');
-        $hashCheck = hash_hmac('sha512', $query, self::VNP_HASHSECRET);
-
-        $isValid    = hash_equals($hashCheck, $vnp_SecureHash);
-        $isSuccess  = ($vnpData['vnp_ResponseCode'] ?? '') === '00';
+        // Xác minh chữ ký (tự động lọc tham số vnp_* bên trong verifyHash)
+        $isValid   = $this->verifyHash($_GET);
+        $isSuccess = (($_GET['vnp_ResponseCode'] ?? '') === '00');
 
         // Tách order_id từ vnp_TxnRef (format: orderId_timestamp)
-        $txnRef  = $vnpData['vnp_TxnRef'] ?? '';
+        $txnRef   = $_GET['vnp_TxnRef'] ?? '';
         $order_id = (int) explode('_', $txnRef)[0];
 
         if ($isValid && $isSuccess && $order_id) {
-            // ── Cập nhật đơn hàng thành "completed" ─────────
+            // Cập nhật đơn hàng thành completed
             $this->orderModel->updateStatus($order_id, 'completed');
 
-            // ── Xoá giỏ hàng ─────────────────────────────────
+            // Xoá giỏ hàng
             unset($_SESSION['cart'], $_SESSION['vnpay_order_id']);
 
-            // ── Cập nhật hạng thành viên ──────────────────────
+            // Cập nhật hạng thành viên
             $userModel = $this->model('User');
             $userModel->updateMembershipTier($_SESSION['user_id']);
 
-            // ── Gửi email xác nhận ────────────────────────────
+            // Gửi email xác nhận
             try {
                 $mailer = new Mailer();
                 $order  = $this->orderModel->getOrderById($order_id);
@@ -163,11 +206,13 @@ class VNPayController extends Controller {
             }
 
             header('Location: ' . URLROOT . '/order/success/' . $order_id);
+            exit;
+
         } else {
-            // Thanh toán thất bại / bị huỷ → hiển thị trang thất bại
-            $responseCode = $vnpData['vnp_ResponseCode'] ?? 'XX';
+            // Thanh toán thất bại / bị huỷ
+            $responseCode = $_GET['vnp_ResponseCode'] ?? 'XX';
             $data = [
-                'order_id'      => $order_id,
+                'order_id'      => $order_id ?: null,
                 'response_code' => $responseCode,
                 'message'       => $this->getVNPayMessage($responseCode),
             ];
@@ -176,26 +221,20 @@ class VNPayController extends Controller {
     }
 
     /**
-     * Bước 3 (tuỳ chọn): IPN – VNPay gọi server-to-server để xác nhận
-     * Đây là bước quan trọng trong môi trường production
+     * Bước 3: IPN – VNPay gọi server-to-server để xác nhận giao dịch
+     * Cần khai báo URL này trên Merchant Admin VNPay
      */
     public function ipn() {
         header('Content-Type: application/json');
 
-        $vnpData        = $_GET;
-        $vnp_SecureHash = $vnpData['vnp_SecureHash'] ?? '';
-        unset($vnpData['vnp_SecureHash'], $vnpData['vnp_SecureHashType']);
+        $isValid  = $this->verifyHash($_GET);
 
-        ksort($vnpData);
-        $query     = http_build_query($vnpData, '', '&');
-        $hashCheck = hash_hmac('sha512', $query, self::VNP_HASHSECRET);
-
-        if (!hash_equals($hashCheck, $vnp_SecureHash)) {
+        if (!$isValid) {
             echo json_encode(['RspCode' => '97', 'Message' => 'Invalid Checksum']);
             return;
         }
 
-        $txnRef   = $vnpData['vnp_TxnRef'] ?? '';
+        $txnRef   = $_GET['vnp_TxnRef'] ?? '';
         $order_id = (int) explode('_', $txnRef)[0];
         $order    = $this->orderModel->getOrderById($order_id);
 
@@ -209,22 +248,23 @@ class VNPayController extends Controller {
             return;
         }
 
-        if (($vnpData['vnp_ResponseCode'] ?? '') === '00') {
+        $responseCode = $_GET['vnp_ResponseCode'] ?? '';
+        if ($responseCode === '00') {
             $this->orderModel->updateStatus($order_id, 'completed');
-            echo json_encode(['RspCode' => '00', 'Message' => 'Confirm Success']);
         } else {
             $this->orderModel->updateStatus($order_id, 'cancelled');
-            echo json_encode(['RspCode' => '00', 'Message' => 'Confirm Success']);
         }
+
+        echo json_encode(['RspCode' => '00', 'Message' => 'Confirm Success']);
     }
 
     /**
      * Trả về thông điệp lỗi theo mã VNPay
      */
-    private function getVNPayMessage($code) {
+    private function getVNPayMessage(string $code): string {
         $messages = [
             '00' => 'Giao dịch thành công',
-            '07' => 'Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).',
+            '07' => 'Trừ tiền thành công nhưng giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).',
             '09' => 'Thẻ/Tài khoản chưa đăng ký dịch vụ InternetBanking.',
             '10' => 'Xác thực thông tin thẻ/tài khoản không đúng quá 3 lần.',
             '11' => 'Đã hết hạn chờ thanh toán. Vui lòng thực hiện lại giao dịch.',
@@ -237,6 +277,6 @@ class VNPayController extends Controller {
             '79' => 'Nhập sai mật khẩu thanh toán quá số lần quy định.',
             '99' => 'Lỗi không xác định. Vui lòng thử lại hoặc liên hệ hỗ trợ.',
         ];
-        return $messages[$code] ?? ('Giao dịch thất bại (Mã lỗi: ' . $code . ').');
+        return $messages[$code] ?? 'Giao dịch thất bại (Mã lỗi: ' . $code . ').';
     }
 }
