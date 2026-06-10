@@ -67,6 +67,8 @@
                                 $pmLabel = 'Tiền mặt';
                                 if($pm == 'card') $pmLabel = 'Thẻ';
                                 if($pm == 'transfer') $pmLabel = 'Chuyển khoản';
+                                if($pm == 'vnpay') $pmLabel = 'VNPay';
+                                if($pm == 'cod') $pmLabel = 'COD';
                             ?>
                             <span class="text-sm text-gray-600 font-bold"><?php echo $pmLabel; ?></span>
                         </td>

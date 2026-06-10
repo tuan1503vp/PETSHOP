@@ -179,6 +179,18 @@ class VNPayController extends Controller {
         $txnRef   = $_GET['vnp_TxnRef'] ?? '';
         $order_id = (int) explode('_', $txnRef)[0];
 
+        // Ghi log debug tìm lỗi hash
+        $receivedHash = $_GET['vnp_SecureHash'] ?? '';
+        $hashData     = $this->buildHashData($_GET);
+        $computedHash = $this->generateHmac($hashData);
+        $logMsg = date('Y-m-d H:i:s') . " - return() - Order ID: " . $order_id . " (TxnRef: " . $txnRef . ")\n"
+                . "Is Valid: " . ($isValid ? 'TRUE' : 'FALSE') . " | Is Success: " . ($isSuccess ? 'TRUE' : 'FALSE') . "\n"
+                . "Received Hash: " . $receivedHash . "\n"
+                . "Computed Hash: " . $computedHash . "\n"
+                . "Hash Data: " . $hashData . "\n"
+                . "GET Params: " . json_encode($_GET, JSON_UNESCAPED_UNICODE) . "\n\n";
+        file_put_contents(dirname(APPROOT) . '/vnpay_debug.log', $logMsg, FILE_APPEND);
+
         if ($isValid && $isSuccess && $order_id) {
             // Thanh toán thành công → chuyển sang 'shipping' (đã thanh toán, đang chuẩn bị giao hàng)
             // Admin sẽ chuyển sang 'completed' khi giao hàng xong và xác nhận
@@ -229,6 +241,20 @@ class VNPayController extends Controller {
         header('Content-Type: application/json');
 
         $isValid  = $this->verifyHash($_GET);
+
+        // Ghi log debug tìm lỗi IPN
+        $txnRef   = $_GET['vnp_TxnRef'] ?? '';
+        $order_id = (int) explode('_', $txnRef)[0];
+        $receivedHash = $_GET['vnp_SecureHash'] ?? '';
+        $hashData     = $this->buildHashData($_GET);
+        $computedHash = $this->generateHmac($hashData);
+        $logMsg = date('Y-m-d H:i:s') . " - ipn() - Order ID: " . $order_id . " (TxnRef: " . $txnRef . ")\n"
+                . "Is Valid: " . ($isValid ? 'TRUE' : 'FALSE') . "\n"
+                . "Received Hash: " . $receivedHash . "\n"
+                . "Computed Hash: " . $computedHash . "\n"
+                . "Hash Data: " . $hashData . "\n"
+                . "GET Params: " . json_encode($_GET, JSON_UNESCAPED_UNICODE) . "\n\n";
+        file_put_contents(dirname(APPROOT) . '/vnpay_debug.log', $logMsg, FILE_APPEND);
 
         if (!$isValid) {
             echo json_encode(['RspCode' => '97', 'Message' => 'Invalid Checksum']);

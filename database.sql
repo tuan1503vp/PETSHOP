@@ -67,7 +67,7 @@ CREATE TABLE `orders` (
   `customer_id` INT, -- Có thể NULL nếu khách vãng lai mua tại POS
   `total_amount` DECIMAL(10,2) NOT NULL,
   `status` ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending',
-  `payment_method` ENUM('cash', 'card', 'transfer', 'cod') DEFAULT 'cash',
+  `payment_method` ENUM('cash', 'card', 'transfer', 'cod', 'vnpay') DEFAULT 'cash',
   `order_type` ENUM('online', 'pos') NOT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`customer_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
