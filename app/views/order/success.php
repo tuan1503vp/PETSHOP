@@ -10,15 +10,16 @@ define('BANK_BRANCH',  'PGD Yên Mỹ');
 // ================================
 
 $orderModel = new Order();
-$order = $orderModel->getOrderById($data['order_id']);
+$order      = $orderModel->getOrderById($data['order_id']);
 $isTransfer = ($order && $order->payment_method === 'transfer');
-$isPaid     = ($order && $order->status === 'completed');
+$isVNPay    = ($order && $order->payment_method === 'vnpay');
+$isPaid     = ($order && in_array($order->status, ['completed', 'shipping']));
 $orderId    = $data['order_id'];
 $paddedId   = str_pad($orderId, 6, '0', STR_PAD_LEFT);
 $transfer_content = 'PETSHOP ' . $paddedId;
 
 $qr_url = '';
-if ($order) {
+if ($order && $isTransfer) {
     $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-compact2.jpg'
             . '?amount=' . urlencode($order->total_amount)
             . '&addInfo=' . urlencode($transfer_content)
@@ -289,6 +290,49 @@ async function uploadReceipt(input) {
     <div class="p-8 text-center">
         <p class="text-gray-400 dark:text-slate-500 text-sm mb-1">Mã đơn hàng</p>
         <p class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-6">#<?php echo $paddedId; ?></p>
+        <div class="space-y-3">
+            <a href="<?php echo URLROOT; ?>/order/history"
+               class="w-full inline-flex justify-center items-center gap-2 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-primary to-indigo-600 text-white font-black shadow-lg hover:-translate-y-0.5 transition-all">
+                <i class="fa-solid fa-list-check"></i> Xem lịch sử đơn hàng
+            </a>
+            <a href="<?php echo URLROOT; ?>/product"
+               class="w-full inline-flex justify-center items-center gap-2 px-4 py-3.5 border border-gray-200 dark:border-slate-700 rounded-2xl text-gray-700 dark:text-slate-200 font-bold hover:bg-gray-50 dark:hover:bg-slate-700 transition">
+                <i class="fa-solid fa-cart-shopping"></i> Tiếp tục mua sắm
+            </a>
+        </div>
+    </div>
+</div>
+
+<?php elseif($isVNPay && $isPaid): ?>
+<!-- ==================== VNPAY – ĐÃ THANH TOÁN ==================== -->
+<div class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center text-white relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div class="relative z-10">
+            <div class="text-5xl mb-3 animate-bounce">🎉</div>
+            <div class="mx-auto w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 border-2 border-white/30">
+                <i class="fa-solid fa-circle-check text-4xl"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-1">Thanh Toán VNPay Thành Công!</h2>
+            <p class="text-blue-100 text-sm">Đơn hàng đã được xác nhận tự động</p>
+        </div>
+    </div>
+    <div class="p-8 text-center">
+        <p class="text-gray-400 dark:text-slate-500 text-sm mb-1">Mã đơn hàng</p>
+        <p class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-4">#<?php echo $paddedId; ?></p>
+
+        <!-- VNPay badge -->
+        <div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-full px-4 py-2 text-xs font-bold mb-5">
+            <img src="https://vnpay.vn/s1/statics/img/logo-new.35c5b5c.svg" alt="VNPay" class="h-4 object-contain">
+            Đã xác nhận qua VNPay
+        </div>
+
+        <div class="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm text-gray-500 dark:text-slate-400 text-left space-y-2 mb-6">
+            <div class="flex items-center gap-2"><i class="fa-solid fa-bolt text-blue-500 w-4"></i><span>Thanh toán <strong class="text-gray-800 dark:text-slate-200">tức thì qua VNPay</strong></span></div>
+            <div class="flex items-center gap-2"><i class="fa-solid fa-truck text-primary w-4"></i><span>Giao hàng dự kiến <strong class="text-gray-800 dark:text-slate-200">2–4 ngày</strong></span></div>
+            <div class="flex items-center gap-2"><i class="fa-solid fa-envelope text-green-500 w-4"></i><span>Email xác nhận đã được gửi</span></div>
+        </div>
+
         <div class="space-y-3">
             <a href="<?php echo URLROOT; ?>/order/history"
                class="w-full inline-flex justify-center items-center gap-2 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-primary to-indigo-600 text-white font-black shadow-lg hover:-translate-y-0.5 transition-all">

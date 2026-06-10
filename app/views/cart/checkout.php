@@ -15,202 +15,415 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
         . '&accountName=' . urlencode(BANK_OWNER);
 ?>
 
-<div class="bg-gradient-to-br from-indigo-50/50 via-white to-pink-50/30 min-h-screen py-12">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+.checkout-wrap { font-family: 'Inter', sans-serif; }
+
+/* Payment cards */
+.pay-card { transition: all .22s cubic-bezier(.4,0,.2,1); cursor: pointer; }
+.pay-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+.pay-card.active { border-color: #6366f1 !important; background: #f5f3ff; box-shadow: 0 0 0 3px rgba(99,102,241,.18), 0 8px 24px rgba(99,102,241,.12); }
+
+/* QR glow */
+@keyframes qrGlow { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.35)}50%{box-shadow:0 0 0 10px rgba(34,197,94,0)} }
+.qr-glow { animation: qrGlow 2.2s infinite; }
+
+/* VNPay gradient */
+.vnpay-btn { background: linear-gradient(135deg,#0066cc,#004499); }
+.vnpay-btn:hover { background: linear-gradient(135deg,#0055bb,#003388); }
+
+/* Panel slide */
+.panel-enter { animation: panelIn .3s ease; }
+@keyframes panelIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
+
+.order-summary { position: sticky; top: 88px; }
+.badge-bank { border: 1px solid #d1fae5; }
+</style>
+
+<div class="checkout-wrap bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/10 min-h-screen py-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-8 flex items-center gap-3">
-            <i class="fa-solid fa-bag-shopping text-primary"></i> Thanh Toán Đơn Hàng
-        </h1>
+
+        <!-- BREADCRUMB -->
+        <nav class="flex items-center gap-2 text-xs text-gray-400 mb-6">
+            <a href="<?php echo URLROOT; ?>" class="hover:text-primary transition">Trang chủ</a>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            <a href="<?php echo URLROOT; ?>/cart" class="hover:text-primary transition">Giỏ hàng</a>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            <span class="text-gray-600 font-semibold">Thanh toán</span>
+        </nav>
+
+        <!-- STEPS -->
+        <div class="flex items-center gap-0 max-w-xs mb-8">
+            <div class="flex flex-col items-center gap-1 flex-1">
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-black shadow-md shadow-primary/30 z-10">
+                    <i class="fa-solid fa-check text-[11px]"></i>
+                </div>
+                <span class="text-[10px] font-bold text-primary">Giỏ hàng</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-primary mb-4" style="margin:0 -4px;z-index:0"></div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-black shadow-md shadow-primary/30 z-10">2</div>
+                <span class="text-[10px] font-bold text-primary">Thanh toán</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-gray-200 mb-4" style="margin:0 -4px;z-index:0"></div>
+            <div class="flex flex-col items-center gap-1 flex-1">
+                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-black z-10">3</div>
+                <span class="text-[10px] font-bold text-gray-400">Xác nhận</span>
+            </div>
+        </div>
 
         <div class="lg:grid lg:grid-cols-12 lg:gap-x-10 lg:items-start">
-            <!-- Left: Form -->
-            <div class="lg:col-span-7">
-                <form action="<?php echo URLROOT; ?>/order/process" method="POST" id="checkoutForm">
 
-                    <!-- Shipping Info -->
-                    <div class="bg-white shadow-sm rounded-2xl border border-gray-100 p-6 mb-6">
-                        <h2 class="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
-                            <i class="fa-solid fa-location-dot text-primary"></i> Thông tin giao hàng
-                        </h2>
-                        <div class="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-4">
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Họ và tên *</label>
-                                <input type="text" id="fullname" name="fullname" value="<?php echo $data['user']->fullname; ?>"
-                                       class="block w-full border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm py-2.5 px-4 border transition" required>
+            <!-- ══════════════════════ FORM LEFT ══════════════════════ -->
+            <div class="lg:col-span-7 space-y-5">
+
+                <!-- ① THÔNG TIN GIAO HÀNG -->
+                <div class="bg-white shadow-sm rounded-3xl border border-gray-100 p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-primary to-indigo-400 rounded-l-3xl"></div>
+                    <h2 class="text-sm font-black text-gray-900 mb-5 pl-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-xl bg-indigo-50 text-primary flex items-center justify-center text-xs"><i class="fa-solid fa-location-dot"></i></span>
+                        Thông tin giao hàng
+                    </h2>
+                    <!-- Shipping fields dùng chung cho tất cả form -->
+                    <div id="shippingFields" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Họ và tên *</label>
+                            <input type="text" id="f_fullname" value="<?php echo htmlspecialchars($data['user']->fullname); ?>"
+                                   class="block w-full border border-gray-200 rounded-2xl text-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition bg-gray-50/50" required>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Số điện thoại *</label>
+                            <input type="text" id="f_phone" value="<?php echo htmlspecialchars($data['user']->phone ?? ''); ?>"
+                                   class="block w-full border border-gray-200 rounded-2xl text-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition bg-gray-50/50" required>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Email</label>
+                            <input type="email" value="<?php echo htmlspecialchars($data['user']->email); ?>"
+                                   class="block w-full border border-gray-100 rounded-2xl text-sm py-3 px-4 bg-gray-50 text-gray-400 cursor-not-allowed" readonly>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Địa chỉ giao hàng *</label>
+                            <textarea id="f_address" rows="3"
+                                      class="block w-full border border-gray-200 rounded-2xl text-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary transition bg-gray-50/50 resize-none"
+                                      placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."><?php echo htmlspecialchars($data['user']->address ?? ''); ?></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ② PHƯƠNG THỨC THANH TOÁN -->
+                <div class="bg-white shadow-sm rounded-3xl border border-gray-100 p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-violet-500 to-purple-400 rounded-l-3xl"></div>
+                    <h2 class="text-sm font-black text-gray-900 mb-5 pl-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-xs"><i class="fa-solid fa-credit-card"></i></span>
+                        Phương thức thanh toán
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5" id="paymentCards">
+
+                        <!-- COD -->
+                        <div class="pay-card active rounded-2xl border-2 border-primary p-4 flex flex-col items-center text-center gap-2" data-method="cod" onclick="selectMethod('cod')">
+                            <div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center">
+                                <i class="fa-solid fa-money-bill-wave text-orange-500 text-xl"></i>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Số điện thoại *</label>
-                                <input type="text" id="phone" name="phone" value="<?php echo $data['user']->phone ?? ''; ?>"
-                                       class="block w-full border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm py-2.5 px-4 border transition" required>
+                                <p class="font-black text-gray-800 text-xs leading-tight">Thanh toán<br>khi nhận hàng</p>
+                                <span class="text-[10px] text-orange-500 font-bold bg-orange-50 px-2 py-0.5 rounded-full mt-1 inline-block">COD</span>
+                            </div>
+                        </div>
+
+                        <!-- CHUYỂN KHOẢN -->
+                        <div class="pay-card rounded-2xl border-2 border-gray-200 p-4 flex flex-col items-center text-center gap-2" data-method="transfer" onclick="selectMethod('transfer')">
+                            <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
+                                <i class="fa-solid fa-building-columns text-green-600 text-xl"></i>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                                <input type="email" value="<?php echo $data['user']->email; ?>"
-                                       class="block w-full border-gray-200 rounded-xl text-sm py-2.5 px-4 border bg-gray-50 text-gray-400 cursor-not-allowed" readonly>
+                                <p class="font-black text-gray-800 text-xs leading-tight">Chuyển khoản<br>VietQR</p>
+                                <span class="text-[10px] text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full mt-1 inline-block border border-green-200">Tự động</span>
                             </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Địa chỉ giao hàng *</label>
-                                <textarea name="address" rows="3"
-                                          class="block w-full border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm py-2.5 px-4 border transition"
-                                          required placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."><?php echo $data['user']->address ?? ''; ?></textarea>
+                        </div>
+
+                        <!-- VNPAY -->
+                        <div class="pay-card rounded-2xl border-2 border-gray-200 p-4 flex flex-col items-center text-center gap-2" data-method="vnpay" onclick="selectMethod('vnpay')">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center overflow-hidden">
+                                <img src="https://vnpay.vn/s1/statics/img/logo-new.35c5b5c.svg" alt="VNPay" class="h-7 object-contain">
+                            </div>
+                            <div>
+                                <p class="font-black text-gray-800 text-xs leading-tight">Thanh toán<br>trực tuyến</p>
+                                <span class="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full mt-1 inline-block border border-blue-200">VNPay</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Payment Method -->
-                    <div class="bg-white shadow-sm rounded-2xl border border-gray-100 p-6">
-                        <h2 class="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
-                            <i class="fa-solid fa-credit-card text-primary"></i> Phương thức thanh toán
-                        </h2>
-
-                        <div class="space-y-3" id="paymentOptions">
-                            <!-- COD -->
-                            <label for="payment_cod" id="label_cod"
-                                   class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all border-primary bg-primary/5">
-                                <input id="payment_cod" name="payment_method" type="radio" value="cod" checked
-                                       class="h-4 w-4 text-primary border-gray-300 focus:ring-primary">
-                                <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
-                                    <i class="fa-solid fa-money-bill-wave text-orange-500"></i>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-gray-800 text-sm">Thanh toán khi nhận hàng (COD)</p>
-                                    <p class="text-xs text-gray-500">Trả tiền mặt khi nhận hàng tại nhà</p>
-                                </div>
-                            </label>
-
-                            <!-- Bank Transfer -->
-                            <label for="payment_transfer" id="label_transfer"
-                                   class="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all border-gray-200 hover:border-gray-300">
-                                <input id="payment_transfer" name="payment_method" type="radio" value="transfer"
-                                       class="h-4 w-4 text-primary border-gray-300 focus:ring-primary">
-                                <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-                                    <i class="fa-solid fa-building-columns text-green-600"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <p class="font-bold text-gray-800 text-sm">Chuyển khoản ngân hàng</p>
-                                    <p class="text-xs text-gray-500">Quét mã VietQR — xác nhận tự động</p>
-                                </div>
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Vietcombank_logo.svg/200px-Vietcombank_logo.svg.png"
-                                     class="h-6 object-contain opacity-80" alt="VCB">
-                            </label>
+                    <!-- ── Panel: COD ── -->
+                    <div id="panel_cod" class="panel-enter rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-info text-orange-400 mt-0.5 flex-shrink-0"></i>
+                            <div class="text-sm text-orange-800 space-y-1">
+                                <p class="font-bold">Thanh toán tiền mặt khi nhận hàng (COD)</p>
+                                <ul class="text-xs text-orange-600 space-y-0.5 list-disc list-inside">
+                                    <li>Giao hàng dự kiến <strong>2–4 ngày làm việc</strong></li>
+                                    <li>Nhân viên giao hàng sẽ gọi điện xác nhận trước</li>
+                                    <li>Thanh toán tiền mặt trực tiếp khi nhận hàng</li>
+                                    <li>Phí ship: <strong>Miễn phí</strong></li>
+                                </ul>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Bank Transfer Panel -->
-                        <div id="bank_transfer_panel" class="hidden mt-5 rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
-                            <div class="p-5">
-                                <div class="flex flex-col sm:flex-row gap-6 items-center">
-
-                                    <!-- QR -->
-                                    <div class="flex-shrink-0 text-center">
-                                        <div class="bg-white p-3 rounded-2xl shadow-md inline-block border border-green-200">
-                                            <img src="<?php echo $qr_url; ?>"
-                                                 alt="QR VietQR"
-                                                 class="w-44 h-44 rounded-xl object-cover"
-                                                 onerror="this.src='https://placehold.co/176x176?text=QR+Code'">
-                                        </div>
-                                        <p class="text-xs text-green-700 font-bold mt-2">📱 Quét bằng app ngân hàng</p>
+                    <!-- ── Panel: Chuyển khoản ── -->
+                    <div id="panel_transfer" class="hidden panel-enter rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
+                        <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-2.5 flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+                            <span class="text-xs font-bold text-white">Thanh toán an toàn qua VietQR</span>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex flex-col sm:flex-row gap-5 items-start">
+                                <div class="flex-shrink-0 text-center mx-auto sm:mx-0">
+                                    <div class="bg-white p-3 rounded-2xl shadow-lg inline-block border border-green-200 qr-glow">
+                                        <img src="<?php echo $qr_url; ?>" alt="QR VietQR" class="w-40 h-40 rounded-xl object-cover"
+                                             onerror="this.src='https://placehold.co/160x160?text=QR'">
                                     </div>
-
-                                    <!-- Bank Info -->
-                                    <div class="flex-1 w-full space-y-2.5">
-                                        <p class="text-xs font-black text-green-700 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-circle-check"></i> Thông tin chuyển khoản
-                                        </p>
-
-                                        <?php
-                                        $bankFields = [
-                                            ['label' => 'Ngân hàng',         'value' => BANK_NAME,       'copy' => false],
-                                            ['label' => 'Chủ tài khoản',     'value' => BANK_OWNER,      'copy' => false],
-                                            ['label' => 'Số tài khoản',      'value' => BANK_ACCOUNT,    'copy' => true],
-                                            ['label' => 'Số tiền (đ)',        'value' => number_format($data['total'], 0, ',', '.') . 'đ', 'rawValue' => $data['total'], 'copy' => true],
-                                            ['label' => 'Nội dung CK',       'value' => $transfer_content, 'copy' => true, 'highlight' => true],
-                                        ];
-                                        foreach($bankFields as $f):
-                                        ?>
-                                        <div class="flex items-center justify-between bg-white rounded-xl px-4 py-2.5 border <?php echo !empty($f['highlight']) ? 'border-green-300 bg-green-50' : 'border-gray-100'; ?>">
-                                            <div>
-                                                <p class="text-[10px] text-gray-400 font-bold uppercase"><?php echo $f['label']; ?></p>
-                                                <p class="text-sm font-black <?php echo !empty($f['highlight']) ? 'text-green-700' : 'text-gray-800'; ?>"><?php echo $f['value']; ?></p>
-                                            </div>
-                                            <?php if($f['copy']): ?>
-                                            <button type="button"
-                                                    onclick="copyText('<?php echo !empty($f['rawValue']) ? $f['rawValue'] : $f['value']; ?>')"
-                                                    class="text-green-600 hover:text-green-800 transition text-xs font-bold flex items-center gap-1 ml-2 flex-shrink-0">
-                                                <i class="fa-regular fa-copy"></i> Copy
-                                            </button>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?php endforeach; ?>
-                                    </div>
+                                    <p class="text-xs text-green-700 font-bold mt-2">📱 Quét bằng app ngân hàng</p>
                                 </div>
-
-                                <!-- Note -->
-                                <div class="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex gap-3 items-start">
-                                    <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 flex-shrink-0"></i>
-                                    <p class="text-xs text-amber-700 leading-relaxed">
-                                        Nhập đúng <strong>nội dung chuyển khoản</strong> để đơn hàng được xác nhận tự động.
-                                        Sau khi chuyển, trang đặt hàng sẽ tự động cập nhật khi chúng tôi xác nhận giao dịch.
-                                    </p>
+                                <div class="flex-1 w-full space-y-2">
+                                    <p class="text-[10px] font-black text-green-700 uppercase tracking-widest mb-2"><i class="fa-solid fa-circle-check mr-1"></i> Thông tin chuyển khoản</p>
+                                    <?php
+                                    $bankFields = [
+                                        ['Ngân hàng',     BANK_NAME,    false, false, null],
+                                        ['Chủ tài khoản', BANK_OWNER,   false, false, null],
+                                        ['Số tài khoản',  BANK_ACCOUNT, true,  false, null],
+                                        ['Số tiền',       number_format($data['total'],0,',','.').'đ', true, false, (int)$data['total']],
+                                        ['Nội dung CK',   $transfer_content, true, true, null],
+                                    ];
+                                    foreach($bankFields as [$label,$val,$canCopy,$hl,$rawVal]):
+                                        $cv = ($rawVal !== null) ? $rawVal : $val;
+                                    ?>
+                                    <div class="flex items-center justify-between bg-white rounded-xl px-3 py-2.5 border <?php echo $hl?'border-green-300':'border-gray-100'; ?>">
+                                        <div>
+                                            <p class="text-[10px] text-gray-400 font-bold uppercase"><?php echo $label; ?></p>
+                                            <p class="text-sm font-black <?php echo $hl?'text-green-700':'text-gray-800'; ?>"><?php echo $val; ?></p>
+                                        </div>
+                                        <?php if($canCopy): ?>
+                                        <button type="button" onclick="copyText('<?php echo htmlspecialchars($cv,ENT_QUOTES); ?>')"
+                                                class="ml-2 flex-shrink-0 text-xs font-bold text-green-600 hover:text-green-800 flex items-center gap-1 transition px-2 py-1 rounded-lg hover:bg-green-50">
+                                            <i class="fa-regular fa-copy"></i> Copy
+                                        </button>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php endforeach; ?>
+                                    <div class="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 flex gap-2 items-start">
+                                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 flex-shrink-0 text-xs"></i>
+                                        <p class="text-xs text-amber-700 leading-relaxed">Nhập đúng <strong>nội dung chuyển khoản</strong> để được xác nhận tự động trong 5–15 phút.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Submit -->
-                        <div class="mt-6">
-                            <button type="submit"
-                                    class="w-full bg-gradient-to-r from-primary to-indigo-600 rounded-2xl shadow-lg shadow-primary/20 py-4 px-4 text-base font-black text-white hover:shadow-primary/40 hover:-translate-y-0.5 focus:outline-none transition-all duration-300 flex items-center justify-center gap-3">
-                                <i class="fa-solid fa-bag-shopping"></i>
-                                <span id="submitText">Đặt Hàng Ngay</span>
-                            </button>
+                    <!-- ── Panel: VNPay ── -->
+                    <div id="panel_vnpay" class="hidden panel-enter rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
+                        <!-- Top bar -->
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-white">
+                                <i class="fa-solid fa-shield-halved text-sm"></i>
+                                <span class="text-xs font-bold">Cổng thanh toán VNPay</span>
+                            </div>
+                            <span class="text-[10px] text-blue-100 font-medium">Bảo mật SSL</span>
+                        </div>
+                        <div class="p-5">
+                            <!-- Logos các ví/thẻ -->
+                            <p class="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-3">Hỗ trợ hình thức thanh toán</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <?php
+                                $paymentLogos = [
+                                    ['https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png',   'MoMo'],
+                                    ['https://upload.wikimedia.org/wikipedia/vi/9/97/ZaloPay_Logo.png', 'ZaloPay'],
+                                    ['https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Vietcombank_logo.svg/200px-Vietcombank_logo.svg.png', 'VCB'],
+                                    ['https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Techcombank_logo.svg/200px-Techcombank_logo.svg.png', 'TCB'],
+                                    ['https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/200px-Mastercard-logo.svg.png', 'Mastercard'],
+                                    ['https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/200px-Visa_Inc._logo.svg.png', 'Visa'],
+                                ];
+                                foreach($paymentLogos as [$logo, $alt]):
+                                ?>
+                                <div class="bg-white rounded-xl px-3 py-2 border border-blue-100 flex items-center h-10 shadow-sm">
+                                    <img src="<?php echo $logo; ?>" alt="<?php echo $alt; ?>" class="h-5 object-contain max-w-[56px]"
+                                         onerror="this.parentElement.innerHTML='<span class=\'text-[10px] font-bold text-gray-500\'><?php echo $alt; ?></span>'">
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <!-- Steps -->
+                            <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+                                <?php
+                                $steps = [
+                                    ['fa-bag-shopping','Đặt hàng','Xác nhận thông tin'],
+                                    ['fa-arrow-up-right-from-square','Cổng VNPay','Chọn ví / thẻ / ngân hàng'],
+                                    ['fa-circle-check','Hoàn tất','Về trang xác nhận'],
+                                ];
+                                foreach($steps as $i => [$icon,$title,$sub]):
+                                ?>
+                                <div class="bg-white rounded-2xl p-3 border border-blue-100 shadow-sm">
+                                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-2">
+                                        <i class="fa-solid <?php echo $icon; ?> text-sm"></i>
+                                    </div>
+                                    <p class="text-xs font-black text-gray-800"><?php echo $title; ?></p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5"><?php echo $sub; ?></p>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div class="bg-blue-100/50 border border-blue-200 rounded-xl px-4 py-3 flex gap-2 items-start">
+                                <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 flex-shrink-0 text-xs"></i>
+                                <p class="text-xs text-blue-700 leading-relaxed">
+                                    Bạn sẽ được chuyển đến <strong>trang thanh toán bảo mật của VNPay</strong>. 
+                                    Sau khi hoàn tất, hệ thống tự động xác nhận và cập nhật đơn hàng.
+                                </p>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- ③ GHI CHÚ -->
+                <div class="bg-white shadow-sm rounded-3xl border border-gray-100 p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-400 to-orange-400 rounded-l-3xl"></div>
+                    <h2 class="text-sm font-black text-gray-900 mb-3 pl-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xs"><i class="fa-solid fa-note-sticky"></i></span>
+                        Ghi chú <span class="text-xs font-normal text-gray-400">(tuỳ chọn)</span>
+                    </h2>
+                    <textarea id="f_note" rows="2"
+                              class="block w-full border border-gray-200 rounded-2xl text-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-amber-300/40 transition bg-gray-50/50 resize-none"
+                              placeholder="Giao giờ hành chính, gọi trước khi giao..."></textarea>
+                </div>
+
+                <!-- ── HIDDEN FORMS ── -->
+
+                <!-- Form COD -->
+                <form id="form_cod" action="<?php echo URLROOT; ?>/order/process" method="POST" class="hidden">
+                    <input type="hidden" name="payment_method" value="cod">
+                    <input type="hidden" name="fullname"  id="cod_fullname">
+                    <input type="hidden" name="phone"     id="cod_phone">
+                    <input type="hidden" name="address"   id="cod_address">
+                    <input type="hidden" name="note"      id="cod_note">
                 </form>
+
+                <!-- Form Transfer -->
+                <form id="form_transfer" action="<?php echo URLROOT; ?>/order/process" method="POST" class="hidden">
+                    <input type="hidden" name="payment_method" value="transfer">
+                    <input type="hidden" name="fullname"  id="tf_fullname">
+                    <input type="hidden" name="phone"     id="tf_phone">
+                    <input type="hidden" name="address"   id="tf_address">
+                    <input type="hidden" name="note"      id="tf_note">
+                </form>
+
+                <!-- Form VNPay -->
+                <form id="form_vnpay" action="<?php echo URLROOT; ?>/vnpay/create" method="POST" class="hidden">
+                    <input type="hidden" name="payment_method" value="vnpay">
+                    <input type="hidden" name="fullname"  id="vp_fullname">
+                    <input type="hidden" name="phone"     id="vp_phone">
+                    <input type="hidden" name="address"   id="vp_address">
+                    <input type="hidden" name="note"      id="vp_note">
+                </form>
+
+                <!-- SUBMIT BUTTON -->
+                <button type="button" id="submitBtn" onclick="handleSubmit()"
+                        class="w-full rounded-2xl shadow-xl py-4 px-4 text-base font-black text-white focus:outline-none transition-all duration-300 flex items-center justify-center gap-3 bg-gradient-to-r from-primary via-indigo-600 to-violet-600 hover:shadow-primary/40 hover:-translate-y-1">
+                    <i class="fa-solid fa-bag-shopping text-lg" id="submitIcon"></i>
+                    <span id="submitText">Đặt Hàng Ngay (COD)</span>
+                    <i class="fa-solid fa-arrow-right text-sm opacity-70"></i>
+                </button>
+
+                <!-- Security badges -->
+                <div class="flex items-center justify-center gap-6 text-xs text-gray-400 flex-wrap">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-green-500 text-base"></i> SSL 256-bit</span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-blue-500 text-base"></i> Mã hoá dữ liệu</span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-rotate-left text-orange-500 text-base"></i> Đổi trả 7 ngày</span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-headset text-violet-500 text-base"></i> Hỗ trợ 24/7</span>
+                </div>
             </div>
 
-            <!-- Right: Order Summary -->
-            <div class="mt-10 lg:mt-0 lg:col-span-5">
-                <div class="sticky top-24">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-receipt text-secondary"></i> Đơn hàng của bạn
-                    </h2>
-                    <div class="bg-white shadow-sm rounded-2xl border border-gray-100 overflow-hidden">
-                        <ul class="divide-y divide-gray-100 max-h-72 overflow-y-auto">
+            <!-- ══════════════════════ ORDER SUMMARY RIGHT ══════════════════════ -->
+            <div class="mt-8 lg:mt-0 lg:col-span-5">
+                <div class="order-summary space-y-4">
+
+                    <!-- Order card -->
+                    <div class="bg-white shadow-sm rounded-3xl border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4 flex items-center justify-between">
+                            <h2 class="text-sm font-black text-white flex items-center gap-2">
+                                <i class="fa-solid fa-receipt text-indigo-300"></i> Đơn hàng của bạn
+                            </h2>
+                            <span class="text-xs text-slate-400"><?php echo count($data['cart']); ?> sản phẩm</span>
+                        </div>
+                        <ul class="divide-y divide-gray-50 max-h-64 overflow-y-auto">
                             <?php foreach($data['cart'] as $item): ?>
-                            <li class="flex gap-4 p-4">
-                                <div class="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                            <li class="flex gap-4 p-4 hover:bg-gray-50/60 transition">
+                                <div class="relative flex-shrink-0 w-16 h-16 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
                                     <img src="<?php echo !empty($item['image']) ? URLROOT.'/public/images/'.$item['image'] : 'https://placehold.co/100x100?text=IMG'; ?>"
-                                         alt="<?php echo $item['name']; ?>" class="w-full h-full object-cover">
+                                         alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-full h-full object-cover">
+                                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-black rounded-full flex items-center justify-center"><?php echo $item['quantity']; ?></span>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-bold text-gray-800 line-clamp-2"><?php echo $item['name']; ?></p>
-                                    <p class="text-xs text-gray-400 mt-0.5">Số lượng: <?php echo $item['quantity']; ?></p>
+                                    <p class="text-sm font-bold text-gray-800 line-clamp-2"><?php echo htmlspecialchars($item['name']); ?></p>
+                                    <p class="text-xs text-gray-400 mt-0.5"><?php echo number_format($item['price'],0,',','.'); ?>đ / cái</p>
                                 </div>
-                                <p class="text-sm font-black text-gray-900 whitespace-nowrap">
-                                    <?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?>đ
-                                </p>
+                                <p class="text-sm font-black text-gray-900 whitespace-nowrap"><?php echo number_format($item['price']*$item['quantity'],0,',','.'); ?>đ</p>
                             </li>
                             <?php endforeach; ?>
                         </ul>
-                        <div class="border-t border-gray-100 p-5 space-y-3 bg-gray-50/50">
+                        <div class="border-t border-gray-100 p-5 space-y-3 bg-gray-50/40">
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-gray-500">Tạm tính</span>
-                                <span class="font-semibold text-gray-800"><?php echo number_format($data['total'], 0, ',', '.'); ?>đ</span>
+                                <span class="font-semibold text-gray-700"><?php echo number_format($data['total'],0,',','.'); ?>đ</span>
                             </div>
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-gray-500">Phí vận chuyển</span>
-                                <span class="font-bold text-green-600">Miễn phí</span>
+                                <span class="font-bold text-green-600 flex items-center gap-1"><i class="fa-solid fa-truck-fast text-xs"></i> Miễn phí</span>
                             </div>
-                            <div class="flex items-center justify-between pt-3 border-t border-gray-200">
-                                <span class="text-base font-black text-gray-900">Tổng cộng</span>
-                                <span class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                                    <?php echo number_format($data['total'], 0, ',', '.'); ?>đ
+                            <div class="border-t border-dashed border-gray-200 my-1"></div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-black text-gray-900">Tổng cộng</span>
+                                <span class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-600">
+                                    <?php echo number_format($data['total'],0,',','.'); ?>đ
                                 </span>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-4 flex items-center justify-center gap-6 text-xs text-gray-400">
-                        <span class="flex items-center gap-1"><i class="fa-solid fa-shield-halved text-green-500"></i> An toàn</span>
-                        <span class="flex items-center gap-1"><i class="fa-solid fa-lock text-blue-500"></i> SSL</span>
-                        <span class="flex items-center gap-1"><i class="fa-solid fa-rotate-left text-orange-500"></i> Đổi trả 7 ngày</span>
+
+                    <!-- Delivery info -->
+                    <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-truck text-primary"></i> Thông tin giao hàng
+                        </h3>
+                        <div class="space-y-2.5">
+                            <?php
+                            $deliveryInfo = [
+                                ['fa-box','blue','Giao hàng tiêu chuẩn','Dự kiến 2–4 ngày làm việc'],
+                                ['fa-phone','green','Xác nhận qua điện thoại','Gọi trước khi giao hàng'],
+                                ['fa-rotate-left','purple','Đổi trả miễn phí','Trong vòng 7 ngày'],
+                            ];
+                            foreach($deliveryInfo as [$icon,$color,$title,$sub]):
+                            ?>
+                            <div class="flex items-center gap-3 text-sm">
+                                <div class="w-8 h-8 bg-<?php echo $color; ?>-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid <?php echo $icon; ?> text-<?php echo $color; ?>-500 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-700 text-xs"><?php echo $title; ?></p>
+                                    <p class="text-[10px] text-gray-400"><?php echo $sub; ?></p>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Hotline -->
+                    <div class="bg-gradient-to-r from-primary/5 to-violet-50 rounded-2xl border border-primary/10 p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+                            <i class="fa-solid fa-headset text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Hỗ trợ đặt hàng</p>
+                            <p class="font-black text-gray-800 text-sm">Hotline: <a href="tel:19008888" class="text-primary hover:underline">1900 8888</a></p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -218,40 +431,84 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
     </div>
 </div>
 
-<!-- Toast -->
+<!-- Toast copy -->
 <div id="copyToast" class="fixed bottom-6 right-6 bg-gray-900 text-white text-sm font-bold px-5 py-3 rounded-2xl shadow-2xl opacity-0 translate-y-4 transition-all duration-300 pointer-events-none flex items-center gap-2 z-50">
     <i class="fa-solid fa-check text-green-400"></i> Đã sao chép!
 </div>
 
 <script>
-// ===== Payment method toggle =====
-const labelCod      = document.getElementById('label_cod');
-const labelTransfer = document.getElementById('label_transfer');
-const panel         = document.getElementById('bank_transfer_panel');
-const submitText    = document.getElementById('submitText');
+let currentMethod = 'cod';
 
-function switchPayment(type) {
-    if (type === 'transfer') {
-        panel.classList.remove('hidden');
-        labelTransfer.classList.replace('border-gray-200', 'border-green-500');
-        labelTransfer.classList.add('bg-green-50/50');
-        labelCod.classList.replace('border-primary', 'border-gray-200');
-        labelCod.classList.remove('bg-primary/5');
-        submitText.textContent = 'Xác Nhận & Đặt Hàng';
-    } else {
-        panel.classList.add('hidden');
-        labelCod.classList.replace('border-gray-200', 'border-primary');
-        labelCod.classList.add('bg-primary/5');
-        labelTransfer.classList.replace('border-green-500', 'border-gray-200');
-        labelTransfer.classList.remove('bg-green-50/50');
-        submitText.textContent = 'Đặt Hàng Ngay';
-    }
+const methodConfig = {
+    cod:      { text: 'Đặt Hàng Ngay (COD)',            icon: 'fa-money-bill-wave', btnClass: 'from-orange-500 via-orange-600 to-amber-600'  },
+    transfer: { text: 'Xác Nhận & Đặt Hàng (CK)',        icon: 'fa-building-columns', btnClass: 'from-green-600 via-emerald-600 to-teal-600' },
+    vnpay:    { text: 'Tiếp tục thanh toán qua VNPay',   icon: 'fa-arrow-up-right-from-square', btnClass: 'from-blue-600 via-blue-700 to-indigo-700' },
+};
+
+function selectMethod(method) {
+    currentMethod = method;
+
+    // Card styles
+    document.querySelectorAll('.pay-card').forEach(c => {
+        c.classList.remove('active');
+        c.classList.replace('border-primary','border-gray-200');
+        c.classList.remove('border-primary');
+        c.style.borderColor = '';
+    });
+    const card = document.querySelector(`[data-method="${method}"]`);
+    card.classList.add('active');
+
+    // Panels
+    ['cod','transfer','vnpay'].forEach(m => {
+        const p = document.getElementById('panel_' + m);
+        if (m === method) {
+            p.classList.remove('hidden');
+            p.classList.add('panel-enter');
+        } else {
+            p.classList.add('hidden');
+        }
+    });
+
+    // Button
+    const cfg = methodConfig[method];
+    const btn = document.getElementById('submitBtn');
+    document.getElementById('submitText').textContent = cfg.text;
+    document.getElementById('submitIcon').className   = `fa-solid ${cfg.icon} text-lg`;
+    btn.className = btn.className.replace(/from-\S+\s+via-\S+\s+to-\S+/, '') + ' ' + cfg.btnClass;
 }
 
-document.getElementById('payment_cod').addEventListener('change', () => switchPayment('cod'));
-document.getElementById('payment_transfer').addEventListener('change', () => switchPayment('transfer'));
+function handleSubmit() {
+    // Validate
+    const fullname = document.getElementById('f_fullname').value.trim();
+    const phone    = document.getElementById('f_phone').value.trim();
+    const address  = document.getElementById('f_address').value.trim();
+    const note     = document.getElementById('f_note').value.trim();
 
-// ===== Copy to clipboard =====
+    if (!fullname) { alert('Vui lòng nhập họ và tên!'); document.getElementById('f_fullname').focus(); return; }
+    if (!phone)    { alert('Vui lòng nhập số điện thoại!'); document.getElementById('f_phone').focus(); return; }
+    if (!address)  { alert('Vui lòng nhập địa chỉ giao hàng!'); document.getElementById('f_address').focus(); return; }
+
+    // Copy values to hidden form
+    const prefix = { cod:'cod', transfer:'tf', vnpay:'vp' }[currentMethod];
+    document.getElementById(prefix + '_fullname').value = fullname;
+    document.getElementById(prefix + '_phone').value    = phone;
+    document.getElementById(prefix + '_address').value  = address;
+    document.getElementById(prefix + '_note').value     = note;
+
+    // Loading state
+    const btn  = document.getElementById('submitBtn');
+    const icon = document.getElementById('submitIcon');
+    btn.disabled = true;
+    btn.classList.add('opacity-80','cursor-not-allowed');
+    icon.className = 'fa-solid fa-circle-notch fa-spin text-lg';
+    document.getElementById('submitText').textContent = currentMethod === 'vnpay'
+        ? 'Đang chuyển sang VNPay...'
+        : 'Đang xử lý đơn hàng...';
+
+    // Submit correct form
+    document.getElementById('form_' + currentMethod).submit();
+}
+
 function copyText(text) {
     navigator.clipboard.writeText(String(text)).then(() => {
         const toast = document.getElementById('copyToast');
@@ -260,7 +517,7 @@ function copyText(text) {
         setTimeout(() => {
             toast.classList.add('opacity-0','translate-y-4');
             toast.classList.remove('opacity-100','translate-y-0');
-        }, 2000);
+        }, 2200);
     });
 }
 </script>

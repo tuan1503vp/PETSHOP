@@ -85,6 +85,25 @@
                             <div class="text-right">
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Tổng tiền</p>
                                 <p class="text-xl font-black text-primary"><?php echo number_format($item->amount, 0, ',', '.'); ?> đ</p>
+                                <?php if($item->type == 'order'): ?>
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1
+                                    <?php
+                                    if ($item->payment_method === 'vnpay') echo 'bg-blue-50 text-blue-600 border border-blue-200';
+                                    elseif ($item->payment_method === 'transfer') echo 'bg-green-50 text-green-600 border border-green-200';
+                                    else echo 'bg-orange-50 text-orange-600 border border-orange-200';
+                                    ?>">
+                                    <i class="fa-solid <?php
+                                        if ($item->payment_method === 'vnpay') echo 'fa-credit-card';
+                                        elseif ($item->payment_method === 'transfer') echo 'fa-building-columns';
+                                        else echo 'fa-money-bill-wave';
+                                    ?>"></i>
+                                    <?php
+                                    if ($item->payment_method === 'vnpay') echo 'VNPay';
+                                    elseif ($item->payment_method === 'transfer') echo 'Chuyển khoản';
+                                    else echo 'COD';
+                                    ?>
+                                </span>
+                                <?php endif; ?>
                             </div>
                         </div>
 
