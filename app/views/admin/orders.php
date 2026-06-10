@@ -11,8 +11,10 @@
     showCancelModal: false,
     cancelOrderId: null,
     cancelReason: '',
+    cancelIsVNPay: false,
     openCancelModal(data) {
         this.cancelOrderId = data.id;
+        this.cancelIsVNPay = (data.payment_method === 'vnpay' && (data.status === 'shipping' || data.status === 'pending'));
         this.showCancelModal = true;
         this.cancelReason = '';
     },
@@ -194,8 +196,14 @@
                     <?php else: ?>
                         <?php foreach($data['orders'] as $order):
                             $isPendingTransfer = ($order->payment_method === 'transfer' && $order->status === 'pending');
+                            $isVNPayPaid       = ($order->payment_method === 'vnpay'    && in_array($order->status, ['shipping','completed']));
+                            $isVNPayPending    = ($order->payment_method === 'vnpay'    && $order->status === 'pending');
+                            $rowClass = '';
+                            if ($isPendingTransfer) $rowClass = 'bg-blue-50/40 border-l-4 border-l-blue-400';
+                            elseif ($isVNPayPaid)   $rowClass = 'bg-indigo-50/30 border-l-4 border-l-indigo-400';
+                            elseif ($isVNPayPending) $rowClass = 'bg-amber-50/30 border-l-4 border-l-amber-400';
                         ?>
-                            <tr class="hover:bg-gray-50 transition-colors <?php echo $isPendingTransfer ? 'bg-blue-50/40 border-l-4 border-l-blue-400' : ''; ?>">
+                            <tr class="hover:bg-gray-50 transition-colors <?php echo $rowClass; ?>">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="font-black text-gray-900">#ORD-<?php echo str_pad($order->id, 5, '0', STR_PAD_LEFT); ?></span>
                                     <p class="text-[10px] font-bold text-gray-400 mt-1"><i class="fa-regular fa-clock"></i> <?php echo date('d/m/y H:i', strtotime($order->created_at)); ?></p>
@@ -229,6 +237,25 @@
                                                     Đã hoàn tiền
                                                 </span>
                                             <?php endif; ?>
+                                        <?php elseif($order->payment_method === 'vnpay'): ?>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider
+                                                <?php echo $isVNPayPaid ? 'bg-blue-100 text-blue-700 border border-blue-200' : ($isVNPayPending ? 'bg-amber-100 text-amber-700 animate-pulse' : 'bg-gray-100 text-gray-500'); ?>">
+                                                <i class="fa-solid fa-credit-card"></i>
+                                                <?php
+                                                    if ($isVNPayPaid)    echo 'VNPay ✓';
+                                                    elseif ($isVNPayPending) echo 'VNPay...';
+                                                    else echo 'VNPay';
+                                                ?>
+                                            </span>
+                                            <?php if($order->refund_status === 'pending'): ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-700 border border-red-200 animate-pulse">
+                                                    <i class="fa-solid fa-rotate-left"></i> Hoàn tiền VNPay
+                                                </span>
+                                            <?php elseif($order->refund_status === 'completed'): ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-gray-100 text-gray-500">
+                                                    Đã hoàn tiền
+                                                </span>
+                                            <?php endif; ?>
                                         <?php elseif($order->payment_method === 'cod'): ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-gray-100 text-gray-500">
                                                 <i class="fa-solid fa-money-bill-wave"></i> COD
@@ -255,18 +282,23 @@
                                     <form action="<?php echo URLROOT; ?>/admin/order_status/<?php echo $order->id; ?>" method="POST" id="statusForm<?php echo $order->id; ?>">
                                         <select name="status" 
                                                 <?php echo in_array($order->status, ['completed', 'cancelled']) ? 'disabled' : ''; ?>
-                                                onchange="if(this.value === 'cancelled') { 
-                                                    window.dispatchEvent(new CustomEvent('open-cancel-modal', {detail: {id: <?php echo $order->id; ?>, status: this.value}}));
+                                                onchange="if(this.value === 'cancelled') {
+                                                    var orderData = <?php echo htmlspecialchars(json_encode(['id'=>$order->id,'payment_method'=>$order->payment_method,'status'=>$order->status,'total_amount'=>$order->total_amount])); ?>;
+                                                    window.dispatchEvent(new CustomEvent('open-cancel-modal', {detail: orderData}));
                                                     this.value = '<?php echo $order->status; ?>';
                                                 } else {
                                                     this.form.submit();
                                                 }"
                                                 class="text-xs font-bold rounded-xl px-3 py-1.5 border border-transparent shadow-sm focus:ring-0 cursor-pointer transition-all hover:border-gray-200
-                                                <?php echo $order->status == 'completed' ? 'bg-green-100 text-green-700 opacity-70 cursor-not-allowed' :
-                                                    ($order->status == 'cancelled' ? 'bg-red-100 text-red-700 opacity-70 cursor-not-allowed' : 
-                                                    ($order->status == 'shipping' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700')); ?>">
-                                            <option value="pending"   <?php echo $order->status == 'pending'   ? 'selected' : ''; ?>>Đang xử lý</option>
-                                            <option value="shipping"  <?php echo $order->status == 'shipping'  ? 'selected' : ''; ?>>Đang giao</option>
+                                                <?php
+                                                    if ($order->status == 'completed') echo 'bg-green-100 text-green-700 opacity-70 cursor-not-allowed';
+                                                    elseif ($order->status == 'cancelled') echo 'bg-red-100 text-red-700 opacity-70 cursor-not-allowed';
+                                                    elseif ($order->status == 'shipping' && $isVNPayPaid) echo 'bg-blue-100 text-blue-700';
+                                                    elseif ($order->status == 'shipping') echo 'bg-indigo-100 text-indigo-700';
+                                                    else echo 'bg-amber-100 text-amber-700';
+                                                ?>">
+                                            <option value="pending"   <?php echo $order->status == 'pending'   ? 'selected' : ''; ?>>Chờ xác nhận</option>
+                                            <option value="shipping"  <?php echo $order->status == 'shipping'  ? 'selected' : ''; ?>><?php echo $isVNPayPaid ? '✓ Đã TT – Đang giao' : 'Đang giao'; ?></option>
                                             <option value="completed" <?php echo $order->status == 'completed' ? 'selected' : ''; ?>>Hoàn thành</option>
                                             <option value="cancelled" <?php echo $order->status == 'cancelled' ? 'selected' : ''; ?>>Đã hủy</option>
                                         </select>
@@ -408,7 +440,13 @@
                         <div class="bg-gray-50 rounded-xl p-3 text-center">
                             <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Thanh toán</p>
                             <p class="text-sm font-black text-gray-800"
-                               x-text="selectedOrder?.payment_method === 'transfer' ? '🏦 Chuyển khoản' : (selectedOrder?.payment_method === 'cod' ? '💵 COD' : (selectedOrder?.payment_method === 'cash' ? '💵 Tiền mặt' : selectedOrder?.payment_method))"></p>
+                               x-text="selectedOrder?.payment_method === 'transfer' ? '🏦 Chuyển khoản' : (selectedOrder?.payment_method === 'vnpay' ? '💳 VNPay' : (selectedOrder?.payment_method === 'cod' ? '💵 COD' : (selectedOrder?.payment_method === 'cash' ? '💵 Tiền mặt' : selectedOrder?.payment_method)))"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-3 text-center">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Đã thanh toán</p>
+                            <span class="text-xs font-black px-2 py-0.5 rounded-full"
+                                  :class="(selectedOrder?.payment_method === 'vnpay' && ['shipping','completed'].includes(selectedOrder?.status)) || (selectedOrder?.payment_method === 'transfer' && selectedOrder?.status !== 'pending') || selectedOrder?.payment_method === 'cash' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'"
+                                  x-text="(selectedOrder?.payment_method === 'vnpay' && ['shipping','completed'].includes(selectedOrder?.status)) || (selectedOrder?.payment_method === 'transfer' && selectedOrder?.status !== 'pending') || selectedOrder?.payment_method === 'cash' ? '✓ Đã thanh toán' : '⏳ Chưa thanh toán'"></span>
                         </div>
                         <div class="bg-gray-50 rounded-xl p-3 text-center">
                             <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Trạng thái</p>
@@ -524,21 +562,51 @@
          class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
          x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
          x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl" @click.away="showCancelModal = false">
+        <div class="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl" @click.away="showCancelModal = false">
             <div class="p-8">
-                <div class="h-16 w-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto">
-                    <i class="fa-solid fa-ban"></i>
+                <!-- Icon -->
+                <div class="h-16 w-16 rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto"
+                     :class="cancelIsVNPay ? 'bg-blue-50 text-blue-500' : 'bg-red-50 text-red-500'">
+                    <i :class="cancelIsVNPay ? 'fa-solid fa-rotate-left' : 'fa-solid fa-ban'"></i>
                 </div>
-                <h3 class="text-xl font-black text-gray-800 text-center mb-2">Hủy đơn hàng</h3>
-                <p class="text-sm text-gray-500 text-center mb-8 px-4">Vui lòng cung cấp lý do hủy đơn hàng này để thông báo cho khách hàng.</p>
+                <h3 class="text-xl font-black text-gray-800 text-center mb-2" x-text="cancelIsVNPay ? 'Hủy & Hoàn tiền VNPay' : 'Hủy đơn hàng'"></h3>
+
+                <!-- Cảnh báo VNPay đã thanh toán -->
+                <div x-show="cancelIsVNPay" class="mb-5 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4 flex gap-3 items-start">
+                    <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 flex-shrink-0"></i>
+                    <div class="text-sm text-blue-800">
+                        <p class="font-black mb-1">Đơn hàng này đã được thanh toán qua VNPay!</p>
+                        <p class="text-xs text-blue-600">Sau khi hủy, khách hàng sẽ gửi yêu cầu hoàn tiền thông qua hệ thống. Admin cần liên hệ VNPay để thực hiện hoàn tiền.</p>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-500 text-center mb-6 px-4" x-show="!cancelIsVNPay">Vui lòng cung cấp lý do hủy đơn hàng này để thông báo cho khách hàng.</p>
                 
                 <form :action="'<?php echo URLROOT; ?>/admin/order_status/' + cancelOrderId" method="POST">
                     <input type="hidden" name="status" value="cancelled">
-                    <div class="mb-6">
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Lý do hủy đơn</label>
+
+                    <div class="mb-4">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Lý do hủy đơn *</label>
                         <textarea name="cancel_reason" x-model="cancelReason" required
-                                  class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 text-sm font-medium outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500/30 transition-all resize-none h-32"
-                                  placeholder="Ví dụ: Sản phẩm tạm hết hàng, Thông tin khách hàng không chính xác..."></textarea>
+                                  class="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 text-sm font-medium outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500/30 transition-all resize-none h-24"
+                                  placeholder="Ví dụ: Sản phẩm tạm hết hàng, khách hàng yêu cầu hủy..."></textarea>
+                    </div>
+
+                    <!-- Thông tin hoàn tiền VNPay (chỉ hiện khi là đơn VNPay đã thanh toán) -->
+                    <div x-show="cancelIsVNPay" class="space-y-3 mb-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                        <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Thông tin tài khoản hoàn tiền (khách cung cấp)</p>
+                        <div class="grid grid-cols-1 gap-3">
+                            <input type="text" name="refund_bank" placeholder="Ngân hàng (VD: VCB, TCB, MBBank...)"
+                                   :required="cancelIsVNPay"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400">
+                            <input type="text" name="refund_account" placeholder="Số tài khoản"
+                                   :required="cancelIsVNPay"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400">
+                            <input type="text" name="refund_name" placeholder="Tên chủ tài khoản"
+                                   :required="cancelIsVNPay"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400">
+                        </div>
+                        <p class="text-[10px] text-gray-400 italic">* Nếu chưa có thông tin, có thể nhập sau khi liên hệ khách hàng.</p>
                     </div>
                     
                     <div class="flex gap-3">
@@ -547,8 +615,9 @@
                             Quay lại
                         </button>
                         <button type="submit" :disabled="!cancelReason.trim()"
-                                class="flex-1 px-6 py-4 rounded-2xl text-sm font-black text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20 transition-all disabled:opacity-50 disabled:shadow-none">
-                            Xác nhận hủy
+                                :class="cancelIsVNPay ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20' : 'bg-red-500 hover:bg-red-600 shadow-red-500/20'"
+                                class="flex-1 px-6 py-4 rounded-2xl text-sm font-black text-white shadow-lg transition-all disabled:opacity-50 disabled:shadow-none">
+                            <span x-text="cancelIsVNPay ? 'Hủy & Ghi nhận hoàn tiền' : 'Xác nhận hủy'"></span>
                         </button>
                     </div>
                 </form>
