@@ -314,23 +314,79 @@ async function uploadReceipt(input) {
                 <i class="fa-solid fa-circle-check text-4xl"></i>
             </div>
             <h2 class="text-2xl font-black mb-1">Thanh Toán VNPay Thành Công!</h2>
-            <p class="text-blue-100 text-sm">Đơn hàng đã được xác nhận tự động</p>
+            <p class="text-blue-100 text-sm">Đơn hàng đã được xác nhận và đang được xử lý</p>
         </div>
     </div>
     <div class="p-8 text-center">
         <p class="text-gray-400 dark:text-slate-500 text-sm mb-1">Mã đơn hàng</p>
         <p class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-4">#<?php echo $paddedId; ?></p>
 
-        <!-- VNPay badge -->
-        <div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-full px-4 py-2 text-xs font-bold mb-5">
-            <img src="https://vnpay.vn/s1/statics/img/logo-new.35c5b5c.svg" alt="VNPay" class="h-4 object-contain">
-            Đã xác nhận qua VNPay
+        <!-- Badge trạng thái hiện tại -->
+        <div class="flex items-center justify-center gap-3 mb-6 flex-wrap">
+            <div class="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-full px-4 py-2 text-xs font-bold">
+                <i class="fa-solid fa-circle-check"></i>
+                Đã thanh toán qua VNPay
+            </div>
+            <div class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full px-4 py-2 text-xs font-bold">
+                <span class="w-2 h-2 bg-indigo-400 rounded-full animate-pulse inline-block"></span>
+                Đang chuẩn bị giao hàng
+            </div>
         </div>
 
-        <div class="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm text-gray-500 dark:text-slate-400 text-left space-y-2 mb-6">
-            <div class="flex items-center gap-2"><i class="fa-solid fa-bolt text-blue-500 w-4"></i><span>Thanh toán <strong class="text-gray-800 dark:text-slate-200">tức thì qua VNPay</strong></span></div>
-            <div class="flex items-center gap-2"><i class="fa-solid fa-truck text-primary w-4"></i><span>Giao hàng dự kiến <strong class="text-gray-800 dark:text-slate-200">2–4 ngày</strong></span></div>
-            <div class="flex items-center gap-2"><i class="fa-solid fa-envelope text-green-500 w-4"></i><span>Email xác nhận đã được gửi</span></div>
+        <!-- Timeline trạng thái đơn hàng -->
+        <div class="bg-gray-50 dark:bg-slate-800 rounded-2xl p-5 mb-6 text-left">
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Tiến trình đơn hàng</p>
+            <div class="space-y-0">
+                <!-- Đặt hàng -->
+                <div class="flex items-start gap-3">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-check text-white text-xs"></i>
+                        </div>
+                        <div class="w-0.5 h-6 bg-green-300 my-0.5"></div>
+                    </div>
+                    <div class="pt-1.5">
+                        <p class="text-sm font-bold text-gray-800 dark:text-white">Đặt hàng thành công</p>
+                        <p class="text-xs text-gray-400"><?php echo date('d/m/Y H:i', strtotime($order->created_at ?? 'now')); ?></p>
+                    </div>
+                </div>
+                <!-- Đã thanh toán -->
+                <div class="flex items-start gap-3">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-check text-white text-xs"></i>
+                        </div>
+                        <div class="w-0.5 h-6 bg-indigo-200 my-0.5"></div>
+                    </div>
+                    <div class="pt-1.5">
+                        <p class="text-sm font-bold text-gray-800 dark:text-white">Đã thanh toán qua VNPay</p>
+                        <p class="text-xs text-gray-400">Xác nhận tự động tức thì</p>
+                    </div>
+                </div>
+                <!-- Đang giao hàng (active) -->
+                <div class="flex items-start gap-3">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0 ring-4 ring-indigo-100 dark:ring-indigo-900">
+                            <i class="fa-solid fa-truck text-white text-xs"></i>
+                        </div>
+                        <div class="w-0.5 h-6 bg-gray-200 my-0.5"></div>
+                    </div>
+                    <div class="pt-1.5">
+                        <p class="text-sm font-bold text-indigo-600">Đang chuẩn bị & giao hàng</p>
+                        <p class="text-xs text-gray-400">Dự kiến 2–4 ngày làm việc</p>
+                    </div>
+                </div>
+                <!-- Hoàn thành (chờ) -->
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-box-open text-gray-400 text-xs"></i>
+                    </div>
+                    <div class="pt-1.5">
+                        <p class="text-sm font-bold text-gray-400">Giao hàng thành công</p>
+                        <p class="text-xs text-gray-300 dark:text-slate-600">Chờ xác nhận từ cửa hàng</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="space-y-3">

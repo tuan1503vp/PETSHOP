@@ -180,8 +180,9 @@ class VNPayController extends Controller {
         $order_id = (int) explode('_', $txnRef)[0];
 
         if ($isValid && $isSuccess && $order_id) {
-            // Cập nhật đơn hàng thành completed
-            $this->orderModel->updateStatus($order_id, 'completed');
+            // Thanh toán thành công → chuyển sang 'shipping' (đã thanh toán, đang chuẩn bị giao hàng)
+            // Admin sẽ chuyển sang 'completed' khi giao hàng xong và xác nhận
+            $this->orderModel->updateStatus($order_id, 'shipping');
 
             // Xoá giỏ hàng
             unset($_SESSION['cart'], $_SESSION['vnpay_order_id']);
@@ -250,7 +251,8 @@ class VNPayController extends Controller {
 
         $responseCode = $_GET['vnp_ResponseCode'] ?? '';
         if ($responseCode === '00') {
-            $this->orderModel->updateStatus($order_id, 'completed');
+            // IPN xác nhận thành công → shipping (đang giao hàng)
+            $this->orderModel->updateStatus($order_id, 'shipping');
         } else {
             $this->orderModel->updateStatus($order_id, 'cancelled');
         }
