@@ -85,7 +85,7 @@
 <section class="py-24 max-w-7xl mx-auto px-4">
     <div class="text-center mb-16 reveal">
         <h2 class="text-secondary font-bold tracking-[0.2em] uppercase mb-2">Hệ sinh thái PetShop</h2>
-        <p class="text-4xl md:text-5xl font-extrabold text-dark tracking-tight">Dịch vụ tận tâm</p>
+        <p class="text-4xl md:text-5xl font-extrabold text-dark dark:text-white tracking-tight">Dịch vụ tận tâm</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
