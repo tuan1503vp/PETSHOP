@@ -7,7 +7,7 @@
  *  2. GET  /vnpay/return  → VNPay redirect về sau khi người dùng thanh toán (hiển thị kết quả)
  *  3. GET  /vnpay/ipn     → VNPay gọi server-to-server (IPN) để xác nhận giao dịch
  */
-class VNPayController extends Controller {
+class VnpayController extends Controller {
 
     // ══════════════════════════════════════════════════════════
     // CẤU HÌNH VNPAY SANDBOX (Thông tin chính thức từ VNPay)
