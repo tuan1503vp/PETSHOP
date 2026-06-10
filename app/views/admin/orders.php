@@ -275,8 +275,34 @@
                                         <span class="text-[10px] font-bold text-gray-400"><?php echo count($order->items); ?> SP</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                 <td class="px-6 py-4 whitespace-nowrap text-right">
                                     <span class="text-sm font-black text-primary"><?php echo number_format($order->total_amount, 0, ',', '.'); ?> đ</span>
+                                    <?php
+                                    // Xác định trạng thái thanh toán thực tế
+                                    $isPaidOrder = false;
+                                    if ($order->payment_method === 'vnpay' && in_array($order->status, ['shipping','completed'])) {
+                                        $isPaidOrder = true;
+                                    } elseif ($order->payment_method === 'transfer' && $order->status !== 'pending') {
+                                        $isPaidOrder = true;
+                                    } elseif (in_array($order->payment_method, ['cash','cod']) && $order->status === 'completed') {
+                                        $isPaidOrder = true;
+                                    }
+                                    ?>
+                                    <div class="mt-1.5 flex justify-end">
+                                        <?php if($isPaidOrder): ?>
+                                            <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                                <i class="fa-solid fa-circle-check"></i> Đã thanh toán
+                                            </span>
+                                        <?php elseif($order->status === 'cancelled'): ?>
+                                            <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
+                                                <i class="fa-solid fa-ban"></i> Đã hủy
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200">
+                                                <i class="fa-regular fa-clock"></i> Chưa thanh toán
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                  <td class="px-6 py-4 whitespace-nowrap">
                                     <form action="<?php echo URLROOT; ?>/admin/order_status/<?php echo $order->id; ?>" method="POST" id="statusForm<?php echo $order->id; ?>">
