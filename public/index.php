@@ -1,16 +1,22 @@
 <?php
-// Bật hiển thị lỗi để debug trên Host (Tạm thời)
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Bật hiển thị lỗi dựa trên môi trường (Local / Host) để bảo mật và tránh làm vỡ giao diện
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+if ($host === 'localhost' || strpos($host, '127.0.0.1') !== false) {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(0);
+}
+
 // Cấu hình Session Cookie tự động hết hạn khi đóng trình duyệt (0)
-// Loại bỏ thiết lập 'domain' cố định để tránh lỗi trên localhost kèm cổng và tự động khớp domain chuẩn.
 $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
             || ($_SERVER['SERVER_PORT'] ?? 80) == 443 
             || (strcasecmp($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '', 'https') === 0);
 
 // Xác định domain cho cookie (loại bỏ cổng nếu có, ví dụ localhost:8080 -> localhost)
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $domain = parse_url('http://' . $host, PHP_URL_HOST);
 $cookieDomain = ($domain === 'localhost' || $domain === '127.0.0.1') ? null : $domain;
 
@@ -22,7 +28,8 @@ session_set_cookie_params([
     'httponly' => true,
     'samesite' => 'Lax'
 ]);
-session_start();
+// Sử dụng @ để tắt các cảnh báo không mong muốn về thư mục session của nhà cung cấp hosting (ví dụ trên InfinityFree)
+@session_start();
 
 // Import cấu hình và các file core
 require_once '../app/config/config.php';
