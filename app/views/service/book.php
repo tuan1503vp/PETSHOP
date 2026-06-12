@@ -262,12 +262,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${minHours}:${minMinutes}`;
     }
 
-    function validateTime() {
+    function validateTime(autoFix = false) {
         const todayStr = getTodayString();
         
         if (dateInput.value === todayStr) {
             const minTimeStr = getMinTimeStr();
             timeInput.min = minTimeStr;
+
+            if (autoFix) {
+                if (!timeInput.value || timeInput.value < minTimeStr) {
+                    timeInput.value = minTimeStr;
+                }
+            }
 
             if (timeInput.value && timeInput.value < minTimeStr) {
                 // Hiển thị thông báo lỗi tức thì
@@ -289,32 +295,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Lắng nghe sự kiện thay đổi ngày/giờ tức thì
-    dateInput.addEventListener('change', validateTime);
-    timeInput.addEventListener('change', validateTime);
-    timeInput.addEventListener('input', validateTime);
+    dateInput.addEventListener('change', function() {
+        validateTime(true);
+    });
+    timeInput.addEventListener('change', function() {
+        validateTime(false);
+    });
+    timeInput.addEventListener('input', function() {
+        validateTime(false);
+    });
+    timeInput.addEventListener('focus', function() {
+        validateTime(true);
+    });
+    timeInput.addEventListener('click', function() {
+        validateTime(true);
+    });
 
-    // Chạy kiểm tra ngay khi tải trang
-    validateTime();
+    // Chạy kiểm tra ngay khi tải trang (không tự động sửa ngay để tránh điền sẵn khi chưa cần thiết, chỉ kiểm tra)
+    validateTime(false);
 
     // Định kỳ cập nhật lại minTime sau mỗi 30 giây nếu chọn ngày hôm nay
     setInterval(function() {
         if (dateInput.value === getTodayString()) {
-            validateTime();
+            validateTime(false);
         }
     }, 30000);
 
     // Kiểm tra khi submit
     form.addEventListener('submit', function(e) {
-        if (!validateTime()) {
+        if (!validateTime(true)) {
             e.preventDefault();
             const minTimeStr = getMinTimeStr();
             alert(`Giờ hẹn không hợp lệ. Vui lòng chọn giờ hẹn từ ${minTimeStr} trở đi.`);
             timeInput.value = minTimeStr;
-            validateTime();
+            validateTime(true);
             timeInput.focus();
         }
     });
-});
+    });
 </script>
 
 <?php require APPROOT . '/views/inc/footer.php'; ?>
