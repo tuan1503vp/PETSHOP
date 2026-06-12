@@ -53,15 +53,17 @@
             <?php foreach ($data['pets'] as $pet): ?>
                 <div class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 flex flex-col group">
                     <!-- Pet Image -->
-                    <div class="relative aspect-video bg-slate-100 overflow-hidden shrink-0">
+                    <div class="relative aspect-[4/3] bg-gradient-to-tr from-slate-50 to-indigo-50/30 overflow-hidden shrink-0 border-b border-gray-100">
                         <?php if (!empty($pet->image)): ?>
                             <img src="<?php echo URLROOT . '/public/images/' . $pet->image; ?>" 
                                  alt="<?php echo htmlspecialchars($pet->name); ?>" 
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         <?php else: ?>
                             <div class="w-full h-full flex flex-col items-center justify-center text-slate-300">
-                                <i class="fa-solid fa-paw text-5xl"></i>
-                                <span class="text-xs mt-2 font-bold uppercase tracking-wider text-slate-400">Không có hình ảnh</span>
+                                <div class="w-14 h-14 bg-slate-100/80 rounded-full flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+                                    <i class="fa-solid fa-paw text-xl"></i>
+                                </div>
+                                <span class="text-[10px] mt-3 font-extrabold uppercase tracking-widest text-slate-400">Không có hình ảnh</span>
                             </div>
                         <?php endif; ?>
                         
