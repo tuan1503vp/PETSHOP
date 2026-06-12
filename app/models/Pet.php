@@ -15,9 +15,10 @@ class Pet {
 
     // Lấy thông tin chi tiết thú cưng theo ID
     public function getPetById($id) {
-        $this->db->query('SELECT p.*, u.fullname as owner_name, u.email as owner_email, u.phone as owner_phone 
+        $this->db->query('SELECT p.*, u.fullname as owner_name, u.email as owner_email, m.phone as owner_phone 
                           FROM pets p 
                           JOIN users u ON p.customer_id = u.id 
+                          LEFT JOIN members m ON u.id = m.user_id 
                           WHERE p.id = :id');
         $this->db->bind(':id', $id);
         return $this->db->single();
@@ -86,19 +87,21 @@ class Pet {
     // Lấy toàn bộ danh sách thú cưng (dùng cho Admin)
     public function getAllPetsForAdmin($search = '') {
         if (!empty($search)) {
-            $this->db->query('SELECT p.*, u.fullname as owner_name, u.email as owner_email, u.phone as owner_phone 
+            $this->db->query('SELECT p.*, u.fullname as owner_name, u.email as owner_email, m.phone as owner_phone 
                               FROM pets p 
                               JOIN users u ON p.customer_id = u.id 
+                              LEFT JOIN members m ON u.id = m.user_id 
                               WHERE p.pet_code LIKE :search 
                                  OR p.name LIKE :search 
                                  OR u.fullname LIKE :search 
-                                 OR u.phone LIKE :search
+                                 OR m.phone LIKE :search
                               ORDER BY p.created_at DESC');
             $this->db->bind(':search', '%' . $search . '%');
         } else {
-            $this->db->query('SELECT p.*, u.fullname as owner_name, u.email as owner_email, u.phone as owner_phone 
+            $this->db->query('SELECT p.*, u.fullname as owner_name, u.email as owner_email, m.phone as owner_phone 
                               FROM pets p 
                               JOIN users u ON p.customer_id = u.id 
+                              LEFT JOIN members m ON u.id = m.user_id 
                               ORDER BY p.created_at DESC');
         }
         return $this->db->resultSet();
