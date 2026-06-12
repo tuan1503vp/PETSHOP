@@ -192,6 +192,12 @@
                                 <input type="time" id="appointment_time" name="appointment_time" required
                                        value="<?php echo $data['appointment_time']; ?>"
                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition <?php echo !empty($data['time_err']) ? 'border-red-400 bg-red-50/30' : ''; ?>">
+                                <p id="time_hint" class="mt-1.5 text-[10px] text-gray-400 font-bold leading-normal">
+                                    <i class="fa-solid fa-circle-question"></i> Lưu ý: Nếu hẹn hôm nay, vui lòng chọn giờ cách thời điểm hiện tại ít nhất 30 phút.
+                                </p>
+                                <p id="time_error_msg" class="mt-1.5 text-[11px] text-red-500 font-bold hidden flex items-center gap-1.5 leading-normal">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> <span>Thời gian hẹn không hợp lệ</span>
+                                </p>
                             </div>
                         </div>
 
@@ -236,74 +242,76 @@
 document.addEventListener('DOMContentLoaded', function() {
     const dateInput = document.getElementById('appointment_date');
     const timeInput = document.getElementById('appointment_time');
+    const timeError = document.getElementById('time_error_msg');
+    const timeHint = document.getElementById('time_hint');
     const form = dateInput.closest('form');
 
-    function updateMinTime() {
+    function getTodayString() {
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
-        const todayStr = `${yyyy}-${mm}-${dd}`;
-
-        if (dateInput.value === todayStr) {
-            // Lấy thời gian hiện tại cộng thêm 30 phút
-            const minTimeDate = new Date(today.getTime() + 30 * 60 * 1000);
-            const minHours = String(minTimeDate.getHours()).padStart(2, '0');
-            const minMinutes = String(minTimeDate.getMinutes()).padStart(2, '0');
-            const minTimeStr = `${minHours}:${minMinutes}`;
-            
-            // Thiết lập giá trị min cho input time
-            timeInput.min = minTimeStr;
-
-            // Nếu người dùng đã chọn giờ trước đó và giờ đó nhỏ hơn giờ tối thiểu
-            if (timeInput.value && timeInput.value < minTimeStr) {
-                timeInput.value = minTimeStr;
-            }
-        } else {
-            // Nếu chọn ngày trong tương lai, không giới hạn giờ theo thời gian hiện tại
-            timeInput.removeAttribute('min');
-        }
+        return `${yyyy}-${mm}-${dd}`;
     }
 
-    // Lắng nghe sự kiện thay đổi ngày
-    dateInput.addEventListener('change', updateMinTime);
-    
-    // Cập nhật ngay khi tải trang
-    updateMinTime();
-
-    // Định kỳ cập nhật lại minTime sau mỗi phút nếu chọn ngày hôm nay
-    setInterval(function() {
+    function getMinTimeStr() {
         const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const todayStr = `${yyyy}-${mm}-${dd}`;
+        const minTimeDate = new Date(today.getTime() + 30 * 60 * 1000);
+        const minHours = String(minTimeDate.getHours()).padStart(2, '0');
+        const minMinutes = String(minTimeDate.getMinutes()).padStart(2, '0');
+        return `${minHours}:${minMinutes}`;
+    }
+
+    function validateTime() {
+        const todayStr = getTodayString();
         
         if (dateInput.value === todayStr) {
-            updateMinTime();
-        }
-    }, 60000); // 60 giây
-
-    // Kiểm tra thêm khi submit form để chắc chắn
-    form.addEventListener('submit', function(e) {
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const todayStr = `${yyyy}-${mm}-${dd}`;
-
-        if (dateInput.value === todayStr) {
-            const minTimeDate = new Date(today.getTime() + 30 * 60 * 1000);
-            const minHours = String(minTimeDate.getHours()).padStart(2, '0');
-            const minMinutes = String(minTimeDate.getMinutes()).padStart(2, '0');
-            const minTimeStr = `${minHours}:${minMinutes}`;
+            const minTimeStr = getMinTimeStr();
+            timeInput.min = minTimeStr;
 
             if (timeInput.value && timeInput.value < minTimeStr) {
-                e.preventDefault();
-                alert(`Giờ hẹn phải sau thời điểm đặt lịch ít nhất 30 phút. Vui lòng chọn giờ từ ${minTimeStr} trở đi.`);
-                timeInput.value = minTimeStr;
-                timeInput.focus();
+                // Hiển thị thông báo lỗi tức thì
+                timeError.querySelector('span').textContent = `Giờ hẹn không hợp lệ (phải từ ${minTimeStr} trở đi).`;
+                timeError.classList.remove('hidden');
+                timeHint.classList.add('hidden');
+                timeInput.classList.add('border-red-400', 'bg-red-50/30');
+                return false;
             }
+        } else {
+            timeInput.removeAttribute('min');
+        }
+        
+        // Nếu hợp lệ
+        timeError.classList.add('hidden');
+        timeHint.classList.remove('hidden');
+        timeInput.classList.remove('border-red-400', 'bg-red-50/30');
+        return true;
+    }
+
+    // Lắng nghe sự kiện thay đổi ngày/giờ tức thì
+    dateInput.addEventListener('change', validateTime);
+    timeInput.addEventListener('change', validateTime);
+    timeInput.addEventListener('input', validateTime);
+
+    // Chạy kiểm tra ngay khi tải trang
+    validateTime();
+
+    // Định kỳ cập nhật lại minTime sau mỗi 30 giây nếu chọn ngày hôm nay
+    setInterval(function() {
+        if (dateInput.value === getTodayString()) {
+            validateTime();
+        }
+    }, 30000);
+
+    // Kiểm tra khi submit
+    form.addEventListener('submit', function(e) {
+        if (!validateTime()) {
+            e.preventDefault();
+            const minTimeStr = getMinTimeStr();
+            alert(`Giờ hẹn không hợp lệ. Vui lòng chọn giờ hẹn từ ${minTimeStr} trở đi.`);
+            timeInput.value = minTimeStr;
+            validateTime();
+            timeInput.focus();
         }
     });
 });
