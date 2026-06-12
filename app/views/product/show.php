@@ -41,7 +41,7 @@
 
         <div class="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start">
             <!-- Image gallery / Slider -->
-            <div class="flex flex-col-reverse" x-data="{ 
+            <div class="w-full" x-data="{ 
                 activeSlide: 0, 
                 imagesCount: <?php echo count($images); ?>,
                 nextSlide() {
@@ -49,27 +49,15 @@
                 },
                 prevSlide() {
                     this.activeSlide = (this.activeSlide - 1 + this.imagesCount) % this.imagesCount;
+                },
+                init() {
+                    if (this.imagesCount > 1) {
+                        setInterval(() => {
+                            this.nextSlide();
+                        }, 5000);
+                    }
                 }
             }">
-                <!-- Image selector (Thumbnails) -->
-                <?php if (count($images) > 1): ?>
-                    <div class="mt-4 w-full sm:block">
-                        <div class="grid grid-cols-4 gap-4">
-                            <?php foreach ($images as $index => $img): ?>
-                                <button type="button" @click="activeSlide = <?php echo $index; ?>"
-                                        class="relative h-20 bg-white rounded-xl flex items-center justify-center text-sm font-medium uppercase text-gray-900 cursor-pointer hover:bg-gray-50 focus:outline-none border-2 transition-all duration-300"
-                                        :class="activeSlide === <?php echo $index; ?> ? 'border-primary shadow-sm scale-95' : 'border-transparent opacity-60 hover:opacity-100'">
-                                    <span class="sr-only">Hình ảnh <?php echo $index + 1; ?></span>
-                                    <span class="absolute inset-0 rounded-md overflow-hidden">
-                                        <img src="<?php echo strpos($img, 'http') === 0 ? $img : URLROOT . '/public/images/' . $img; ?>" 
-                                             class="w-full h-full object-center object-cover">
-                                    </span>
-                                </button>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
                 <!-- Main Slider view -->
                 <div class="w-full aspect-square bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 relative group">
                     <!-- Images wrapper with transition -->
@@ -97,6 +85,17 @@
                                     class="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/80 hover:bg-white shadow-md text-gray-700 flex items-center justify-center transition-all duration-300 hover:scale-110 border border-gray-100 focus:outline-none opacity-0 group-hover:opacity-100">
                                 <i class="fa-solid fa-chevron-right"></i>
                             </button>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Dot indicators -->
+                    <?php if (count($images) > 1): ?>
+                        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                            <?php foreach ($images as $index => $img): ?>
+                                <button type="button" @click="activeSlide = <?php echo $index; ?>"
+                                        class="h-2.5 rounded-full transition-all duration-300 focus:outline-none"
+                                        :class="activeSlide === <?php echo $index; ?> ? 'w-8 bg-primary shadow-sm' : 'w-2.5 bg-gray-300/80 hover:bg-gray-400'"></button>
+                            <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
                 </div>
