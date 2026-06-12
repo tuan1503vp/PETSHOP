@@ -1085,6 +1085,21 @@ class AdminController extends Controller {
             $doctor_id = $_POST['doctor_id'];
 
             $appointmentModel = $this->model('Appointment');
+            $appointment = $appointmentModel->getAppointmentById($appointment_id);
+
+            if (!$appointment) {
+                flash('admin_error', 'Lịch hẹn không tồn tại.');
+                header('Location: ' . URLROOT . '/admin/services');
+                return;
+            }
+
+            // Kiểm tra bác sĩ/nhân viên có rảnh không
+            if (!$appointmentModel->checkDoctorAvailability($doctor_id, $appointment->appointment_date, $appointment->appointment_time)) {
+                flash('admin_error', 'Bác sĩ/Nhân viên này hiện đang bận hoặc có lịch hẹn chưa hoàn thành trước đó.');
+                header('Location: ' . URLROOT . '/admin/services');
+                return;
+            }
+
             if ($appointmentModel->assignDoctor($appointment_id, $doctor_id)) {
                 
                 // Nếu người được phân công là nhân viên chăm sóc (staff) 
@@ -1207,7 +1222,7 @@ class AdminController extends Controller {
 
         // Kiểm tra bác sĩ có rảnh vào khung giờ này không
         if (!$appointmentModel->checkDoctorAvailability($_SESSION['user_id'], $appointment->appointment_date, $appointment->appointment_time)) {
-            flash('admin_error', 'Bạn đã có lịch hẹn khác vào khung giờ này. Không thể nhận thêm.');
+            flash('admin_error', 'Bạn đang có lịch hẹn khác trùng giờ hoặc có ca khám chưa hoàn thành trước đó. Vui lòng thanh toán ca cũ trước.');
             header('Location: ' . URLROOT . '/admin/services');
             return;
         }

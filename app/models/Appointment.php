@@ -113,10 +113,18 @@ class Appointment {
 
     // Kiểm tra bác sĩ có rảnh vào thời gian này không
     public function checkDoctorAvailability($doctor_id, $date, $time) {
-        $this->db->query('SELECT id FROM appointments WHERE doctor_id = :doctor_id AND appointment_date = :date AND appointment_time = :time AND status NOT IN ("cancelled", "completed")');
+        $targetDateTime = $date . ' ' . $time;
+        $this->db->query('SELECT id FROM appointments 
+                          WHERE doctor_id = :doctor_id 
+                          AND status NOT IN ("cancelled", "completed")
+                          AND (
+                              (appointment_date = :date AND appointment_time = :time)
+                              OR (CONCAT(appointment_date, " ", appointment_time) <= :target_datetime)
+                          )');
         $this->db->bind(':doctor_id', $doctor_id);
         $this->db->bind(':date', $date);
         $this->db->bind(':time', $time);
+        $this->db->bind(':target_datetime', $targetDateTime);
         
         $this->db->single();
         return ($this->db->rowCount() == 0);
@@ -124,19 +132,23 @@ class Appointment {
 
     // Tìm bác sĩ rảnh vào thời gian này
     public function findAvailableDoctor($date, $time) {
-        // Lấy danh sách bác sĩ rảnh (không có lịch hẹn nào trùng giờ)
+        $targetDateTime = $date . ' ' . $time;
+        // Lấy danh sách bác sĩ rảnh (không có lịch hẹn nào trùng giờ hoặc chưa hoàn thành trước đó)
         $this->db->query('SELECT id FROM users 
                           WHERE role = "doctor" 
                           AND id NOT IN (
                               SELECT doctor_id FROM appointments 
-                              WHERE appointment_date = :date 
-                              AND appointment_time = :time 
-                              AND doctor_id IS NOT NULL 
+                              WHERE doctor_id IS NOT NULL 
                               AND status NOT IN ("cancelled", "completed")
+                              AND (
+                                  (appointment_date = :date AND appointment_time = :time)
+                                  OR (CONCAT(appointment_date, " ", appointment_time) <= :target_datetime)
+                              )
                           )
                           LIMIT 1');
         $this->db->bind(':date', $date);
         $this->db->bind(':time', $time);
+        $this->db->bind(':target_datetime', $targetDateTime);
         
         $row = $this->db->single();
         return ($row) ? $row->id : false;
@@ -144,17 +156,21 @@ class Appointment {
 
     // Lấy danh sách nhân viên rảnh vào thời gian này theo role (doctor / staff)
     public function getAvailableUsersByRole($date, $time, $role) {
+        $targetDateTime = $date . ' ' . $time;
         $this->db->query('SELECT id, fullname, role FROM users 
                           WHERE role = :role 
                           AND id NOT IN (
                               SELECT doctor_id FROM appointments 
-                              WHERE appointment_date = :date 
-                              AND appointment_time = :time 
-                              AND doctor_id IS NOT NULL 
+                              WHERE doctor_id IS NOT NULL 
                               AND status NOT IN ("cancelled", "completed")
+                              AND (
+                                  (appointment_date = :date AND appointment_time = :time)
+                                  OR (CONCAT(appointment_date, " ", appointment_time) <= :target_datetime)
+                              )
                           )');
         $this->db->bind(':date', $date);
         $this->db->bind(':time', $time);
+        $this->db->bind(':target_datetime', $targetDateTime);
         $this->db->bind(':role', $role);
         
         return $this->db->resultSet();
