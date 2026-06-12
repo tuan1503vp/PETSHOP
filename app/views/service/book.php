@@ -162,16 +162,59 @@
                             document.addEventListener('DOMContentLoaded', toggleDurationFields);
                         </script>
 
-                        <!-- Thú cưng (text input) -->
-                        <div>
-                            <label for="pet_info" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
-                                <i class="fa-solid fa-paw mr-1 text-pink-400"></i> Thú Cưng Của Bạn
-                            </label>
-                            <input type="text" id="pet_info" name="pet_info" 
-                                   value="<?php echo $data['pet_info'] ?? ''; ?>"
-                                   placeholder="VD: Chó Poodle, 3 tuổi, 5kg / Mèo Ba Tư trắng..."
-                                   class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition placeholder:text-gray-300">
-                            <p class="mt-1.5 text-xs text-gray-400">Mô tả loài, giống, tuổi, cân nặng để chúng tôi chuẩn bị tốt hơn</p>
+                        <!-- Thú cưng (chọn trong danh sách hoặc tự nhập) -->
+                        <div class="space-y-4" x-data="{ 
+                            selectedPetId: '<?php echo $data['pet_id'] ?? ''; ?>',
+                            pets: [
+                                <?php if(!empty($data['my_pets'])): ?>
+                                    <?php foreach($data['my_pets'] as $pet): ?>
+                                        { 
+                                            id: '<?php echo $pet->id; ?>', 
+                                            name: '<?php echo addslashes($pet->name); ?>',
+                                            info: '<?php echo addslashes($pet->name); ?> (<?php echo addslashes($pet->species); ?><?php echo !empty($pet->breed) ? ' ' . addslashes($pet->breed) : ''; ?>, <?php echo $pet->age; ?> tháng tuổi, <?php echo !empty($pet->weight) ? floatval($pet->weight) . 'kg' : 'Chưa rõ cân nặng'; ?>)'
+                                        },
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            ],
+                            onPetChange(e) {
+                                const petId = e.target.value;
+                                if (petId === '') {
+                                    document.getElementById('pet_info').value = '';
+                                } else {
+                                    const found = this.pets.find(p => p.id === petId);
+                                    if (found) {
+                                        document.getElementById('pet_info').value = found.info;
+                                    }
+                                }
+                            }
+                        }">
+                            <?php if(!empty($data['my_pets'])): ?>
+                            <div>
+                                <label for="pet_id" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                                    <i class="fa-solid fa-list-check mr-1 text-primary"></i> Chọn Thú Cưng Đã Đăng Ký
+                                </label>
+                                <select id="pet_id" name="pet_id" @change="onPetChange($event)" x-model="selectedPetId"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm font-medium text-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition appearance-none">
+                                    <option value="">-- Tự nhập thông tin thú cưng khác --</option>
+                                    <?php foreach($data['my_pets'] as $pet): ?>
+                                        <option value="<?php echo $pet->id; ?>" <?php echo (isset($data['pet_id']) && $data['pet_id'] == $pet->id) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($pet->name); ?> (<?php echo $pet->pet_code; ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <?php endif; ?>
+
+                            <div>
+                                <label for="pet_info" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                                    <i class="fa-solid fa-paw mr-1 text-pink-400"></i> Thông Tin Chi Tiết Thú Cưng <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="pet_info" name="pet_info" required
+                                       value="<?php echo htmlspecialchars($data['pet_info'] ?? ''); ?>"
+                                       placeholder="VD: Chó Poodle, 3 tuổi, 5kg / Mèo Ba Tư trắng..."
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition placeholder:text-gray-300">
+                                <p class="mt-1.5 text-xs text-gray-400">Mô tả loài, giống, tuổi, cân nặng để chúng tôi chuẩn bị tốt hơn</p>
+                            </div>
                         </div>
 
                         <!-- Ngày & Giờ -->

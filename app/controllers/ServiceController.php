@@ -46,13 +46,15 @@ class ServiceController extends Controller {
             return;
         }
 
+        $petModel = $this->model('Pet');
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
 
             $data = [
                 'customer_id' => $_SESSION['user_id'],
                 'service_id' => trim($_POST['service_id']),
-                'pet_id' => null,
+                'pet_id' => !empty($_POST['pet_id']) ? (int)$_POST['pet_id'] : null,
                 'pet_info' => trim($_POST['pet_info'] ?? ''),
                 'doctor_id' => null,
                 'appointment_date' => trim($_POST['appointment_date']),
@@ -96,15 +98,19 @@ class ServiceController extends Controller {
                 }
             } else {
                 $data['services'] = $this->serviceModel->getServices();
+                $data['my_pets'] = $petModel->getPetsByCustomer($_SESSION['user_id']);
                 $data['selected_service'] = $data['service_id'];
                 $this->view('service/book', $data);
             }
         } else {
             $services = $this->serviceModel->getServices();
+            $my_pets = $petModel->getPetsByCustomer($_SESSION['user_id']);
 
             $data = [
                 'services' => $services,
+                'my_pets' => $my_pets,
                 'selected_service' => $service_id,
+                'pet_id' => null,
                 'pet_info' => '',
                 'appointment_date' => '',
                 'appointment_time' => '',
