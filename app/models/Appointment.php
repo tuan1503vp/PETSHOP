@@ -8,11 +8,12 @@ class Appointment {
 
     // Đặt lịch mới
     public function book($data) {
-        $this->db->query('INSERT INTO appointments (customer_id, pet_id, service_id, doctor_id, appointment_date, appointment_time, duration_value, duration_unit, notes) 
-                          VALUES (:customer_id, :pet_id, :service_id, :doctor_id, :appointment_date, :appointment_time, :duration_value, :duration_unit, :notes)');
+        $this->db->query('INSERT INTO appointments (customer_id, pet_id, pet_info, service_id, doctor_id, appointment_date, appointment_time, duration_value, duration_unit, notes) 
+                          VALUES (:customer_id, :pet_id, :pet_info, :service_id, :doctor_id, :appointment_date, :appointment_time, :duration_value, :duration_unit, :notes)');
         
         $this->db->bind(':customer_id', $data['customer_id']);
         $this->db->bind(':pet_id', $data['pet_id']);
+        $this->db->bind(':pet_info', $data['pet_info'] ?? null);
         $this->db->bind(':service_id', $data['service_id']);
         $this->db->bind(':doctor_id', $data['doctor_id']);
         $this->db->bind(':appointment_date', $data['appointment_date']);
@@ -24,9 +25,8 @@ class Appointment {
         return $this->db->execute();
     }
 
-    // Lấy lịch hẹn của khách hàng
     public function getAppointmentsByCustomer($customer_id) {
-        $this->db->query('SELECT a.*, s.name as service_name, p.name as pet_name, u.fullname as doctor_name
+        $this->db->query('SELECT a.*, s.name as service_name, COALESCE(p.name, a.pet_info) as pet_name, u.fullname as doctor_name
                           FROM appointments a
                           JOIN services s ON a.service_id = s.id
                           LEFT JOIN pets p ON a.pet_id = p.id
@@ -43,7 +43,7 @@ class Appointment {
                        COALESCE(c.fullname, a.customer_name) as customer_name, 
                        c.email as customer_email, 
                        COALESCE(m.phone, a.customer_phone) as customer_phone, 
-                       p.name as pet_name, p.species as pet_species, u.fullname as doctor_name
+                       COALESCE(p.name, a.pet_info) as pet_name, p.species as pet_species, u.fullname as doctor_name
                           FROM appointments a
                           JOIN services s ON a.service_id = s.id
                           LEFT JOIN categories cat ON s.category_id = cat.id
@@ -98,7 +98,7 @@ class Appointment {
                           COALESCE(c.fullname, a.customer_name) as customer_name, 
                           c.email as customer_email, 
                           COALESCE(m.phone, a.customer_phone) as customer_phone, 
-                          p.name as pet_name, p.species as pet_species, u.fullname as doctor_name
+                          COALESCE(p.name, a.pet_info) as pet_name, p.species as pet_species, u.fullname as doctor_name
                           FROM appointments a
                           JOIN services s ON a.service_id = s.id
                           LEFT JOIN categories cat ON s.category_id = cat.id
@@ -180,7 +180,7 @@ class Appointment {
     public function getAllCompletedAppointments() {
         $this->db->query('SELECT a.*, s.name as service_name, 
                           COALESCE(c.fullname, a.customer_name) as customer_name, 
-                          p.name as pet_name, u.fullname as doctor_name
+                          COALESCE(p.name, a.pet_info) as pet_name, u.fullname as doctor_name
                           FROM appointments a
                           JOIN services s ON a.service_id = s.id
                           LEFT JOIN users c ON a.customer_id = c.id
@@ -194,7 +194,7 @@ class Appointment {
     // Lấy các lịch hẹn đã hoàn thành của một nhân viên/bác sĩ cụ thể
     public function getCompletedAppointmentsByDoctor($doctor_id, $month = null, $year = null) {
         $sql = 'SELECT a.*, s.name as service_name, 
-                COALESCE(c.fullname, a.customer_name) as customer_name, p.name as pet_name
+                COALESCE(c.fullname, a.customer_name) as customer_name, COALESCE(p.name, a.pet_info) as pet_name
                 FROM appointments a
                 JOIN services s ON a.service_id = s.id
                 LEFT JOIN users c ON a.customer_id = c.id
@@ -239,7 +239,7 @@ class Appointment {
                           COALESCE(c.fullname, a.customer_name) as customer_name, 
                           c.email as customer_email, 
                           COALESCE(m.phone, a.customer_phone) as customer_phone,
-                          p.name as pet_name, p.species as pet_species, u.fullname as doctor_name
+                          COALESCE(p.name, a.pet_info) as pet_name, p.species as pet_species, u.fullname as doctor_name
                           FROM appointments a
                           JOIN services s ON a.service_id = s.id
                           LEFT JOIN categories cat ON s.category_id = cat.id
@@ -259,7 +259,7 @@ class Appointment {
                           COALESCE(c.fullname, a.customer_name) as customer_name, 
                           c.email as customer_email, 
                           COALESCE(m.phone, a.customer_phone) as customer_phone,
-                          p.name as pet_name, p.species as pet_species, u.fullname as doctor_name
+                          COALESCE(p.name, a.pet_info) as pet_name, p.species as pet_species, u.fullname as doctor_name
                           FROM appointments a
                           JOIN services s ON a.service_id = s.id
                           LEFT JOIN users c ON a.customer_id = c.id

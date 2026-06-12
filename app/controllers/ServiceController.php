@@ -88,11 +88,6 @@ class ServiceController extends Controller {
                 // Đặt mặc định là chưa phân công
                 $data['doctor_id'] = null;
 
-                // Gộp pet_info vào notes nếu có
-                if (!empty($data['pet_info'])) {
-                    $data['notes'] = '[Thú cưng: ' . $data['pet_info'] . '] ' . $data['notes'];
-                }
-
                 if ($this->appointmentModel->book($data)) {
                     flash('booking_success', 'Lịch hẹn đang chờ xác nhận! Quản lý sẽ duyệt và thông báo lại cho bạn.');
                     header('Location: ' . URLROOT . '/service');

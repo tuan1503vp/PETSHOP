@@ -89,6 +89,7 @@ CREATE TABLE `appointments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `customer_id` INT NOT NULL,
   `pet_id` INT, -- Đặt cho thú cưng nào
+  `pet_info` VARCHAR(255), -- Thông tin mô tả thú cưng tự nhập
   `service_id` INT NOT NULL,
   `doctor_id` INT, -- Bác sĩ/Nhân viên phụ trách
   `final_price` DECIMAL(10,2), -- Số tiền chốt sau khi hoàn thành
