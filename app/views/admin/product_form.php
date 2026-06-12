@@ -66,7 +66,32 @@
                             <p class="mt-2 text-xs text-gray-500 italic">Ảnh hiện tại: <?php echo $data['product']->image; ?></p>
                         <?php endif; ?>
                     </div>
+
+                    <div>
+                        <label for="additional_images" class="block text-sm font-bold text-gray-700 mb-2">Hình ảnh bổ sung (nhiều ảnh)</label>
+                        <input type="file" name="additional_images[]" id="additional_images" accept="image/*" multiple
+                               class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
+                    </div>
                 </div>
+
+                <?php if(isset($data['product']) && !empty($data['additional_images'])): ?>
+                    <div class="border-t border-gray-100 pt-6">
+                        <label class="block text-sm font-bold text-gray-700 mb-3">Hình ảnh bổ sung hiện tại (chọn để xóa)</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                            <?php foreach($data['additional_images'] as $img): ?>
+                                <div class="relative group rounded-2xl overflow-hidden border border-gray-100 shadow-sm aspect-square bg-gray-50 flex items-center justify-center">
+                                    <img src="<?php echo URLROOT . '/public/images/' . $img->image; ?>" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <label class="flex items-center gap-1.5 text-white text-xs font-bold cursor-pointer bg-red-600/95 px-3 py-1.5 rounded-full select-none shadow-md">
+                                            <input type="checkbox" name="delete_images[]" value="<?php echo $img->id; ?>" class="rounded text-red-600 focus:ring-0 w-3.5 h-3.5 border-none">
+                                            Xóa ảnh
+                                        </label>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
 
                 <div>
                     <label for="description" class="block text-sm font-bold text-gray-700 mb-2">Mô Tả Sản Phẩm</label>

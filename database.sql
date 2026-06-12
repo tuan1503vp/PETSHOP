@@ -84,6 +84,15 @@ CREATE TABLE `order_items` (
   FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
 );
 
+-- Bảng Ảnh phụ của Sản phẩm (Nhiều ảnh cho 1 sản phẩm)
+CREATE TABLE `product_images` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `product_id` INT NOT NULL,
+  `image` VARCHAR(255) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+);
+
 -- Bảng Lịch hẹn Dịch vụ
 CREATE TABLE `appointments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,

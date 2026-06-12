@@ -462,7 +462,22 @@ class AdminController extends Controller {
                 'image' => $image
             ];
 
-            if ($this->productModel->addProduct($data)) {
+            $insertedId = $this->productModel->addProduct($data);
+            if ($insertedId) {
+                // Xử lý upload các hình ảnh bổ sung mới
+                if (isset($_FILES['additional_images']) && !empty($_FILES['additional_images']['name'][0])) {
+                    $files = $_FILES['additional_images'];
+                    $count = count($files['name']);
+                    for ($i = 0; $i < $count; $i++) {
+                        if ($files['error'][$i] == 0) {
+                            $filename = time() . '_add_' . $i . '_' . $files['name'][$i];
+                            if (move_uploaded_file($files['tmp_name'][$i], APPROOT . '/../public/images/' . $filename)) {
+                                $this->productModel->addProductImage($insertedId, $filename);
+                            }
+                        }
+                    }
+                }
+
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
                     $_SESSION['user_username'],
@@ -502,6 +517,34 @@ class AdminController extends Controller {
             ];
 
             if ($this->productModel->updateProduct($data)) {
+                // 1. Xóa các hình ảnh bổ sung được chọn xóa
+                if (isset($_POST['delete_images']) && is_array($_POST['delete_images'])) {
+                    foreach ($_POST['delete_images'] as $imgId) {
+                        $img = $this->productModel->getProductImageById($imgId);
+                        if ($img) {
+                            $filePath = APPROOT . '/../public/images/' . $img->image;
+                            if (file_exists($filePath)) {
+                                unlink($filePath);
+                            }
+                            $this->productModel->deleteProductImage($imgId);
+                        }
+                    }
+                }
+
+                // 2. Upload các hình ảnh bổ sung mới
+                if (isset($_FILES['additional_images']) && !empty($_FILES['additional_images']['name'][0])) {
+                    $files = $_FILES['additional_images'];
+                    $count = count($files['name']);
+                    for ($i = 0; $i < $count; $i++) {
+                        if ($files['error'][$i] == 0) {
+                            $filename = time() . '_add_' . $i . '_' . $files['name'][$i];
+                            if (move_uploaded_file($files['tmp_name'][$i], APPROOT . '/../public/images/' . $filename)) {
+                                $this->productModel->addProductImage($id, $filename);
+                            }
+                        }
+                    }
+                }
+
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
                     $_SESSION['user_username'],
@@ -516,13 +559,36 @@ class AdminController extends Controller {
         } else {
             $product = $this->productModel->getProductById($id);
             $categories = $this->productModel->getProductCategories();
-            $this->view('admin/product_form', ['product' => $product, 'categories' => $categories]);
+            $additionalImages = $this->productModel->getProductImages($id);
+            $this->view('admin/product_form', [
+                'product' => $product, 
+                'categories' => $categories,
+                'additional_images' => $additionalImages
+            ]);
         }
     }
 
     public function product_delete($id) {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Xóa ảnh phụ trên đĩa trước khi xóa sp khỏi DB (DB cascade xóa các dòng trong product_images)
+            $additionalImages = $this->productModel->getProductImages($id);
+            foreach ($additionalImages as $img) {
+                $filePath = APPROOT . '/../public/images/' . $img->image;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+
+            // Xóa ảnh chính trên đĩa
+            $product = $this->productModel->getProductById($id);
+            if ($product && $product->image) {
+                $filePath = APPROOT . '/../public/images/' . $product->image;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+
             if ($this->productModel->deleteProduct($id)) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],

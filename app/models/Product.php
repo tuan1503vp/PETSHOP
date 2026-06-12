@@ -121,7 +121,10 @@ class Product {
         $this->db->bind(':stock_quantity', $data['stock_quantity']);
         $this->db->bind(':image', $data['image']);
 
-        return $this->db->execute();
+        if ($this->db->execute()) {
+            return $this->db->lastInsertId();
+        }
+        return false;
     }
 
     // Cập nhật sản phẩm
@@ -170,6 +173,35 @@ class Product {
     public function decreaseStock($id, $quantity) {
         $this->db->query('UPDATE products SET stock_quantity = stock_quantity - :quantity WHERE id = :id AND stock_quantity >= :quantity');
         $this->db->bind(':quantity', $quantity);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    // Lấy danh sách ảnh bổ sung của sản phẩm
+    public function getProductImages($product_id) {
+        $this->db->query('SELECT * FROM product_images WHERE product_id = :product_id ORDER BY id ASC');
+        $this->db->bind(':product_id', $product_id);
+        return $this->db->resultSet();
+    }
+
+    // Thêm ảnh bổ sung cho sản phẩm
+    public function addProductImage($product_id, $image) {
+        $this->db->query('INSERT INTO product_images (product_id, image) VALUES (:product_id, :image)');
+        $this->db->bind(':product_id', $product_id);
+        $this->db->bind(':image', $image);
+        return $this->db->execute();
+    }
+
+    // Lấy thông tin 1 ảnh bổ sung
+    public function getProductImageById($id) {
+        $this->db->query('SELECT * FROM product_images WHERE id = :id');
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    // Xóa ảnh bổ sung khỏi CSDL
+    public function deleteProductImage($id) {
+        $this->db->query('DELETE FROM product_images WHERE id = :id');
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }

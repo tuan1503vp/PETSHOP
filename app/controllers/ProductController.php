@@ -48,8 +48,11 @@ class ProductController extends Controller {
         $reviews = $this->reviewModel->getReviewsByProductId($id);
         $ratingInfo = $this->reviewModel->getAverageRating($id);
 
+        $additionalImages = $this->productModel->getProductImages($id);
+
         $data = [
             'product' => $product,
+            'additional_images' => $additionalImages,
             'reviews' => $reviews,
             'ratingInfo' => $ratingInfo,
             'seo' => [

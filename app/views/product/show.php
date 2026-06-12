@@ -24,11 +24,81 @@
             </ol>
         </nav>
 
+        <?php
+        $images = [];
+        if (!empty($product->image)) {
+            $images[] = $product->image;
+        }
+        if (!empty($data['additional_images'])) {
+            foreach ($data['additional_images'] as $img) {
+                $images[] = $img->image;
+            }
+        }
+        if (empty($images)) {
+            $images[] = 'https://placehold.co/600x600?text=No+Image';
+        }
+        ?>
+
         <div class="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start">
-            <!-- Image gallery -->
-            <div class="flex flex-col-reverse">
-                <div class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden sm:aspect-w-4 sm:aspect-h-3">
-                    <img src="<?php echo !empty($product->image) ? URLROOT . '/public/images/' . $product->image : 'https://placehold.co/600x600?text=No+Image'; ?>" alt="<?php echo $product->name; ?>" class="w-full h-full object-center object-cover">
+            <!-- Image gallery / Slider -->
+            <div class="flex flex-col-reverse" x-data="{ 
+                activeSlide: 0, 
+                imagesCount: <?php echo count($images); ?>,
+                nextSlide() {
+                    this.activeSlide = (this.activeSlide + 1) % this.imagesCount;
+                },
+                prevSlide() {
+                    this.activeSlide = (this.activeSlide - 1 + this.imagesCount) % this.imagesCount;
+                }
+            }">
+                <!-- Image selector (Thumbnails) -->
+                <?php if (count($images) > 1): ?>
+                    <div class="mt-4 w-full sm:block">
+                        <div class="grid grid-cols-4 gap-4">
+                            <?php foreach ($images as $index => $img): ?>
+                                <button type="button" @click="activeSlide = <?php echo $index; ?>"
+                                        class="relative h-20 bg-white rounded-xl flex items-center justify-center text-sm font-medium uppercase text-gray-900 cursor-pointer hover:bg-gray-50 focus:outline-none border-2 transition-all duration-300"
+                                        :class="activeSlide === <?php echo $index; ?> ? 'border-primary shadow-sm scale-95' : 'border-transparent opacity-60 hover:opacity-100'">
+                                    <span class="sr-only">Hình ảnh <?php echo $index + 1; ?></span>
+                                    <span class="absolute inset-0 rounded-md overflow-hidden">
+                                        <img src="<?php echo strpos($img, 'http') === 0 ? $img : URLROOT . '/public/images/' . $img; ?>" 
+                                             class="w-full h-full object-center object-cover">
+                                    </span>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Main Slider view -->
+                <div class="w-full aspect-square bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 relative group">
+                    <!-- Images wrapper with transition -->
+                    <div class="relative w-full h-full flex transition-all duration-500 ease-out" 
+                         :style="'transform: translateX(-' + (activeSlide * 100) + '%)'">
+                        <?php foreach ($images as $img): ?>
+                            <div class="w-full h-full flex-shrink-0 flex items-center justify-center bg-gray-50/50">
+                                <img src="<?php echo strpos($img, 'http') === 0 ? $img : URLROOT . '/public/images/' . $img; ?>" 
+                                     alt="<?php echo htmlspecialchars($product->name); ?>" 
+                                     class="w-full h-full object-center object-cover">
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Navigation arrows -->
+                    <?php if (count($images) > 1): ?>
+                        <div>
+                            <!-- Left arrow -->
+                            <button type="button" @click="prevSlide()" 
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/80 hover:bg-white shadow-md text-gray-700 flex items-center justify-center transition-all duration-300 hover:scale-110 border border-gray-100 focus:outline-none opacity-0 group-hover:opacity-100">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <!-- Right arrow -->
+                            <button type="button" @click="nextSlide()" 
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/80 hover:bg-white shadow-md text-gray-700 flex items-center justify-center transition-all duration-300 hover:scale-110 border border-gray-100 focus:outline-none opacity-0 group-hover:opacity-100">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
