@@ -144,6 +144,11 @@
                     <a href="<?php echo URLROOT; ?>/ai" class="<?php echo $is_ai ? $active_nav : $inactive_nav; ?>">
                         AI Phân tích
                     </a>
+                    <?php if (isLoggedIn()): ?>
+                    <a href="<?php echo URLROOT; ?>/pet" class="<?php echo (strpos($current_url, '/pet') !== false) ? $active_nav : $inactive_nav; ?>">
+                        Thú cưng của tôi
+                    </a>
+                    <?php endif; ?>
                     <a href="<?php echo URLROOT; ?>/contact" class="<?php echo (strpos($current_url, '/contact') !== false) ? $active_nav : $inactive_nav; ?>">
                         Liên hệ
                     </a>

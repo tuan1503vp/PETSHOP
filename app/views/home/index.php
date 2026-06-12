@@ -88,18 +88,18 @@
         <p class="text-4xl md:text-5xl font-extrabold text-dark dark:text-white tracking-tight">Dịch vụ tận tâm</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- POS & Shop -->
         <div onclick="window.location.href='<?php echo URLROOT; ?>/product'" class="group reveal relative p-[2px] rounded-3xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-b from-primary/30 to-transparent shadow-xl shadow-primary/5 cursor-pointer">
-            <div class="bg-white/90 backdrop-blur-sm p-8 rounded-[22px] h-full flex flex-col justify-between">
+            <div class="bg-white/90 backdrop-blur-sm p-6 rounded-[22px] h-full flex flex-col justify-between">
                 <div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center text-primary mb-8 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
-                        <i class="fa-solid fa-store text-2xl"></i>
+                    <div class="w-14 h-14 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
+                        <i class="fa-solid fa-store text-xl"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-gray-800 mb-4"> Mua Sắm Online/Offline </h3>
-                    <p class="text-slate-500 font-medium leading-relaxed mb-8">Trải nghiệm mua sắm không giới hạn từ thức ăn hạt cao cấp đến phụ kiện thời thượng.</p>
+                    <h3 class="text-xl font-black text-gray-800 mb-3"> Mua Sắm Online </h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed mb-6">Trải nghiệm mua sắm từ thức ăn hạt cao cấp đến các phụ kiện thời thượng.</p>
                 </div>
-                <a href="<?php echo URLROOT; ?>/product" class="inline-flex items-center text-primary font-bold hover:text-indigo-800 transition-colors group/btn">
+                <a href="<?php echo URLROOT; ?>/product" class="inline-flex items-center text-primary text-xs font-bold hover:text-indigo-800 transition-colors group/btn">
                     Khám phá ngay <i class="fa-solid fa-arrow-right ml-2 transform group-hover/btn:translate-x-2 transition-transform"></i>
                 </a>
             </div>
@@ -107,15 +107,15 @@
 
         <!-- Spa & Grooming -->
         <div onclick="window.location.href='<?php echo URLROOT; ?>/service'" class="group reveal relative p-[2px] rounded-3xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-b from-secondary/30 to-transparent shadow-xl shadow-secondary/5 cursor-pointer" style="transition-delay: 100ms;">
-            <div class="bg-white/90 backdrop-blur-sm p-8 rounded-[22px] h-full flex flex-col justify-between">
+            <div class="bg-white/90 backdrop-blur-sm p-6 rounded-[22px] h-full flex flex-col justify-between">
                 <div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-2xl flex items-center justify-center text-secondary mb-8 group-hover:scale-110 group-hover:bg-secondary group-hover:text-white transition-all duration-500 shadow-inner">
-                        <i class="fa-solid fa-scissors text-2xl"></i>
+                    <div class="w-14 h-14 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-2xl flex items-center justify-center text-secondary mb-6 group-hover:scale-110 group-hover:bg-secondary group-hover:text-white transition-all duration-500 shadow-inner">
+                        <i class="fa-solid fa-scissors text-xl"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-gray-800 mb-4">Chăm Sóc & Khám Bệnh</h3>
-                    <p class="text-slate-500 font-medium leading-relaxed mb-8">Đội ngũ kỹ thuật viên tay nghề cao giúp "boss" của bạn lột xác với diện mạo sang chảnh.</p>
+                    <h3 class="text-xl font-black text-gray-800 mb-3">Chăm Sóc & Đặt Lịch</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed mb-6">Đội ngũ kỹ thuật viên tay nghề cao giúp "boss" của bạn lột xác với diện mạo mới.</p>
                 </div>
-                <a href="<?php echo URLROOT; ?>/service" class="inline-flex items-center text-secondary font-bold hover:text-pink-700 transition-colors group/btn">
+                <a href="<?php echo URLROOT; ?>/service" class="inline-flex items-center text-secondary text-xs font-bold hover:text-pink-700 transition-colors group/btn">
                     Xem bảng giá <i class="fa-solid fa-arrow-right ml-2 transform group-hover/btn:translate-x-2 transition-transform"></i>
                 </a>
             </div>
@@ -123,16 +123,32 @@
 
         <!-- AI Health -->
         <div onclick="window.location.href='<?php echo URLROOT; ?>/ai'" class="group reveal relative p-[2px] rounded-3xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-b from-blue-500/30 to-transparent shadow-xl shadow-blue-500/5 cursor-pointer" style="transition-delay: 200ms;">
-            <div class="bg-white/90 backdrop-blur-sm p-8 rounded-[22px] h-full flex flex-col justify-between">
+            <div class="bg-white/90 backdrop-blur-sm p-6 rounded-[22px] h-full flex flex-col justify-between">
                 <div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-2xl flex items-center justify-center text-blue-500 mb-8 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all duration-500 shadow-inner">
-                        <i class="fa-solid fa-microchip text-2xl"></i>
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-2xl flex items-center justify-center text-blue-500 mb-6 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all duration-500 shadow-inner">
+                        <i class="fa-solid fa-microchip text-xl"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-gray-800 mb-4">Bác Sĩ AI</h3>
-                    <p class="text-slate-500 font-medium leading-relaxed mb-8">Công nghệ chẩn đoán sơ bộ bằng AI, giúp phát hiện sớm các vấn đề sức khỏe qua hình ảnh.</p>
+                    <h3 class="text-xl font-black text-gray-800 mb-3">Bác Sĩ AI</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed mb-6">Chẩn đoán sơ bộ bằng trí tuệ nhân tạo, phát hiện sớm các bất thường qua ảnh chụp.</p>
                 </div>
-                <a href="<?php echo URLROOT; ?>/ai" class="inline-flex items-center text-blue-500 font-bold hover:text-blue-700 transition-colors group/btn">
+                <a href="<?php echo URLROOT; ?>/ai" class="inline-flex items-center text-blue-500 text-xs font-bold hover:text-blue-700 transition-colors group/btn">
                     Trải nghiệm AI <i class="fa-solid fa-arrow-right ml-2 transform group-hover/btn:translate-x-2 transition-transform"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Pet Care & Health Book -->
+        <div onclick="window.location.href='<?php echo URLROOT; ?>/pet'" class="group reveal relative p-[2px] rounded-3xl transition-all duration-500 hover:-translate-y-2 bg-gradient-to-b from-purple-500/30 to-transparent shadow-xl shadow-purple-500/5 cursor-pointer" style="transition-delay: 300ms;">
+            <div class="bg-white/90 backdrop-blur-sm p-6 rounded-[22px] h-full flex flex-col justify-between">
+                <div>
+                    <div class="w-14 h-14 bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-2xl flex items-center justify-center text-purple-500 mb-6 group-hover:scale-110 group-hover:bg-purple-500 group-hover:text-white transition-all duration-500 shadow-inner">
+                        <i class="fa-solid fa-paw text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-gray-800 mb-3">Sổ Sức Khỏe & Pet</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed mb-6">Quản lý danh sách thú cưng tại nhà và theo dõi hồ sơ khám từ phòng khám.</p>
+                </div>
+                <a href="<?php echo URLROOT; ?>/pet" class="inline-flex items-center text-purple-500 text-xs font-bold hover:text-purple-700 transition-colors group/btn">
+                    Quản lý ngay <i class="fa-solid fa-arrow-right ml-2 transform group-hover/btn:translate-x-2 transition-transform"></i>
                 </a>
             </div>
         </div>
