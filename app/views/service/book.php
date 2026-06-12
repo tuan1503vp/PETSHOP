@@ -232,4 +232,81 @@
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('appointment_date');
+    const timeInput = document.getElementById('appointment_time');
+    const form = dateInput.closest('form');
+
+    function updateMinTime() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        if (dateInput.value === todayStr) {
+            // Lấy thời gian hiện tại cộng thêm 30 phút
+            const minTimeDate = new Date(today.getTime() + 30 * 60 * 1000);
+            const minHours = String(minTimeDate.getHours()).padStart(2, '0');
+            const minMinutes = String(minTimeDate.getMinutes()).padStart(2, '0');
+            const minTimeStr = `${minHours}:${minMinutes}`;
+            
+            // Thiết lập giá trị min cho input time
+            timeInput.min = minTimeStr;
+
+            // Nếu người dùng đã chọn giờ trước đó và giờ đó nhỏ hơn giờ tối thiểu
+            if (timeInput.value && timeInput.value < minTimeStr) {
+                timeInput.value = minTimeStr;
+            }
+        } else {
+            // Nếu chọn ngày trong tương lai, không giới hạn giờ theo thời gian hiện tại
+            timeInput.removeAttribute('min');
+        }
+    }
+
+    // Lắng nghe sự kiện thay đổi ngày
+    dateInput.addEventListener('change', updateMinTime);
+    
+    // Cập nhật ngay khi tải trang
+    updateMinTime();
+
+    // Định kỳ cập nhật lại minTime sau mỗi phút nếu chọn ngày hôm nay
+    setInterval(function() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        
+        if (dateInput.value === todayStr) {
+            updateMinTime();
+        }
+    }, 60000); // 60 giây
+
+    // Kiểm tra thêm khi submit form để chắc chắn
+    form.addEventListener('submit', function(e) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        if (dateInput.value === todayStr) {
+            const minTimeDate = new Date(today.getTime() + 30 * 60 * 1000);
+            const minHours = String(minTimeDate.getHours()).padStart(2, '0');
+            const minMinutes = String(minTimeDate.getMinutes()).padStart(2, '0');
+            const minTimeStr = `${minHours}:${minMinutes}`;
+
+            if (timeInput.value && timeInput.value < minTimeStr) {
+                e.preventDefault();
+                alert(`Giờ hẹn phải sau thời điểm đặt lịch ít nhất 30 phút. Vui lòng chọn giờ từ ${minTimeStr} trở đi.`);
+                timeInput.value = minTimeStr;
+                timeInput.focus();
+            }
+        }
+    });
+});
+</script>
+
 <?php require APPROOT . '/views/inc/footer.php'; ?>

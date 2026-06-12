@@ -65,11 +65,23 @@ class ServiceController extends Controller {
             ];
 
             // Validate
+            $today = date('Y-m-d');
             if (empty($data['appointment_date'])) {
                 $data['date_err'] = 'Vui lòng chọn ngày hẹn';
+            } elseif ($data['appointment_date'] < $today) {
+                $data['date_err'] = 'Không thể đặt lịch hẹn trong quá khứ';
             }
+
             if (empty($data['appointment_time'])) {
                 $data['time_err'] = 'Vui lòng chọn giờ hẹn';
+            } elseif ($data['appointment_date'] === $today) {
+                $currentTime = time();
+                $minTime = $currentTime + 30 * 60; // Ít nhất sau 30 phút
+                
+                $appointmentTimestamp = strtotime($data['appointment_date'] . ' ' . $data['appointment_time']);
+                if ($appointmentTimestamp < $minTime) {
+                    $data['time_err'] = 'Giờ hẹn phải sau thời điểm đặt lịch ít nhất 30 phút';
+                }
             }
 
             if (empty($data['date_err']) && empty($data['time_err'])) {
