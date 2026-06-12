@@ -16,12 +16,14 @@ CREATE TABLE `users` (
 -- Bảng Thú cưng (Của khách hàng)
 CREATE TABLE `pets` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `pet_code` VARCHAR(50) UNIQUE,
   `customer_id` INT NOT NULL,
   `name` VARCHAR(100) NOT NULL,
   `species` VARCHAR(50) NOT NULL, -- Chó, Mèo, Chim...
   `breed` VARCHAR(100), -- Giống (VD: Corgi, Poodle...)
-  `age` INT, -- Tuổi (Tháng/Năm)
+  `age` INT, -- Tuổi (Số tháng tuổi)
   `gender` ENUM('male', 'female', 'unknown') DEFAULT 'unknown',
+  `color` VARCHAR(100), -- Màu sắc
   `weight` DECIMAL(5,2), -- Cân nặng (kg)
   `image` VARCHAR(255),
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -127,6 +129,20 @@ CREATE TABLE `health_records` (
   FOREIGN KEY (`pet_id`) REFERENCES `pets`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`appointment_id`) REFERENCES `appointments`(`id`) ON DELETE SET NULL,
   FOREIGN KEY (`doctor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+-- Bảng Nhật ký sức khỏe (Chủ nuôi theo dõi hàng ngày)
+CREATE TABLE `pet_health_logs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `pet_id` INT NOT NULL,
+  `log_date` DATE NOT NULL,
+  `weight` DECIMAL(5,2) NULL,
+  `temperature` DECIMAL(4,1) NULL,
+  `status` VARCHAR(100) NULL, -- Rất tốt, Bình thường, Mệt mỏi, Ốm yếu...
+  `symptoms` TEXT NULL,
+  `notes` TEXT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`pet_id`) REFERENCES `pets`(`id`) ON DELETE CASCADE
 );
 
 -- Bảng Lịch sử Phân tích AI

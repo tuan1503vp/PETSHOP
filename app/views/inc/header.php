@@ -516,6 +516,16 @@
                                             </div>
                                             <i class="fa-solid fa-chevron-right text-xs text-gray-300 group-hover:translate-x-1 transition-transform"></i>
                                         </a>
+
+                                        <a href="<?php echo URLROOT; ?>/pet" class="flex items-center justify-between w-full p-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-xl transition border border-gray-100 shadow-sm group">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-primary flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                                    <i class="fa-solid fa-paw"></i>
+                                                </div>
+                                                Thú cưng của tôi
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right text-xs text-gray-300 group-hover:translate-x-1 transition-transform"></i>
+                                        </a>
                                         
                                         <a href="<?php echo URLROOT; ?>/auth/logout" class="flex items-center justify-between w-full p-3 bg-white hover:bg-red-50 text-red-600 text-sm font-bold rounded-xl transition border border-red-50 shadow-sm group">
                                             <div class="flex items-center">
@@ -586,6 +596,9 @@
                     <?php endif; ?>
                     <a href="<?php echo URLROOT; ?>/order/history" class="block px-3 py-3 rounded-xl text-base font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800">
                         <i class="fa-solid fa-history w-6 text-center"></i> Lịch sử đơn hàng
+                    </a>
+                    <a href="<?php echo URLROOT; ?>/pet" class="block px-3 py-3 rounded-xl text-base font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800">
+                        <i class="fa-solid fa-paw w-6 text-center"></i> Thú cưng của tôi
                     </a>
                     <a href="<?php echo URLROOT; ?>/wishlist" class="block px-3 py-3 rounded-xl text-base font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800">
                         <i class="fa-solid fa-heart w-6 text-center"></i> Yêu thích

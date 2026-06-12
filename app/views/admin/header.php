@@ -200,6 +200,17 @@
                 </li>
                 <?php endif; ?>
 
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'manager', 'doctor', 'staff'])): ?>
+                <?php $is_admin_pets = strpos($current_url, '/admin/pets') !== false || strpos($current_url, '/admin/pet_') !== false; ?>
+                <li>
+                    <a href="<?php echo URLROOT; ?>/admin/pets" class="flex items-center p-3 rounded-lg <?php echo $is_admin_pets ? $active_class : $inactive_class; ?>">
+                        <i class="fa-solid fa-paw w-6"></i>
+                        <span>Quản lý Thú cưng</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+
+
                 <?php if($_SESSION['user_role'] == 'admin' || $_SESSION['user_role'] == 'manager'): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/employees" class="flex items-center p-3 rounded-lg <?php echo $is_employees ? $active_class : $inactive_class; ?>">

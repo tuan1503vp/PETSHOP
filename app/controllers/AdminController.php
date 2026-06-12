@@ -1768,4 +1768,98 @@ class AdminController extends Controller {
         ]);
         exit;
     }
+
+    // Quản lý thú cưng (dành cho Admin, Manager, Staff, Doctor)
+    public function pets() {
+        $this->checkAccess(['admin', 'manager', 'staff', 'doctor']);
+        
+        $search = trim($_GET['q'] ?? '');
+        $petModel = $this->model('Pet');
+        $pets = $petModel->getAllPetsForAdmin($search);
+        
+        $this->view('admin/pets', [
+            'pets' => $pets,
+            'search' => $search
+        ]);
+    }
+
+    // Chi tiết thú cưng & hồ sơ y tế (dành cho Admin, Manager, Staff, Doctor)
+    public function pet_detail($id) {
+        $this->checkAccess(['admin', 'manager', 'staff', 'doctor']);
+        
+        $petModel = $this->model('Pet');
+        $healthLogModel = $this->model('PetHealthLog');
+        $healthRecordModel = $this->model('HealthRecord');
+        
+        $pet = $petModel->getPetById($id);
+        if (!$pet) {
+            flash('admin_pet_error', 'Thú cưng không tồn tại hoặc đã bị xóa.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+            header('Location: ' . URLROOT . '/admin/pets');
+            exit;
+        }
+        
+        $logs = $healthLogModel->getLogsByPet($id);
+        $records = $healthRecordModel->getRecordsByPet($id);
+        
+        $this->view('admin/pet_detail', [
+            'pet' => $pet,
+            'logs' => $logs,
+            'records' => $records
+        ]);
+    }
+
+    // Thêm hồ sơ khám bệnh/điều trị (dành cho Admin, Doctor, Staff)
+    public function pet_health_record_add($pet_id) {
+        $this->checkAccess(['admin', 'manager', 'staff', 'doctor']);
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            
+            $healthRecordModel = $this->model('HealthRecord');
+            $data = [
+                'pet_id' => $pet_id,
+                'appointment_id' => !empty($_POST['appointment_id']) ? (int)$_POST['appointment_id'] : null,
+                'doctor_id' => $_SESSION['user_id'],
+                'diagnosis' => trim($_POST['diagnosis'] ?? ''),
+                'treatment' => trim($_POST['treatment'] ?? ''),
+                'notes' => trim($_POST['notes'] ?? ''),
+                'visit_date' => trim($_POST['visit_date'] ?? date('Y-m-d'))
+            ];
+            
+            if (empty($data['diagnosis'])) {
+                flash('record_message', 'Vui lòng nhập chẩn đoán.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+            } else {
+                if ($healthRecordModel->addRecord($data)) {
+                    flash('record_message', 'Thêm hồ sơ khám bệnh thành công!');
+                } else {
+                    flash('record_message', 'Có lỗi xảy ra, vui lòng thử lại.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+                }
+            }
+        }
+        
+        header('Location: ' . URLROOT . '/admin/pet_detail/' . $pet_id);
+        exit;
+    }
+
+    // Xóa hồ sơ khám bệnh (dành cho Admin, Manager, Doctor)
+    public function pet_health_record_delete($id) {
+        $this->checkAccess(['admin', 'manager', 'doctor']);
+        
+        $healthRecordModel = $this->model('HealthRecord');
+        $record = $healthRecordModel->getRecordById($id);
+        
+        if (!$record) {
+            header('Location: ' . URLROOT . '/admin/pets');
+            exit;
+        }
+        
+        if ($healthRecordModel->deleteRecord($id)) {
+            flash('record_message', 'Đã xóa hồ sơ khám bệnh!');
+        } else {
+            flash('record_message', 'Không thể xóa hồ sơ khám bệnh.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+        }
+        
+        header('Location: ' . URLROOT . '/admin/pet_detail/' . $record->pet_id);
+        exit;
+    }
 }
