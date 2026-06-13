@@ -246,70 +246,98 @@ class AiController extends Controller {
                     $reply .= "- 🛍️ Sản phẩm: [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
                 }
                 foreach($s_results as $s) {
-                    $reply .= "- 🗓️ Dịch vụ: [" . $s->name . "](" . URLROOT . "/service/book/" . $s->id . ") - Giá: " . number_format($s->price, 0, ',', '.') . "đ\n";
-                }
-                return $reply;
-            }
-        }
-        
-        // Fallback cuối cùng
-        return "Dạ Pawsy xin lỗi, hình như em chưa hiểu rõ ý của Quý khách lắm ạ. Quý khách có thể vui lòng diễn đạt lại câu hỏi cụ thể hơn giúp em được không ạ?\n\n👉 Hoặc để được giải đáp chi tiết và nhanh chóng nhất, Quý khách vui lòng liên hệ trực tiếp với nhân viên cửa hàng qua các kênh sau nhé:\n💬 **Zalo/Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n🌐 Hoặc xem thêm thông tin tại **[Trang Liên Hệ](" . URLROOT . "/contact)**.\n\nCác bạn tư vấn viên sẽ phản hồi Quý khách ngay lập tức ạ!";
-    }
-
-    // Hàm phụ trợ: Bỏ dấu tiếng Việt
-    private function removeVietnameseAccents($str) {
-        $unicode = array(
-            'a' => 'á|à|ả|ã|ạ|ă|ắ|ặ|ằ|ẳ|ẵ|â|ấ|ầ|ẩ|ẫ|ậ',
-            'd' => 'đ',
-            'e' => 'é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ',
-            'i' => 'í|ì|ỉ|ĩ|ị',
-            'o' => 'ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ',
-            'u' => 'ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự',
-            'y' => 'ý|ỳ|ỷ|ỹ|ỵ',
-            'A' => 'Á|À|Ả|Ã|Ạ|Ă|Ắ|Ặ|Ằ|Ẳ|Ẵ|Â|Ấ|Ầ|Ẩ|Ẫ|Ậ',
-            'D' => 'Đ',
-            'E' => 'É|È|Ẻ|Ẽ|Ẹ|Ê|Ế|Ề|Ể|Ễ|Ệ',
-            'I' => 'Í|Ì|Ỉ|Ĩ|Ị',
-            'O' => 'Ó|Ò|Ỏ|Õ|Ọ|Ô|Ố|Ồ|Ổ|Ỗ|Ộ|Ơ|Ớ|Ờ|Ở|Ỡ|Ợ',
-       private function callOpenRouterApiForPetChat($pet, $logs, $message) {
-        $msg_lower = mb_strtolower(trim($message), 'UTF-8');
-        $msg_no_accent = $this->removeVietnameseAccents($msg_lower);
+                    $reply .= "- 🗓️ Dịch vụ: [" . $s->name . "](" . URLRO    private function callOpenRouterApiForPetChat($pet, $logs, $message) {
+        $apiKey = trim(OPENROUTER_API_KEY);
         
         $db = new Database();
-        
-        $petName = htmlspecialchars($pet->name);
-        $species = mb_strtolower($pet->species ?? '', 'UTF-8');
-        $isCat = ($species === 'mèo' || strpos($species, 'mèo') !== false || strpos($this->removeVietnameseAccents($species), 'meo') !== false);
-
-        // Bệnh lý / Y tế
-        if (strpos($msg_lower, 'bệnh') !== false || strpos($msg_no_accent, 'benh') !== false || 
-            strpos($msg_lower, 'ốm') !== false || strpos($msg_lower, 'sốt') !== false || 
-            strpos($msg_lower, 'nôn') !== false || strpos($msg_lower, 'tiêu chảy') !== false) {
-            return "Dạ Pawsy nghe. Vì em chỉ là **Trợ lý dinh dưỡng**, đối với các triệu chứng bệnh lý hoặc biểu hiện bất thường của bé **" . $petName . "**, em khuyên Quý khách nên tham khảo ý kiến của [Bác sĩ AI](" . URLROOT . "/ai) để phân tích triệu chứng chuyên sâu hoặc đặt lịch khám trực tiếp để bé được hỗ trợ kịp thời ạ.";
+        $db->query("SELECT p.id, p.name, p.price, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id = c.id");
+        $products = $db->resultSet();
+        $productsList = "";
+        foreach ($products as $p) {
+            $productsList .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
         }
 
-        // Mang thai / Có bầu
-        if (strpos($msg_lower, 'mang thai') !== false || strpos($msg_no_accent, 'mang thai') !== false || 
-            strpos($msg_lower, 'có bầu') !== false || strpos($msg_no_accent, 'co bau') !== false || 
-            strpos($msg_lower, 'bầu') !== false) {
-            if ($isCat) {
-                return "Dạ đối với bé mèo **" . $petName . "** đang mang thai, nhu cầu dinh dưỡng sẽ tăng cao hơn rất nhiều (gấp 1.5 - 2 lần). Quý khách nên chuyển sang các loại hạt Kitten (dành cho mèo con) vì chúng giàu Đạm và Canxi hơn:\n\n- [Royal Canin Mother & Babycat](" . URLROOT . "/product/show/11) - Dinh dưỡng tối ưu cho mèo mẹ và mèo con.\n- Bổ sung thêm Pate dinh dưỡng mỗi ngày để mèo mẹ có nhiều sữa nhé ạ!";
-            } else {
-                return "Dạ đối với bé cún **" . $petName . "** đang mang thai, Quý khách cần tăng cường thức ăn giàu Đạm và Canxi. Các dòng hạt dành cho chó con (Puppy) là lựa chọn tuyệt vời trong giai đoạn này:\n\n- [SmartHeart Puppy](" . URLROOT . "/product/show/8) - Hỗ trợ phát triển toàn diện.\n- Có thể trộn thêm thịt nạc luộc và rau củ để bé có sữa tốt nhất ạ!";
+        $logSummary = "";
+        if (!empty($logs)) {
+            foreach ($logs as $index => $log) {
+                $logSummary .= "- Ngày " . date('d/m/Y', strtotime($log->log_date)) 
+                             . ": Cân nặng: " . ($log->weight ? $log->weight . "kg" : "chưa rõ")
+                             . ", Thân nhiệt: " . ($log->temperature ? $log->temperature . "°C" : "chưa rõ")
+                             . ", Trạng thái: " . $log->status
+                             . ($log->symptoms ? ", Triệu chứng: " . $log->symptoms : "") . "\n";
             }
-        }
-
-        // Tắm / Spa
-        if (strpos($msg_lower, 'tắm') !== false || strpos($msg_no_accent, 'tam') !== false || strpos($msg_lower, 'spa') !== false) {
-            return "Dạ, để bé **" . $petName . "** luôn sạch sẽ thơm tho, mời Quý khách đặt lịch [Dịch vụ Chăm sóc Spa](" . URLROOT . "/service/book/6) tại cửa hàng nhé!";
-        }
-
-        // Mặc định (Thức ăn)
-        if ($isCat) {
-            return "Dạ Pawsy nghe! Dựa vào hồ sơ của bé mèo **" . $petName . "**, em xin đề xuất các sản phẩm hạt & pate thích hợp:\n\n- [Whiskas Pate Cho Mèo Con](" . URLROOT . "/product/show/14) - Giàu DHA và taurine giúp bé khỏe mạnh.\n- [Royal Canin Kitten](" . URLROOT . "/product/show/11) - Thức ăn hạt khô thơm ngon dành riêng cho mèo.\n\nNgoài ra, bạn có thể tham khảo dịch vụ [Tắm spa / Vệ sinh](" . URLROOT . "/service/book/6) để bé luôn thơm tho nhé!";
         } else {
-            return "Dạ Pawsy nghe! Dựa vào hồ sơ của bé cún **" . $petName . "**, em xin đề xuất các sản phẩm hạt & pate thích hợp:\n\n- [SmartHeart Adult Beef Flavor](" . URLROOT . "/product/show/8) - Hạt khô thơm ngon bổ sung đạm bò.\n- [Ganador Premium Adult Lamb & Rice](" . URLROOT . "/product/show/9) - Thức ăn hạt vị cừu giúp da lông bóng mượt.\n\nNgoài ra, bạn có thể đăng ký dịch vụ [Huấn luyện cún](" . URLROOT . "/service/book/7) để bé cưng ngoan ngoãn hơn nhé!";
+            $logSummary = "Chưa có nhật ký sức khỏe nào được ghi nhận.";
         }
+
+        $petContext = "THÔNG TIN THÚ CƯNG HIỆN TẠI:\n"
+                    . "- Tên: " . htmlspecialchars($pet->name) . "\n"
+                    . "- Loài: " . htmlspecialchars($pet->species) . "\n"
+                    . "- Giống: " . ($pet->breed ? htmlspecialchars($pet->breed) : "Chưa rõ") . "\n"
+                    . "- Tuổi: " . htmlspecialchars($pet->age) . " tháng tuổi\n"
+                    . "- Cân nặng hiện tại: " . ($pet->weight ? htmlspecialchars($pet->weight) . "kg" : "Chưa rõ") . "\n"
+                    . "- Nhật ký sức khỏe 5 ngày gần nhất:\n" . $logSummary;
+        
+        // Nếu không có API Key hợp lệ, báo lỗi rõ ràng thay vì im lặng
+        if (empty($apiKey) || strpos($apiKey, 'sk-or') !== 0) {
+            return "Dạ Pawsy xin lỗi, hiện tại tính năng Trợ lý AI nâng cao đang tạm bảo trì do chưa cấu hình Mã khóa API hợp lệ (OpenRouter API Key). Quý khách vui lòng liên hệ Ban quản trị để cấu hình lại tính năng này ạ!";
+        }
+
+        $systemPrompt = "Bạn là Pawsy - Trợ lý dinh dưỡng AI chuyên nghiệp tại PetShop.\n"
+                      . "Nhiệm vụ chính: tư vấn dinh dưỡng, chế độ ăn uống, chăm sóc thể trạng cho bé thú cưng cụ thể dựa trên dữ liệu sau:\n\n"
+                      . $petContext . "\n\n"
+                      . "SẢN PHẨM CỦA CỬA HÀNG (Hãy đề xuất nếu phù hợp, kèm Markdown link):\n" . $productsList . "\n\n"
+                      . "QUY TẮC:\n"
+                      . "- Nếu hỏi về bệnh tật cần chẩn đoán sâu, hãy từ chối lịch sự và khuyên dùng [Bác sĩ AI](" . URLROOT . "/ai).\n"
+                      . "- Luôn xưng 'Dạ Pawsy nghe', gọi khách là 'Quý khách' hoặc 'Anh/Chị', gọi thú cưng là 'bé'.\n"
+                      . "- Nhắc tên thú cưng thân thiện.\n"
+                      . "- Trình bày Markdown gọn gàng.";
+
+        $url = 'https://openrouter.ai/api/v1/chat/completions';
+        $payload = [
+            "model" => "meta-llama/llama-3.2-3b-instruct:free",
+            "messages" => [
+                [
+                    "role" => "system",
+                    "content" => $systemPrompt
+                ],
+                [
+                    "role" => "user",
+                    "content" => $message
+                ]
+            ],
+            "temperature" => 0.7
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $apiKey,
+            'HTTP-Referer: http://pet.kesug.com',
+            'X-Title: PetShop AI Pet Care'
+        ]);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $response = curl_exec($ch);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if ($err || !$response) {
+            return "Dạ Pawsy xin lỗi, hệ thống máy chủ AI bên ngoài đang không phản hồi (Lỗi mạng hoặc Hosting chặn kết nối). Xin vui lòng thử lại sau ạ!";
+        } else {
+            $responseData = json_decode($response, true);
+            if (isset($responseData['choices'][0]['message']['content'])) {
+                return $responseData['choices'][0]['message']['content'];
+            } else if (isset($responseData['error'])) {
+                return "Dạ Pawsy xin lỗi, máy chủ AI từ chối kết nối (Mã khóa API có thể đã hết hạn hoặc hết tín dụng). Thông báo từ máy chủ: " . htmlspecialchars($responseData['error']['message'] ?? 'Lỗi không xác định');
+            }
+            return "Dạ Pawsy xin lỗi, có lỗi không xác định khi nhận dữ liệu từ AI. Xin vui lòng thử lại!";
+        }
+    }
 
 
     public function getVaccineSchedule() {
