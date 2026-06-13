@@ -246,52 +246,141 @@ class AiController extends Controller {
                     $reply .= "- 🛍️ Sản phẩm: [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
                 }
                 foreach($s_results as $s) {
-                    $reply .= "- 🗓️ Dịch vụ: [" . $s->name . "](" . URLRO    private function callOpenRouterApiForPetChat($pet, $logs, $message) {
+                    $reply .= "- 🗓️ Dịch vụ: [" . $s->name . "](" . URLROOT . "/service/book/" . $s->id . ") - Giá: " . number_format($s->price, 0, ',', '.') . "đ\n";
+                }
+                return $reply;
+            }
+        }
+        
+        // Fallback cuối cùng
+        return "Dạ Pawsy xin lỗi, hình như em chưa hiểu rõ ý của Quý khách lắm ạ. Quý khách có thể vui lòng diễn đạt lại câu hỏi cụ thể hơn giúp em được không ạ?\n\n👉 Hoặc để được giải đáp chi tiết và nhanh chóng nhất, Quý khách vui lòng liên hệ trực tiếp với nhân viên cửa hàng qua các kênh sau nhé:\n💬 **Zalo/Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n🌐 Hoặc xem thêm thông tin tại **[Trang Liên Hệ](" . URLROOT . "/contact)**.\n\nCác bạn tư vấn viên sẽ phản hồi Quý khách ngay lập tức ạ!";
+    }
+
+    // Hàm phụ trợ: Bỏ dấu tiếng Việt
+    private function removeVietnameseAccents($str) {
+        $unicode = array(
+            'a' => 'á|à|ả|ã|ạ|ă|ắ|ặ|ằ|ẳ|ẵ|â|ấ|ầ|ẩ|ẫ|ậ',
+            'd' => 'đ',
+            'e' => 'é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ',
+            'i' => 'í|ì|ỉ|ĩ|ị',
+            'o' => 'ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ',
+            'u' => 'ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự',
+            'y' => 'ý|ỳ|ỷ|ỹ|ỵ',
+            'A' => 'Á|À|Ả|Ã|Ạ|Ă|Ắ|Ặ|Ằ|Ẳ|Ẵ|Â|Ấ|Ầ|Ẩ|Ẫ|Ậ',
+            'D' => 'Đ',
+            'E' => 'É|È|Ẻ|Ẽ|Ẹ|Ê|Ế|Ề|Ể|Ễ|Ệ',
+            'I' => 'Í|Ì|Ỉ|Ĩ|Ị',
+            'O' => 'Ó|Ò|Ỏ|Õ|Ọ|Ô|Ố|Ồ|Ổ|Ỗ|Ộ|Ơ|Ớ|Ờ|Ở|Ỡ|Ợ',
+            'U' => 'Ú|Ù|Ủ|Ũ|Ụ|Ư|Ứ|Ừ|Ử|Ữ|Ự',
+            'Y' => 'Ý|Ỳ|Ỷ|Ỹ|Ỵ',
+        );
+        foreach ($unicode as $nonUnicode => $uni) {
+            $str = preg_replace("/($uni)/i", $nonUnicode, $str);
+        }
+        return $str;
+    }
+
+    // Chat tư vấn chuyên sâu về sức khỏe thú cưng cụ thể
+    public function pet_chat() {
+        header('Content-Type: application/json');
+        
+        $json = file_get_contents('php://input');
+        $input = json_decode($json, true);
+        
+        if (!$input || empty($input['message']) || empty($input['pet_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Dữ liệu không đầy đủ.']);
+            return;
+        }
+        
+        $petId = intval($input['pet_id']);
+        $message = trim($input['message']);
+        
+        // Lấy thông tin thú cưng
+        $petModel = $this->model('Pet');
+        $pet = $petModel->getPetById($petId);
+        
+        if (!$pet || $pet->customer_id != ($_SESSION['user_id'] ?? 0)) {
+            echo json_encode(['success' => false, 'message' => 'Bạn không có quyền truy cập thông tin thú cưng này.']);
+            return;
+        }
+        
+        // Lấy 5 nhật ký sức khỏe gần nhất
+        $healthLogModel = $this->model('PetHealthLog');
+        $logs = $healthLogModel->getLogsByPet($petId);
+        // Lấy tối đa 5 logs
+        $logs = array_slice($logs, 0, 5);
+        
+        $reply = $this->callOpenRouterApiForPetChat($pet, $logs, $message);
+        
+        if ($reply) {
+            echo json_encode(['success' => true, 'reply' => $reply]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi kết nối AI.']);
+        }
+    }
+
+    private function callOpenRouterApiForPetChat($pet, $logs, $message) {
         $apiKey = trim(OPENROUTER_API_KEY);
         
+        // Fetch store products and services
         $db = new Database();
         $db->query("SELECT p.id, p.name, p.price, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id = c.id");
         $products = $db->resultSet();
         $productsList = "";
         foreach ($products as $p) {
-            $productsList .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
+            $productsList .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ (Danh mục: " . $p->cat_name . ")\n";
         }
 
+        $db->query("SELECT s.id, s.name, s.price, c.name as cat_name FROM services s LEFT JOIN categories c ON s.category_id = c.id");
+        $services = $db->resultSet();
+        $servicesList = "";
+        foreach ($services as $s) {
+            $servicesList .= "- [" . $s->name . "](" . URLROOT . "/service/book/" . $s->id . ") - Giá: " . number_format($s->price, 0, ',', '.') . "đ (Danh mục: " . $s->cat_name . ")\n";
+        }
+        
+        // Định dạng nhật ký sức khỏe gần nhất
         $logSummary = "";
         if (!empty($logs)) {
             foreach ($logs as $index => $log) {
                 $logSummary .= "- Ngày " . date('d/m/Y', strtotime($log->log_date)) 
-                             . ": Cân nặng: " . ($log->weight ? $log->weight . "kg" : "chưa rõ")
-                             . ", Thân nhiệt: " . ($log->temperature ? $log->temperature . "°C" : "chưa rõ")
+                             . ": Cân nặng: " . ($log->weight ? $log->weight . "kg" : "chưa ghi nhận")
+                             . ", Thân nhiệt: " . ($log->temperature ? $log->temperature . "°C" : "chưa ghi nhận")
                              . ", Trạng thái: " . $log->status
-                             . ($log->symptoms ? ", Triệu chứng: " . $log->symptoms : "") . "\n";
+                             . ($log->symptoms ? ", Triệu chứng: " . $log->symptoms : "")
+                             . ($log->notes ? ", Ghi chú: " . $log->notes : "") . "\n";
             }
         } else {
             $logSummary = "Chưa có nhật ký sức khỏe nào được ghi nhận.";
         }
 
         $petContext = "THÔNG TIN THÚ CƯNG HIỆN TẠI:\n"
-                    . "- Tên: " . htmlspecialchars($pet->name) . "\n"
-                    . "- Loài: " . htmlspecialchars($pet->species) . "\n"
-                    . "- Giống: " . ($pet->breed ? htmlspecialchars($pet->breed) : "Chưa rõ") . "\n"
-                    . "- Tuổi: " . htmlspecialchars($pet->age) . " tháng tuổi\n"
-                    . "- Cân nặng hiện tại: " . ($pet->weight ? htmlspecialchars($pet->weight) . "kg" : "Chưa rõ") . "\n"
+                    . "- Tên: " . $pet->name . "\n"
+                    . "- Loài: " . $pet->species . "\n"
+                    . "- Giống: " . ($pet->breed ? $pet->breed : "Chưa rõ") . "\n"
+                    . "- Tuổi: " . $pet->age . " tháng tuổi\n"
+                    . "- Giới tính: " . ($pet->gender == 'male' ? 'Đực' : ($pet->gender == 'female' ? 'Cái' : 'Chưa rõ')) . "\n"
+                    . "- Cân nặng hiện tại: " . ($pet->weight ? $pet->weight . "kg" : "Chưa rõ") . "\n"
                     . "- Nhật ký sức khỏe 5 ngày gần nhất:\n" . $logSummary;
         
-        // Nếu không có API Key hợp lệ, báo lỗi rõ ràng thay vì im lặng
+        $petSpecies = $pet->species ?? '';
+        
         if (empty($apiKey) || strpos($apiKey, 'sk-or') !== 0) {
             return "Dạ Pawsy xin lỗi, hiện tại tính năng Trợ lý AI nâng cao đang tạm bảo trì do chưa cấu hình Mã khóa API hợp lệ (OpenRouter API Key). Quý khách vui lòng liên hệ Ban quản trị để cấu hình lại tính năng này ạ!";
         }
 
         $systemPrompt = "Bạn là Pawsy - Trợ lý dinh dưỡng AI chuyên nghiệp tại PetShop.\n"
-                      . "Nhiệm vụ chính: tư vấn dinh dưỡng, chế độ ăn uống, chăm sóc thể trạng cho bé thú cưng cụ thể dựa trên dữ liệu sau:\n\n"
+                      . "Nhiệm vụ chính của bạn là tư vấn dinh dưỡng, chế độ ăn uống, và hướng dẫn chăm sóc thể trạng cho bé thú cưng cụ thể của khách hàng dựa trên dữ liệu được cung cấp.\n\n"
                       . $petContext . "\n\n"
-                      . "SẢN PHẨM CỦA CỬA HÀNG (Hãy đề xuất nếu phù hợp, kèm Markdown link):\n" . $productsList . "\n\n"
-                      . "QUY TẮC:\n"
-                      . "- Nếu hỏi về bệnh tật cần chẩn đoán sâu, hãy từ chối lịch sự và khuyên dùng [Bác sĩ AI](" . URLROOT . "/ai).\n"
-                      . "- Luôn xưng 'Dạ Pawsy nghe', gọi khách là 'Quý khách' hoặc 'Anh/Chị', gọi thú cưng là 'bé'.\n"
-                      . "- Nhắc tên thú cưng thân thiện.\n"
-                      . "- Trình bày Markdown gọn gàng.";
+                      . "DANH SÁCH SẢN PHẨM & DỊCH VỤ CỦA CỬA HÀNG:\n"
+                      . "Khi tư vấn thức ăn hay dịch vụ chăm sóc, hãy đề xuất trực tiếp các sản phẩm/dịch vụ phù hợp dưới đây kèm link Markdown chính xác (không tự bịa link):\n"
+                      . "SẢN PHẨM CỦA CỬA HÀNG:\n" . $productsList . "\n"
+                      . "DỊCH VỤ CỦA CỬA HÀNG:\n" . $servicesList . "\n\n"
+                      . "QUY TẮC PHẢN HỒI QUAN TRỌNG:\n"
+                      . "- Nếu khách hàng hỏi về bệnh tật, triệu chứng lạ hoặc các vấn đề sức khỏe cần chẩn đoán chuyên sâu (ví dụ: sốt, nôn ói, tiêu chảy, lờ đờ, ghẻ ngứa, bỏ ăn nặng,...), hãy lịch sự trả lời rằng bạn chỉ là trợ lý tư vấn dinh dưỡng, không có chuyên môn chẩn đoán lâm sàng. Sau đó, hướng dẫn họ click vào link [Bác sĩ AI](" . URLROOT . "/ai) để phân tích triệu chứng chuyên sâu.\n"
+                      . "- Luôn xưng hô là 'Dạ Pawsy nghe', gọi khách hàng là 'Quý khách' hoặc 'Anh/Chị', gọi thú cưng là 'bé'.\n"
+                      . "- Nhắc đến tên của bé thú cưng một cách thân thiện trong câu trả lời.\n"
+                      . "- Đề xuất đúng sản phẩm/thức ăn cho chó nếu bé là chó, và cho mèo nếu bé là mèo. Không nhầm lẫn giữa thức ăn chó và mèo.\n"
+                      . "- Trình bày câu trả lời gọn gàng, đẹp mắt bằng Markdown, xuống dòng rõ ràng, dễ đọc.";
 
         $url = 'https://openrouter.ai/api/v1/chat/completions';
         $payload = [
@@ -316,7 +405,7 @@ class AiController extends Controller {
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'Authorization: Bearer ' . $apiKey,
-            'HTTP-Referer: http://pet.kesug.com',
+            'HTTP-Referer: http://localhost/PETSHOP',
             'X-Title: PetShop AI Pet Care'
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
@@ -338,7 +427,6 @@ class AiController extends Controller {
             return "Dạ Pawsy xin lỗi, có lỗi không xác định khi nhận dữ liệu từ AI. Xin vui lòng thử lại!";
         }
     }
-
 
     public function getVaccineSchedule() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
