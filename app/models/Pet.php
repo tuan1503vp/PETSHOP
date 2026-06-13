@@ -106,4 +106,12 @@ class Pet {
         }
         return $this->db->resultSet();
     }
+
+    // Tìm kiếm thú cưng theo mã số
+    public function getPetByCode($pet_code) {
+        $this->db->query('SELECT * FROM pets WHERE pet_code = :pet_code');
+        $this->db->bind(':pet_code', $pet_code);
+        return $this->db->single();
+    }
 }
+

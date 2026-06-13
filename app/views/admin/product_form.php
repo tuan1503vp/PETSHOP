@@ -59,6 +59,13 @@
                     </div>
 
                     <div>
+                        <label for="expiry_date" class="block text-sm font-bold text-gray-700 mb-2">Hạn sử dụng (nếu có)</label>
+                        <input type="date" name="expiry_date" id="expiry_date"
+                               value="<?php echo (isset($data['product']) && $data['product']->expiry_date) ? $data['product']->expiry_date : ''; ?>"
+                               class="w-full border-gray-200 rounded-xl shadow-sm py-3 px-4 focus:ring-primary focus:border-primary border transition-all">
+                    </div>
+
+                    <div>
                         <label for="image" class="block text-sm font-bold text-gray-700 mb-2">Hình ảnh sản phẩm</label>
                         <input type="file" name="image" id="image" accept="image/*"
                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">

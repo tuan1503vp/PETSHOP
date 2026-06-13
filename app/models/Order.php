@@ -64,6 +64,7 @@ class Order {
         $this->db->query('SELECT o.*, COALESCE(o.customer_name, u.fullname) as customer_name 
                           FROM orders o 
                           LEFT JOIN users u ON o.customer_id = u.id 
+                          WHERE o.total_amount > 0
                           ORDER BY o.created_at DESC');
         return $this->db->resultSet();
     }
@@ -129,7 +130,7 @@ class Order {
                 FROM orders o 
                 LEFT JOIN users u ON o.customer_id = u.id
                 LEFT JOIN members m ON u.id = m.user_id
-                WHERE 1=1';
+                WHERE o.total_amount > 0';
         
         if (!empty($filters['type']) && $filters['type'] != 'all') {
             $sql .= ' AND o.order_type = :type';

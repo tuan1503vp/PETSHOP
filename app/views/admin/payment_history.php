@@ -114,7 +114,7 @@
                         <td class="px-6 py-4">
                             <?php 
                                 $price_display = 0;
-                                if (!empty($app->final_price) && $app->final_price > 0) {
+                                if ($app->final_price !== null && $app->final_price !== '') {
                                     $price_display = $app->final_price;
                                 } elseif (!empty($app->service_price)) {
                                     $is_boarding = strpos(mb_strtolower($app->category_name ?? ''), 'trông giữ') !== false;

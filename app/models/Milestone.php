@@ -1,0 +1,43 @@
+<?php
+class Milestone {
+    private $db;
+
+    public function __construct() {
+        $this->db = new Database;
+    }
+
+    // Lấy danh sách cột mốc của bé
+    public function getMilestonesByPet($pet_id) {
+        $this->db->query('SELECT * FROM pet_milestones WHERE pet_id = :pet_id ORDER BY milestone_date DESC, created_at DESC');
+        $this->db->bind(':pet_id', $pet_id);
+        return $this->db->resultSet();
+    }
+
+    // Lấy thông tin chi tiết một cột mốc
+    public function getMilestoneById($id) {
+        $this->db->query('SELECT * FROM pet_milestones WHERE id = :id');
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    // Thêm cột mốc mới
+    public function addMilestone($data) {
+        $this->db->query('INSERT INTO pet_milestones (pet_id, title, description, milestone_date, image) 
+                          VALUES (:pet_id, :title, :description, :milestone_date, :image)');
+        
+        $this->db->bind(':pet_id', $data['pet_id']);
+        $this->db->bind(':title', $data['title']);
+        $this->db->bind(':description', !empty($data['description']) ? $data['description'] : null);
+        $this->db->bind(':milestone_date', $data['milestone_date']);
+        $this->db->bind(':image', !empty($data['image']) ? $data['image'] : null);
+
+        return $this->db->execute();
+    }
+
+    // Xóa cột mốc
+    public function deleteMilestone($id) {
+        $this->db->query('DELETE FROM pet_milestones WHERE id = :id');
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+}

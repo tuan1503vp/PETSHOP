@@ -8,8 +8,8 @@ class Appointment {
 
     // Đặt lịch mới
     public function book($data) {
-        $this->db->query('INSERT INTO appointments (customer_id, pet_id, pet_info, service_id, doctor_id, appointment_date, appointment_time, duration_value, duration_unit, notes) 
-                          VALUES (:customer_id, :pet_id, :pet_info, :service_id, :doctor_id, :appointment_date, :appointment_time, :duration_value, :duration_unit, :notes)');
+        $this->db->query('INSERT INTO appointments (customer_id, pet_id, pet_info, service_id, doctor_id, appointment_date, appointment_time, duration_value, duration_unit, notes, selected_test) 
+                          VALUES (:customer_id, :pet_id, :pet_info, :service_id, :doctor_id, :appointment_date, :appointment_time, :duration_value, :duration_unit, :notes, :selected_test)');
         
         $this->db->bind(':customer_id', $data['customer_id']);
         $this->db->bind(':pet_id', $data['pet_id']);
@@ -21,6 +21,7 @@ class Appointment {
         $this->db->bind(':duration_value', $data['duration_value'] ?? 1);
         $this->db->bind(':duration_unit', $data['duration_unit'] ?? 'none');
         $this->db->bind(':notes', $data['notes']);
+        $this->db->bind(':selected_test', $data['selected_test'] ?? null);
 
         return $this->db->execute();
     }
@@ -113,18 +114,15 @@ class Appointment {
 
     // Kiểm tra bác sĩ có rảnh vào thời gian này không
     public function checkDoctorAvailability($doctor_id, $date, $time) {
-        $targetDateTime = $date . ' ' . $time;
+        // Chỉ kiểm tra trùng khung giờ (cùng ngày và giờ chính xác)
         $this->db->query('SELECT id FROM appointments 
                           WHERE doctor_id = :doctor_id 
                           AND status NOT IN ("cancelled", "completed")
-                          AND (
-                              (appointment_date = :date AND appointment_time = :time)
-                              OR (CONCAT(appointment_date, " ", appointment_time) <= :target_datetime)
-                          )');
+                          AND appointment_date = :date
+                          AND appointment_time = :time');
         $this->db->bind(':doctor_id', $doctor_id);
         $this->db->bind(':date', $date);
         $this->db->bind(':time', $time);
-        $this->db->bind(':target_datetime', $targetDateTime);
         
         $this->db->single();
         return ($this->db->rowCount() == 0);
@@ -235,7 +233,7 @@ class Appointment {
     }
 
     public function getAppointmentsForDoctor($doctor_id) {
-        $this->db->query('SELECT a.*, s.name as service_name, cat.name as category_name, 
+        $this->db->query('SELECT a.*, s.name as service_name, s.price as service_price, cat.name as category_name, 
                           COALESCE(c.fullname, a.customer_name) as customer_name, 
                           c.email as customer_email, 
                           COALESCE(m.phone, a.customer_phone) as customer_phone,
@@ -255,7 +253,7 @@ class Appointment {
     }
 
     public function getCompletedByDoctor($doctor_id) {
-        $this->db->query('SELECT a.*, s.name as service_name, 
+        $this->db->query('SELECT a.*, s.name as service_name, s.price as service_price, 
                           COALESCE(c.fullname, a.customer_name) as customer_name, 
                           c.email as customer_email, 
                           COALESCE(m.phone, a.customer_phone) as customer_phone,

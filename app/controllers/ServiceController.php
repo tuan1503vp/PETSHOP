@@ -62,6 +62,7 @@ class ServiceController extends Controller {
                 'duration_value' => trim($_POST['duration_value'] ?? 1),
                 'duration_unit' => trim($_POST['duration_unit'] ?? 'none'),
                 'notes' => trim($_POST['notes']),
+                'selected_test' => trim($_POST['selected_test'] ?? ''),
                 'date_err' => '',
                 'time_err' => '',
             ];
@@ -78,7 +79,7 @@ class ServiceController extends Controller {
                 $data['time_err'] = 'Vui lòng chọn giờ hẹn';
             } elseif ($data['appointment_date'] === $today) {
                 $currentTime = time();
-                $minTime = $currentTime + 30 * 60; // Ít nhất sau 30 phút
+                $minTime = $currentTime + 30 * 60; // Giờ hẹn phải sau thời điểm đặt lịch ít nhất 30 phút
                 
                 $appointmentTimestamp = strtotime($data['appointment_date'] . ' ' . $data['appointment_time']);
                 if ($appointmentTimestamp < $minTime) {
@@ -106,15 +107,23 @@ class ServiceController extends Controller {
             $services = $this->serviceModel->getServices();
             $my_pets = $petModel->getPetsByCustomer($_SESSION['user_id']);
 
+            $selected_pet_id = isset($_GET['pet_id']) ? (int)$_GET['pet_id'] : null;
+            $symptoms = isset($_GET['symptoms']) ? trim($_GET['symptoms']) : '';
+            $notes = '';
+            if (!empty($symptoms)) {
+                $notes = "Triệu chứng từ nhật ký sức khỏe: " . $symptoms;
+            }
+
             $data = [
                 'services' => $services,
                 'my_pets' => $my_pets,
                 'selected_service' => $service_id,
-                'pet_id' => null,
+                'pet_id' => $selected_pet_id,
                 'pet_info' => '',
                 'appointment_date' => '',
                 'appointment_time' => '',
-                'notes' => '',
+                'notes' => $notes,
+                'selected_test' => '',
                 'date_err' => '',
                 'time_err' => ''
             ];

@@ -78,7 +78,7 @@
         $_sidebar_payment_waiting_count = 0;
         if(in_array($_SESSION['user_role'], ['admin','manager','cashier'])) {
             $tmpDb2 = new Database;
-            $tmpDb2->query("SELECT COUNT(*) as cnt FROM appointments WHERE status = 'confirmed' AND final_price IS NOT NULL AND final_price > 0");
+            $tmpDb2->query("SELECT COUNT(*) as cnt FROM appointments WHERE status = 'confirmed' AND final_price IS NOT NULL");
             $_sidebar_payment_row = $tmpDb2->single();
             $_sidebar_payment_waiting_count = $_sidebar_payment_row ? $_sidebar_payment_row->cnt : 0;
         }
@@ -108,7 +108,7 @@
         </div>
         <div class="p-4 flex-1 overflow-y-auto no-scrollbar">
             <ul class="space-y-2">
-                <?php if(!in_array($_SESSION['user_role'], ['doctor', 'cashier', 'manager', 'staff'])): ?>
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'manager'])): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin" class="flex items-center p-3 rounded-lg <?php echo $is_admin_home ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-chart-line w-6"></i>
@@ -163,6 +163,15 @@
                         <span class="ml-2 text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-md shadow-red-500/50"><?php echo $_sidebar_payment_waiting_count; ?></span>
                         <?php endif; ?>
                         <span class="badge-pending-appt ml-2 text-[10px] font-black bg-orange-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-md shadow-orange-500/50" style="<?php echo $_sidebar_pending_appt_count > 0 ? 'display: inline-flex;' : 'display: none;'; ?>"><?php echo $_sidebar_pending_appt_count; ?></span>
+                    </a>
+                </li>
+                <?php endif; ?>
+
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'doctor'])): ?>
+                <li>
+                    <a href="<?php echo URLROOT; ?>/admin/medical_report" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/medical_report') !== false ? $active_class : $inactive_class; ?>">
+                        <i class="fa-solid fa-staff-snake w-6 text-emerald-400"></i>
+                        <span>Báo cáo Y tế</span>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -229,6 +238,9 @@
                         <span>Hộp thư liên hệ</span>
                     </a>
                 </li>
+                <?php endif; ?>
+
+                <?php if($_SESSION['user_role'] == 'admin'): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/activity_logs" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/activity_logs') !== false ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-clock-rotate-left w-6"></i>

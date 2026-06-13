@@ -105,21 +105,45 @@
                             <p class="text-[11px] text-blue-600/70 italic" id="duration_hint">Hệ thống sẽ tính phí dựa trên thời gian thực tế khi bạn đón thú cưng.</p>
                         </div>
 
+                        <!-- Test Selection Fields (Hidden by default, shown for "Tiêm phòng & xét nghiệm") -->
+                        <div id="test_selection_container" class="hidden space-y-4 bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100">
+                            <h4 class="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                                <i class="fa-solid fa-vial"></i> Đăng ký Xét nghiệm Kèm theo
+                            </h4>
+                            <div>
+                                <label for="selected_test" class="block text-xs font-bold text-gray-600 mb-2">Chọn Loại Xét Nghiệm <span class="text-red-500">*</span></label>
+                                <select id="selected_test" name="selected_test"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-800 focus:ring-2 focus:ring-primary/20 outline-none transition appearance-none">
+                                    <option value="Không xét nghiệm (chỉ tiêm phòng)" <?php echo (isset($data['selected_test']) && $data['selected_test'] === 'Không xét nghiệm (chỉ tiêm phòng)') ? 'selected' : ''; ?>>Không xét nghiệm (chỉ tiêm phòng)</option>
+                                    <option value="Xét nghiệm máu cơ bản (Công thức máu)" <?php echo (isset($data['selected_test']) && $data['selected_test'] === 'Xét nghiệm máu cơ bản (Công thức máu)') ? 'selected' : ''; ?>>Xét nghiệm máu cơ bản (Công thức máu)</option>
+                                    <option value="Xét nghiệm kháng thể Vaccine (Kiểm tra miễn dịch)" <?php echo (isset($data['selected_test']) && $data['selected_test'] === 'Xét nghiệm kháng thể Vaccine (Kiểm tra miễn dịch)') ? 'selected' : ''; ?>>Xét nghiệm kháng thể Vaccine (Kiểm tra miễn dịch)</option>
+                                    <option value="Xét nghiệm ký sinh trùng đường máu (4DX)" <?php echo (isset($data['selected_test']) && $data['selected_test'] === 'Xét nghiệm ký sinh trùng đường máu (4DX)') ? 'selected' : ''; ?>>Xét nghiệm ký sinh trùng đường máu (4DX)</option>
+                                    <option value="Xét nghiệm sinh hóa chức năng gan thận" <?php echo (isset($data['selected_test']) && $data['selected_test'] === 'Xét nghiệm sinh hóa chức năng gan thận') ? 'selected' : ''; ?>>Xét nghiệm sinh hóa chức năng gan thận</option>
+                                    <option value="Xét nghiệm virus truyền nhiễm (Parvo/Care/FIV/FeLV)" <?php echo (isset($data['selected_test']) && $data['selected_test'] === 'Xét nghiệm virus truyền nhiễm (Parvo/Care/FIV/FeLV)') ? 'selected' : ''; ?>>Xét nghiệm virus truyền nhiễm (Parvo/Care/FIV/FeLV)</option>
+                                </select>
+                            </div>
+                            <p class="text-[11px] text-emerald-600/70 italic">Hỗ trợ kiểm tra sức khỏe tổng quát trước khi tiêm phòng để đảm bảo an toàn tối đa cho thú cưng.</p>
+                        </div>
+
                         <script>
                             function toggleDurationFields() {
                                 const select = document.getElementById('service_id');
                                 const container = document.getElementById('duration_container');
+                                const testContainer = document.getElementById('test_selection_container');
                                 if (!select || select.selectedIndex < 0) return;
                                 
                                 const selectedOption = select.options[select.selectedIndex];
                                 if (!selectedOption || selectedOption.value === "") {
                                     container.classList.add('hidden');
+                                    testContainer.classList.add('hidden');
                                     return;
                                 }
 
                                 const category = selectedOption.getAttribute('data-category') || '';
                                 const serviceName = selectedOption.text.toLowerCase();
+                                const serviceId = selectedOption.value;
                                 
+                                // Toggle Boarding Duration
                                 if (category.toLowerCase().includes('trông giữ')) {
                                     container.classList.remove('hidden');
                                     const unitSelect = document.getElementById('duration_unit');
@@ -156,6 +180,13 @@
                                     }
                                 } else {
                                     container.classList.add('hidden');
+                                }
+
+                                // Toggle Test Selection (for "Tiêm phòng & xét nghiệm" service - ID 10)
+                                if (serviceId == '10' || serviceName.includes('tiêm phòng') || serviceName.includes('xét nghiệm')) {
+                                    testContainer.classList.remove('hidden');
+                                } else {
+                                    testContainer.classList.add('hidden');
                                 }
                             }
                             // Run on load
@@ -299,7 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getMinTimeStr() {
         const today = new Date();
-        const minTimeDate = new Date(today.getTime() + 30 * 60 * 1000);
+        // Thêm 31 phút so với thời điểm hiện tại
+        const minTimeDate = new Date(today.getTime() + 31 * 60 * 1000);
         const minHours = String(minTimeDate.getHours()).padStart(2, '0');
         const minMinutes = String(minTimeDate.getMinutes()).padStart(2, '0');
         return `${minHours}:${minMinutes}`;

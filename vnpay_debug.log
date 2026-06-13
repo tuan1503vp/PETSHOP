@@ -1,0 +1,21 @@
+2026-06-10 22:11:59 - return() - Order ID: 59 (TxnRef: 59_1781104289)
+Is Valid: TRUE | Is Success: TRUE
+Received Hash: 597d9bc08187a1b183639c189af0073cfacebb2892e3f3f1e6c1a2bb6c20af2817f9c4e5a3709dc980b4af076dbd63427c863925027505351deba92a63e79214
+Computed Hash: 597d9bc08187a1b183639c189af0073cfacebb2892e3f3f1e6c1a2bb6c20af2817f9c4e5a3709dc980b4af076dbd63427c863925027505351deba92a63e79214
+Hash Data: vnp_Amount=59600000&vnp_BankCode=NCB&vnp_BankTranNo=VNP15578247&vnp_CardType=ATM&vnp_OrderInfo=PETSHOP+don+hang+000059&vnp_PayDate=20260610221153&vnp_ResponseCode=00&vnp_TmnCode=4VCHK58N&vnp_TransactionNo=15578247&vnp_TransactionStatus=00&vnp_TxnRef=59_1781104289
+GET Params: {"url":"vnpay\/return","vnp_Amount":"59600000","vnp_BankCode":"NCB","vnp_BankTranNo":"VNP15578247","vnp_CardType":"ATM","vnp_OrderInfo":"PETSHOP don hang 000059","vnp_PayDate":"20260610221153","vnp_ResponseCode":"00","vnp_TmnCode":"4VCHK58N","vnp_TransactionNo":"15578247","vnp_TransactionStatus":"00","vnp_TxnRef":"59_1781104289","vnp_SecureHash":"597d9bc08187a1b183639c189af0073cfacebb2892e3f3f1e6c1a2bb6c20af2817f9c4e5a3709dc980b4af076dbd63427c863925027505351deba92a63e79214"}
+
+2026-06-10 22:33:30 - return() - Order ID: 60 (TxnRef: 60_1781105584)
+Is Valid: TRUE | Is Success: TRUE
+Received Hash: b81b1ddda2cd24c8422db46c4fcd5d05344aa596b77f8fccd0a8fbedb2be4852d39c529b902d8953a7c27117ffd2d13d8a7b679e4c7a6ea7912bbec5fcd888d1
+Computed Hash: b81b1ddda2cd24c8422db46c4fcd5d05344aa596b77f8fccd0a8fbedb2be4852d39c529b902d8953a7c27117ffd2d13d8a7b679e4c7a6ea7912bbec5fcd888d1
+Hash Data: vnp_Amount=59600000&vnp_BankCode=NCB&vnp_BankTranNo=VNP15578269&vnp_CardType=ATM&vnp_OrderInfo=PETSHOP+don+hang+000060&vnp_PayDate=20260610223325&vnp_ResponseCode=00&vnp_TmnCode=4VCHK58N&vnp_TransactionNo=15578269&vnp_TransactionStatus=00&vnp_TxnRef=60_1781105584
+GET Params: {"url":"vnpay\/return","vnp_Amount":"59600000","vnp_BankCode":"NCB","vnp_BankTranNo":"VNP15578269","vnp_CardType":"ATM","vnp_OrderInfo":"PETSHOP don hang 000060","vnp_PayDate":"20260610223325","vnp_ResponseCode":"00","vnp_TmnCode":"4VCHK58N","vnp_TransactionNo":"15578269","vnp_TransactionStatus":"00","vnp_TxnRef":"60_1781105584","vnp_SecureHash":"b81b1ddda2cd24c8422db46c4fcd5d05344aa596b77f8fccd0a8fbedb2be4852d39c529b902d8953a7c27117ffd2d13d8a7b679e4c7a6ea7912bbec5fcd888d1"}
+
+2026-06-11 10:22:58 - return() - Order ID: 61 (TxnRef: 61_1781148065)
+Is Valid: TRUE | Is Success: FALSE
+Received Hash: 6cea00b7a20a2e6de8bbb95b2c5999adff0b54f7937ff08303e3da95e0bfb24f6654dfcd46db25ffd26c63e628bced6a197c3f5d08a17a9994610d60d8f4dae7
+Computed Hash: 6cea00b7a20a2e6de8bbb95b2c5999adff0b54f7937ff08303e3da95e0bfb24f6654dfcd46db25ffd26c63e628bced6a197c3f5d08a17a9994610d60d8f4dae7
+Hash Data: vnp_Amount=299700000&vnp_BankCode=VNPAY&vnp_CardType=QRCODE&vnp_OrderInfo=PETSHOP+don+hang+000061&vnp_PayDate=20260611102105&vnp_ResponseCode=24&vnp_TmnCode=4VCHK58N&vnp_TransactionNo=0&vnp_TransactionStatus=02&vnp_TxnRef=61_1781148065
+GET Params: {"url":"vnpay\/return","vnp_Amount":"299700000","vnp_BankCode":"VNPAY","vnp_CardType":"QRCODE","vnp_OrderInfo":"PETSHOP don hang 000061","vnp_PayDate":"20260611102105","vnp_ResponseCode":"24","vnp_TmnCode":"4VCHK58N","vnp_TransactionNo":"0","vnp_TransactionStatus":"02","vnp_TxnRef":"61_1781148065","vnp_SecureHash":"6cea00b7a20a2e6de8bbb95b2c5999adff0b54f7937ff08303e3da95e0bfb24f6654dfcd46db25ffd26c63e628bced6a197c3f5d08a17a9994610d60d8f4dae7"}
+

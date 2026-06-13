@@ -1,6 +1,6 @@
 <?php require APPROOT . '/views/admin/header.php'; ?>
 
-<div class="p-6 lg:p-8 space-y-6">
+<div class="p-6 lg:p-8 space-y-6" x-data="{ showQuickRecord: false }">
     <!-- Breadcrumb & Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -8,6 +8,12 @@
                 <i class="fa-solid fa-paw text-primary"></i> Quản lý Thú cưng hệ thống
             </h1>
             <p class="text-xs text-gray-500 mt-1">Danh sách toàn bộ thú cưng của khách hàng đăng ký trên hệ thống để theo dõi y tế.</p>
+        </div>
+        <div>
+            <button @click="showQuickRecord = true" 
+                    class="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-primary to-indigo-600 hover:from-indigo-600 hover:to-primary text-white text-sm font-bold rounded-2xl shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-file-medical"></i> Ghi y bạ nhanh bằng mã số
+            </button>
         </div>
     </div>
 
@@ -141,6 +147,85 @@
                 </table>
             </div>
         <?php endif; ?>
+    </div>
+
+    <!-- Modal Ghi y bạ nhanh -->
+    <div x-show="showQuickRecord" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+         x-cloak>
+        
+        <div x-show="showQuickRecord"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl border border-gray-100"
+             @click.away="showQuickRecord = false">
+            
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-primary to-indigo-600 px-6 py-4 text-white flex justify-between items-center">
+                <h3 class="font-black text-base flex items-center gap-2">
+                    <i class="fa-solid fa-file-medical"></i> Ghi y bạ khám chữa bệnh nhanh
+                </h3>
+                <button @click="showQuickRecord = false" class="text-white/80 hover:text-white transition focus:outline-none">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form action="<?php echo URLROOT; ?>/admin/pet_health_record_add_by_code" method="POST" class="p-6 space-y-4 text-sm">
+                <!-- Mã thú cưng + Ngày khám -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="modal_pet_code" class="block text-xs font-bold text-gray-600 mb-1">Mã thú cưng <span class="text-red-500">*</span></label>
+                        <input type="text" id="modal_pet_code" name="pet_code" placeholder="Ví dụ: PET-123456" required
+                               class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition uppercase">
+                    </div>
+                    <div>
+                        <label for="modal_visit_date" class="block text-xs font-bold text-gray-600 mb-1">Ngày khám <span class="text-red-500">*</span></label>
+                        <input type="date" id="modal_visit_date" name="visit_date" value="<?php echo date('Y-m-d'); ?>" required
+                               class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition">
+                    </div>
+                </div>
+
+                <!-- Chẩn đoán lâm sàng -->
+                <div>
+                    <label for="modal_diagnosis" class="block text-xs font-bold text-gray-600 mb-1">Chẩn đoán lâm sàng <span class="text-red-500">*</span></label>
+                    <textarea id="modal_diagnosis" name="diagnosis" rows="2" required placeholder="Nhập triệu chứng, chẩn đoán của bác sĩ..."
+                              class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition"></textarea>
+                </div>
+
+                <!-- Kế hoạch điều trị & Đơn thuốc -->
+                <div>
+                    <label for="modal_treatment" class="block text-xs font-bold text-gray-600 mb-1">Chỉ định điều trị & Đơn thuốc</label>
+                    <textarea id="modal_treatment" name="treatment" rows="3" placeholder="Nhập đơn thuốc, liều lượng, cách sử dụng..."
+                              class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition"></textarea>
+                </div>
+
+                <!-- Ghi chú thêm & Hẹn tái khám -->
+                <div>
+                    <label for="modal_notes" class="block text-xs font-bold text-gray-600 mb-1">Ghi chú & Hẹn tái khám</label>
+                    <textarea id="modal_notes" name="notes" rows="2" placeholder="Ví dụ: Tái khám sau 3 ngày, kiêng ăn đồ tanh..."
+                              class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition"></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                    <button type="button" @click="showQuickRecord = false" 
+                            class="px-5 py-2.5 bg-gray-100 text-gray-500 rounded-xl font-bold hover:bg-gray-200 transition">Hủy</button>
+                    <button type="submit" 
+                            class="px-5 py-2.5 bg-primary hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-primary/20 transition">Lưu vào sổ</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

@@ -260,20 +260,23 @@ class OrderController extends Controller {
                 
                 $grand_total = $product_total + $appointment_total;
 
-                // Tạo đơn hàng chính
-                $orderData = [
-                    'customer_id' => $customer_id,
-                    'customer_name' => $customer_name,
-                    'customer_phone' => $customer_phone,
-                    'total_amount' => $product_total, // Tổng tiền sản phẩm
-                    'payment_method' => $payment_method,
-                    'order_type' => 'pos',
-                    'status' => 'completed'
-                ];
+                // Tạo đơn hàng chính nếu có sản phẩm
+                $order_id = null;
+                if ($product_total > 0) {
+                    $orderData = [
+                        'customer_id' => $customer_id,
+                        'customer_name' => $customer_name,
+                        'customer_phone' => $customer_phone,
+                        'total_amount' => $product_total, // Tổng tiền sản phẩm
+                        'payment_method' => $payment_method,
+                        'order_type' => 'pos',
+                        'status' => 'completed'
+                    ];
 
-                $order_id = $this->orderModel->createOrder($orderData);
+                    $order_id = $this->orderModel->createOrder($orderData);
+                }
 
-                if ($order_id) {
+                if ($order_id || $appointment_total > 0) {
                     $details_log = [];
                     foreach ($cartItems as $item) {
                         if (!empty($item['is_appointment'])) {
@@ -284,7 +287,9 @@ class OrderController extends Controller {
                             $details_log[] = "[Dịch vụ] " . $item['name'] . " (x" . $item['quantity'] . ")";
                         } else {
                             // Xử lý sản phẩm
-                            $this->orderModel->addOrderItem($order_id, $item['id'], $item['quantity'], $item['price']);
+                            if ($order_id) {
+                                $this->orderModel->addOrderItem($order_id, $item['id'], $item['quantity'], $item['price']);
+                            }
                             $this->productModel->decreaseStock($item['id'], $item['quantity']);
                             $details_log[] = "[Sản phẩm] " . $item['name'] . " (x" . $item['quantity'] . ")";
                         }

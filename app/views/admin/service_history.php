@@ -44,11 +44,12 @@
                     <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Khách hàng</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Dịch vụ</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Thời gian hoàn thành</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-widest">Chi tiết</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
                 <?php if(empty($data['appointments'])): ?>
-                <tr><td colspan="4" class="px-6 py-12 text-center text-gray-400 font-bold">Không có dữ liệu trong khoảng thời gian này</td></tr>
+                <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 font-bold">Không có dữ liệu trong khoảng thời gian này</td></tr>
                 <?php else: ?>
                     <?php foreach($data['appointments'] as $app): ?>
                     <tr class="hover:bg-gray-50 transition-colors">
@@ -61,6 +62,11 @@
                         <td class="px-6 py-4">
                             <span class="text-sm font-bold text-gray-800"><?php echo date('H:i', strtotime($app->appointment_time)); ?></span><br>
                             <span class="text-xs text-gray-500 font-bold"><?php echo date('d/m/Y', strtotime($app->appointment_date)); ?></span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="<?php echo URLROOT; ?>/admin/appointment_detail/<?php echo $app->id; ?>" target="_blank" class="bg-indigo-50 text-primary border border-indigo-100 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-indigo-100 transition inline-flex items-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-eye"></i> Xem
+                            </a>
                         </td>
                     </tr>
                     <?php endforeach; ?>

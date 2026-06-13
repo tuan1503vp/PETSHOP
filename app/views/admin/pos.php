@@ -535,7 +535,7 @@
                 <div class="space-y-1 border-b border-dashed border-gray-300 pb-3 mb-3 text-[8px] text-gray-600">
                     <div class="flex justify-between">
                         <span>HĐ số:</span>
-                        <span class="font-bold text-black" x-text="completedOrder ? '#' + completedOrder.order_id.toString().padStart(5, '0') : ''"></span>
+                        <span class="font-bold text-black" x-text="completedOrder ? (completedOrder.order_id ? '#' + completedOrder.order_id.toString().padStart(5, '0') : 'DV') : ''"></span>
                     </div>
                     <div class="flex justify-between">
                         <span>Ngày:</span>
@@ -566,12 +566,19 @@
                     </div>
                     <template x-if="completedOrder && completedOrder.cart">
                         <template x-for="item in completedOrder.cart" :key="item.id">
-                            <div class="flex justify-between items-start text-[9px] text-gray-800 font-medium">
-                                <div class="max-w-[130px] leading-tight">
-                                    <span x-text="item.name"></span>
+                            <div class="border-b border-gray-50 pb-1.5 last:border-b-0">
+                                <div class="flex justify-between items-start text-[9px] text-gray-800 font-medium">
+                                    <div class="max-w-[130px] leading-tight">
+                                        <span x-text="item.name"></span>
+                                    </div>
+                                    <div class="whitespace-nowrap" x-text="`${item.quantity} x ${Math.round(item.price).toLocaleString('vi-VN')}đ`"></div>
+                                    <div class="font-bold text-black whitespace-nowrap text-right" x-text="`${(item.quantity * item.price).toLocaleString('vi-VN')}đ`"></div>
                                 </div>
-                                <div class="whitespace-nowrap" x-text="`${item.quantity} x ${Math.round(item.price).toLocaleString('vi-VN')}đ`"></div>
-                                <div class="font-bold text-black whitespace-nowrap text-right" x-text="`${(item.quantity * item.price).toLocaleString('vi-VN')}đ`"></div>
+                                <template x-if="item.instruction">
+                                    <div class="text-[7px] text-gray-500 italic mt-0.5 leading-tight pl-1 border-l border-primary/40">
+                                        HD: <span x-text="item.instruction"></span>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                     </template>
@@ -699,7 +706,8 @@ document.addEventListener('alpine:init', () => {
                 customer_id: a.customer_id,
                 customer_name: a.customer_name,
                 customer_phone: a.customer_phone,
-                is_appointment: true
+                is_appointment: true,
+                prescriptions: a.prescriptions || []
             };
         }),
         benefits: <?php echo json_encode($data['benefits']); ?>,
@@ -744,13 +752,7 @@ document.addEventListener('alpine:init', () => {
                 setTimeout(() => {
                     const appt = this.appointments.find(a => String(a.real_id) === String(apptId));
                     if (appt) {
-                        const existingItem = this.cart.find(item => item.id === appt.id);
-                        if (!existingItem) {
-                            this.cart.push({
-                                ...appt,
-                                quantity: appt.duration_value
-                            });
-                        }
+                        this.addToCart(appt);
                         this.customerName = appt.customer_name;
                         this.customerPhone = appt.customer_phone;
                         const cust = this.customers.find(c => c.fullname === appt.customer_name || c.phone === appt.customer_phone);
@@ -790,7 +792,8 @@ document.addEventListener('alpine:init', () => {
                                 customer_id: a.customer_id,
                                 customer_name: a.customer_name,
                                 customer_phone: a.customer_phone,
-                                is_appointment: true
+                                is_appointment: true,
+                                prescriptions: a.prescriptions || []
                             };
                         });
                         
@@ -1029,8 +1032,34 @@ document.addEventListener('alpine:init', () => {
             } else {
                 this.cart.push({
                     ...product,
-                    quantity: 1
+                    quantity: product.is_appointment ? (product.duration_value || 1) : 1
                 });
+
+                // Tự động thêm các sản phẩm trong đơn thuốc kèm theo của lịch hẹn
+                if (product.is_appointment && product.prescriptions && product.prescriptions.length > 0) {
+                    product.prescriptions.forEach(pres => {
+                        const actualProduct = this.products.find(p => p.id === pres.product_id);
+                        if (actualProduct) {
+                            if (actualProduct.stock <= 0) {
+                                alert('Cảnh báo: Sản phẩm "' + actualProduct.name + '" trong đơn thuốc đã hết hàng!');
+                            } else if (actualProduct.stock < pres.quantity) {
+                                alert('Cảnh báo: Sản phẩm "' + actualProduct.name + '" trong đơn thuốc không đủ tồn kho (Cần ' + pres.quantity + ', Còn ' + actualProduct.stock + ')!');
+                            }
+                            
+                            const existingProd = this.cart.find(item => item.id === actualProduct.id);
+                            const addQty = Math.min(parseInt(pres.quantity), actualProduct.stock > 0 ? actualProduct.stock : 1);
+                            if (existingProd) {
+                                existingProd.quantity = Math.min(existingProd.quantity + addQty, actualProduct.stock > 0 ? actualProduct.stock : 999);
+                            } else {
+                                this.cart.push({
+                                    ...actualProduct,
+                                    quantity: addQty,
+                                    instruction: pres.instruction || ''
+                                });
+                            }
+                        }
+                    });
+                }
             }
         },
 

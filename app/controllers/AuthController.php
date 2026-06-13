@@ -179,6 +179,7 @@ class AuthController extends Controller {
         $_SESSION['user_id'] = $user->id;
         $_SESSION['user_email'] = $user->email;
         $_SESSION['user_name'] = $user->fullname;
+        $_SESSION['user_username'] = $user->fullname;
         $_SESSION['user_role'] = $user->role;
         
         // Ghi nhật ký hành vi đăng nhập
@@ -201,6 +202,7 @@ class AuthController extends Controller {
         unset($_SESSION['user_id']);
         unset($_SESSION['user_email']);
         unset($_SESSION['user_name']);
+        unset($_SESSION['user_username']);
         unset($_SESSION['user_role']);
         
         // Tắt session_regenerate_id(true) trên host dùng chung để tránh lỗi mất cookie

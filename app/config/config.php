@@ -33,7 +33,7 @@ define('DB_NAME', 'petshop_db');
 
 // Cấu hình AI (OpenRouter API)
 if (!defined('OPENROUTER_API_KEY')) {
-    define('OPENROUTER_API_KEY', getenv('OPENROUTER_API_KEY') ?: '');
+    define('OPENROUTER_API_KEY', 'mock');
 }
 
 // Cấu hình SMTP Email (dự phòng - InfinityFree thường chặn cổng này)

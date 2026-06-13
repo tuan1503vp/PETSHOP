@@ -1,6 +1,30 @@
-<?php require APPROOT . '/views/inc/header.php'; ?>
+<?php require APPROOT . '/views/inc/header.php'; $pet = $data['pet']; ?>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+.chat-bubble-content p {
+    margin-bottom: 0.5rem;
+}
+.chat-bubble-content p:last-child {
+    margin-bottom: 0;
+}
+.chat-bubble-content ul, .chat-bubble-content ol {
+    margin-bottom: 0.5rem;
+    padding-left: 1.25rem;
+    list-style-type: disc;
+}
+.chat-bubble-content ol {
+    list-style-type: decimal;
+}
+.chat-bubble-content li {
+    margin-bottom: 0.25rem;
+}
+.chat-bubble-content strong {
+    font-weight: 800;
+    color: #111827;
+}
+</style>
 
-<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: 'daily_logs', showAddLogModal: false }">
+<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: '<?php echo $_GET['tab'] ?? 'clinic_records'; ?>', showAddVaccineModal: false, showAddMilestoneModal: false, petWeight: <?php echo !empty($pet->weight) ? floatval($pet->weight) : 0; ?>, lifeStage: 'adult_neutered', rer: 0, der: 0, foodRecommend: 0, pateRecommend: 0, aiMessages: [{ sender: 'ai', text: 'Xin chào! Mình là Pawsy, trợ lý AI chăm sóc sức khỏe của bé <?php echo htmlspecialchars($pet->name); ?>. Bạn cần mình tư vấn điều gì về sức khỏe hay dinh dưỡng của bé không?' }], aiInput: '', aiLoading: false, calculateNutrition() { if (this.petWeight <= 0) return; this.rer = Math.round(70 * Math.pow(this.petWeight, 0.75)); let multiplier = 1.6; if (this.lifeStage === 'puppy_kitten') multiplier = 3.0; else if (this.lifeStage === 'adult_intact') multiplier = 1.8; else if (this.lifeStage === 'adult_neutered') multiplier = 1.6; else if (this.lifeStage === 'obese_weight_loss') multiplier = 1.2; this.der = Math.round(this.rer * multiplier); this.foodRecommend = Math.round(this.der * 0.7 / 3.5); this.pateRecommend = Math.round(this.der * 0.3 / 0.9); }, async sendAiMessage() { if (!this.aiInput.trim()) return; const userMsg = this.aiInput; this.aiMessages.push({ sender: 'user', text: userMsg }); this.aiInput = ''; this.aiLoading = true; try { const res = await fetch('<?php echo URLROOT; ?>/ai/pet_chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pet_id: <?php echo $pet->id; ?>, message: userMsg }) }); const data = await res.json(); if (data.success) { this.aiMessages.push({ sender: 'ai', text: data.reply }); } else { this.aiMessages.push({ sender: 'ai', text: 'Có lỗi xảy ra: ' + data.message }); } } catch (e) { this.aiMessages.push({ sender: 'ai', text: 'Không thể kết nối với Pawsy. Vui lòng kiểm tra lại kết nối mạng.' }); } finally { this.aiLoading = false; this.$nextTick(() => { const container = document.getElementById('chatMessages'); if (container) container.scrollTop = container.scrollHeight; }); } }, init() { this.calculateNutrition(); } }">
     <!-- Breadcrumb -->
     <nav class="flex text-sm text-gray-500 mb-8" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -23,7 +47,6 @@
     </nav>
 
     <!-- Pet Summary Header Card -->
-    <?php $pet = $data['pet']; ?>
     <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 sm:p-8 mb-8 flex flex-col md:flex-row gap-8 items-center md:items-start">
         <div class="w-32 h-32 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-gray-100 shadow-inner">
             <?php if (!empty($pet->image)): ?>
@@ -81,99 +104,33 @@
     <?php flash('record_message'); ?>
 
     <!-- Tabs Navigation -->
-    <div class="border-b border-gray-200 mb-8">
-        <nav class="flex space-x-8" aria-label="Tabs">
-            <button @click="activeTab = 'daily_logs'" 
-                    :class="activeTab === 'daily_logs' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
-                <i class="fa-solid fa-notes-medical mr-2"></i> Nhật ký sức khỏe (Chủ nuôi)
-            </button>
-            <button @click="activeTab = 'clinic_records'" 
+    <div class="border-b border-gray-200 mb-8 overflow-x-auto">
+        <nav class="flex space-x-8 min-w-max" aria-label="Tabs">
+
+            <button @click="activeTab = 'clinic_records'; window.history.replaceState(null, null, '?tab=clinic_records')" 
                     :class="activeTab === 'clinic_records' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
                 <i class="fa-solid fa-stethoscope mr-2"></i> Lịch sử khám bệnh (PETSHOP)
             </button>
+            <button @click="activeTab = 'vaccinations'; window.history.replaceState(null, null, '?tab=vaccinations')" 
+                    :class="activeTab === 'vaccinations' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
+                <i class="fa-solid fa-syringe mr-2"></i> Lịch tiêm phòng
+            </button>
+            <button @click="activeTab = 'nutrition_ai'; window.history.replaceState(null, null, '?tab=nutrition_ai')" 
+                    :class="activeTab === 'nutrition_ai' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
+                <i class="fa-solid fa-bowl-food mr-2"></i> Dinh dưỡng & Trợ lý AI
+            </button>
+            <button @click="activeTab = 'milestones'; window.history.replaceState(null, null, '?tab=milestones')" 
+                    :class="activeTab === 'milestones' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
+                <i class="fa-solid fa-timeline mr-2"></i> Cột mốc & Kỷ niệm
+            </button>
         </nav>
     </div>
 
-    <!-- TAB 1: Daily Health Logs -->
-    <div x-show="activeTab === 'daily_logs'" x-transition class="space-y-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <h3 class="text-lg font-bold text-gray-900">Theo dõi sức khỏe hàng ngày</h3>
-                <p class="text-xs text-gray-500 mt-0.5">Thường xuyên cập nhật cân nặng, nhiệt độ để theo dõi trạng thái bé cưng.</p>
-            </div>
-            <button @click="showAddLogModal = true" 
-                    class="inline-flex items-center px-4 py-2 text-xs font-bold text-white bg-primary rounded-xl hover:bg-indigo-700 transition shadow-sm hover:shadow-primary/20">
-                <i class="fa-solid fa-plus mr-1.5"></i> Thêm nhật ký
-            </button>
-        </div>
 
-        <?php if (empty($data['logs'])): ?>
-            <div class="bg-white rounded-[2rem] border border-gray-100 p-12 text-center text-gray-500 shadow-sm">
-                <i class="fa-regular fa-clipboard text-gray-300 text-4xl mb-4 block"></i>
-                <p class="text-sm font-medium">Bé chưa có nhật ký sức khỏe nào.</p>
-                <button @click="showAddLogModal = true" class="text-xs font-bold text-primary hover:underline mt-2">Thêm nhật ký ngay</button>
-            </div>
-        <?php else: ?>
-            <div class="bg-white rounded-[2rem] border border-gray-100 overflow-hidden shadow-sm">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-100 text-sm">
-                        <thead class="bg-gray-50 text-[10px] text-gray-400 font-black uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4 text-left">Ngày ghi</th>
-                                <th class="px-6 py-4 text-left">Cân nặng</th>
-                                <th class="px-6 py-4 text-left">Nhiệt độ</th>
-                                <th class="px-6 py-4 text-left">Trạng thái</th>
-                                <th class="px-6 py-4 text-left">Triệu chứng & Ghi chú</th>
-                                <th class="px-6 py-4 text-center">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 text-gray-700 font-medium">
-                            <?php foreach ($data['logs'] as $log): ?>
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-bold">
-                                        <?php echo date('d/m/Y', strtotime($log->log_date)); ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php echo !empty($log->weight) ? floatval($log->weight) . ' kg' : '-'; ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php echo !empty($log->temperature) ? floatval($log->temperature) . ' °C' : '-'; ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php
-                                            $badgeClass = "bg-gray-100 text-gray-700";
-                                            if ($log->status === 'Rất tốt') $badgeClass = "bg-green-50 text-green-700 border border-green-100";
-                                            elseif ($log->status === 'Bình thường') $badgeClass = "bg-blue-50 text-blue-700 border border-blue-100";
-                                            elseif ($log->status === 'Mệt mỏi') $badgeClass = "bg-amber-50 text-amber-700 border border-amber-100";
-                                            elseif ($log->status === 'Ốm yếu') $badgeClass = "bg-red-50 text-red-700 border border-red-100";
-                                        ?>
-                                        <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider <?php echo $badgeClass; ?>">
-                                            <?php echo htmlspecialchars($log->status); ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <?php if (!empty($log->symptoms)): ?>
-                                            <div class="text-xs text-red-500 font-semibold mb-0.5">Triệu chứng: <?php echo htmlspecialchars($log->symptoms); ?></div>
-                                        <?php endif; ?>
-                                        <div class="text-xs text-gray-500"><?php echo htmlspecialchars($log->notes); ?></div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <a href="<?php echo URLROOT; ?>/pet/delete_health_log/<?php echo $log->id; ?>" 
-                                           onclick="return confirm('Bạn muốn xóa nhật ký sức khỏe ngày <?php echo date('d/m/Y', strtotime($log->log_date)); ?>?');"
-                                           class="text-red-500 hover:text-red-700 font-bold text-xs">
-                                            <i class="fa-solid fa-trash-can"></i> Xóa
-                                        </a>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        <?php endif; ?>
-    </div>
 
     <!-- TAB 2: Clinic Records -->
     <div x-show="activeTab === 'clinic_records'" x-transition class="space-y-6">
@@ -218,6 +175,29 @@
                                     <i class="fa-solid fa-pills"></i> Đơn thuốc & Hướng điều trị
                                 </h5>
                                 <p class="text-gray-800 leading-relaxed"><?php echo !empty($record->treatment) ? nl2br(htmlspecialchars($record->treatment)) : 'Chưa có chỉ định điều trị.'; ?></p>
+                                
+                                <?php if (!empty($record->prescriptions)): ?>
+                                    <div class="mt-4 pt-3 border-t border-emerald-100/40 space-y-2">
+                                        <p class="text-[10px] font-black uppercase text-emerald-600 tracking-widest flex items-center gap-1">
+                                            <i class="fa-solid fa-receipt"></i> Chi tiết thuốc kê đơn:
+                                        </p>
+                                        <div class="space-y-2">
+                                            <?php foreach ($record->prescriptions as $pres): ?>
+                                                <div class="bg-white/60 p-2.5 rounded-xl border border-emerald-100/30 text-xs">
+                                                    <div class="flex justify-between font-bold text-gray-800">
+                                                        <span><?php echo htmlspecialchars($pres->product_name); ?></span>
+                                                        <span class="text-primary">x<?php echo $pres->quantity; ?></span>
+                                                    </div>
+                                                    <?php if (!empty($pres->instruction)): ?>
+                                                        <p class="text-[11px] text-gray-500 italic mt-1 pl-2 border-l border-emerald-500/30">
+                                                            HDSD: <?php echo htmlspecialchars($pres->instruction); ?>
+                                                        </p>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -233,8 +213,352 @@
         <?php endif; ?>
     </div>
 
-    <!-- MODAL: Add Daily Log -->
-    <div x-show="showAddLogModal" 
+    <!-- TAB 3: Vaccinations -->
+    <div x-show="activeTab === 'vaccinations'" x-transition class="space-y-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">Sổ tiêm chủng & phòng bệnh</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Theo dõi lịch sử tiêm vắc xin và các mũi điều trị phòng ngừa định kỳ.</p>
+            </div>
+            <button onclick="document.getElementById('ai-vaccine-modal').classList.remove('hidden'); fetchAiVaccineSchedule();" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-emerald-500/30 transition-all flex items-center gap-2 group">
+                <i class="fa-solid fa-wand-magic-sparkles group-hover:rotate-12 transition-transform"></i> Phác đồ AI
+            </button>
+        </div>
+
+        <?php flash('vaccination_message'); ?>
+
+        <?php if (empty($data['vaccinations'])): ?>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-12 text-center text-gray-500 shadow-sm">
+                <i class="fa-solid fa-syringe text-gray-300 text-4xl mb-4 block"></i>
+                <p class="text-sm font-medium">Bé chưa có lịch sử tiêm chủng nào được ghi nhận.</p>
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <?php foreach ($data['vaccinations'] as $vac): ?>
+                    <div class="bg-white rounded-[2rem] border border-emerald-100 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[4rem] z-0 group-hover:scale-110 transition-transform"></div>
+                        
+                        <div class="flex items-start justify-between mb-4 relative z-10">
+                            <div>
+                                <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-syringe"></i> Mũi tiêm / Vắc-xin
+                                </p>
+                                <h4 class="text-lg font-bold text-gray-900"><?php echo htmlspecialchars($vac->vaccine_name); ?></h4>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Ngày tiêm</p>
+                                <p class="text-sm font-bold text-gray-700"><?php echo date('d/m/Y', strtotime($vac->vaccinated_date)); ?></p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-4 relative z-10">
+                            <div class="bg-gray-50/80 p-3 rounded-2xl border border-gray-100/50">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Sinh hiệu</p>
+                                <p class="text-xs font-bold text-gray-700">
+                                    <i class="fa-solid fa-weight-scale text-orange-400 mr-1"></i><?php echo !empty($vac->weight) ? $vac->weight . 'kg' : '--'; ?> 
+                                    <span class="text-gray-300 mx-1">|</span> 
+                                    <i class="fa-solid fa-temperature-half text-red-400 mr-1"></i><?php echo !empty($vac->temperature) ? $vac->temperature . '°C' : '--'; ?>
+                                </p>
+                            </div>
+                            <div class="bg-gray-50/80 p-3 rounded-2xl border border-gray-100/50">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Bác sĩ & Lô SX</p>
+                                <p class="text-xs font-bold text-gray-700 truncate" title="<?php echo htmlspecialchars($vac->veterinarian_name ?? 'Bác sĩ'); ?>">
+                                    <i class="fa-solid fa-user-doctor text-blue-400 mr-1"></i><?php echo htmlspecialchars($vac->veterinarian_name ?? 'Bác sĩ'); ?>
+                                </p>
+                                <?php if(!empty($vac->batch_number)): ?>
+                                <p class="text-[10px] text-gray-500 truncate mt-0.5">Lô: <?php echo htmlspecialchars($vac->batch_number); ?></p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <?php if (!empty($vac->test_result) || !empty($vac->reaction_notes) || !empty($vac->notes)): ?>
+                        <div class="space-y-2 mb-4 text-xs relative z-10">
+                            <?php if (!empty($vac->test_result)): ?>
+                            <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-50">
+                                <span class="font-bold text-indigo-700 block mb-0.5"><i class="fa-solid fa-microscope mr-1"></i> Khám Sàng lọc:</span>
+                                <span class="text-gray-600 leading-relaxed"><?php echo nl2br(htmlspecialchars($vac->test_result)); ?></span>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <?php if (!empty($vac->reaction_notes)): ?>
+                            <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-50">
+                                <span class="font-bold text-emerald-700 block mb-0.5"><i class="fa-solid fa-clipboard-list mr-1"></i> Dặn dò sau tiêm:</span>
+                                <span class="text-gray-600 leading-relaxed"><?php echo nl2br(htmlspecialchars($vac->reaction_notes)); ?></span>
+                            </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($vac->notes)): ?>
+                            <div class="bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
+                                <span class="font-bold text-gray-500 block mb-0.5"><i class="fa-solid fa-comment-dots mr-1"></i> Ghi chú khác:</span>
+                                <span class="text-gray-600 leading-relaxed"><?php echo nl2br(htmlspecialchars($vac->notes)); ?></span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100 relative z-10">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Lịch nhắc tiếp theo</p>
+                                <?php if (!empty($vac->next_due_date)): ?>
+                                    <?php 
+                                        $nextDate = strtotime($vac->next_due_date);
+                                        $today = strtotime(date('Y-m-d'));
+                                        $dueClass = ($nextDate < $today) ? 'text-red-600 bg-red-50 border-red-100' : 'text-indigo-600 bg-indigo-50 border-indigo-100';
+                                    ?>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border <?php echo $dueClass; ?>">
+                                        <i class="fa-regular fa-calendar-check"></i> <?php echo date('d/m/Y', $nextDate); ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-xs text-gray-400 italic font-medium px-1">Không có</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- TAB 4: Nutrition & AI Advisor -->
+    <div x-show="activeTab === 'nutrition_ai'" x-transition class="space-y-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Nutrition Calculator -->
+            <div class="lg:col-span-5 bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 sm:p-8 space-y-6">
+                <div>
+                    <h4 class="text-lg font-black text-gray-900 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-primary"></i> Nhu cầu dinh dưỡng
+                    </h4>
+                    <p class="text-xs text-gray-500 mt-1">Dựa trên cân nặng thực tế và thể trạng của bé cưng.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">Cân nặng hiện tại (kg)</label>
+                        <div class="relative rounded-xl shadow-sm">
+                            <input type="number" step="0.1" min="0.1" max="150" x-model.number="petWeight" @input="calculateNutrition()"
+                                   class="w-full pl-4 pr-12 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary font-bold text-gray-800">
+                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                <span class="text-gray-400 font-semibold text-xs">kg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">Trạng thái phát triển & Sinh lý</label>
+                        <select x-model="lifeStage" @change="calculateNutrition()"
+                                class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-gray-800 font-semibold">
+                            <option value="puppy_kitten">Thú non / Cún miu con đang lớn</option>
+                            <option value="adult_intact">Trưởng thành (chưa triệt sản)</option>
+                            <option value="adult_neutered">Trưởng thành (đã triệt sản)</option>
+                            <option value="obese_weight_loss">Béo phì / Cần giảm cân</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Calculation Results -->
+                <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-4">
+                    <h5 class="text-[10px] font-black uppercase text-gray-400 tracking-wider">Khuyến nghị năng lượng & Định lượng</h5>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-3 rounded-xl border border-slate-100">
+                            <span class="text-[10px] text-gray-400 font-semibold block">Nhu cầu nghỉ ngơi (RER)</span>
+                            <span class="text-base font-black text-gray-800" x-text="rer + ' kcal'"></span>
+                        </div>
+                        <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/30">
+                            <span class="text-[10px] text-indigo-500 font-semibold block">Năng lượng/ngày (DER)</span>
+                            <span class="text-base font-black text-primary" x-text="der + ' kcal'"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5 pt-2 border-t border-slate-200/50">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-500 font-medium"><i class="fa-solid fa-cookie-bite mr-1.5 text-amber-500"></i>Thức ăn hạt khô (70%):</span>
+                            <span class="font-black text-gray-800" x-text="foodRecommend + ' gram / ngày'"></span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-500 font-medium"><i class="fa-solid fa-fish-fins mr-1.5 text-cyan-500"></i>Pate / Thức ăn ướt (30%):</span>
+                            <span class="font-black text-gray-800" x-text="pateRecommend + ' gram / ngày'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Suggestion -->
+                <div class="space-y-4">
+                    <h5 class="text-xs font-black uppercase text-gray-800 tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-bag-shopping text-primary"></i> Sản phẩm phù hợp đề xuất
+                    </h5>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <?php if(!empty($data['suggestedProducts'])): ?>
+                            <?php foreach($data['suggestedProducts'] as $p): ?>
+                                <a href="<?php echo URLROOT; ?>/product/show/<?php echo $p->id; ?>" 
+                                   class="bg-white border border-gray-100 rounded-2xl p-3 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
+                                    <div>
+                                        <div class="w-full aspect-square rounded-xl overflow-hidden bg-slate-50 mb-2">
+                                            <?php if(!empty($p->image)): ?>
+                                                <img src="<?php echo URLROOT . '/public/images/' . $p->image; ?>" 
+                                                     alt="<?php echo htmlspecialchars($p->name); ?>" 
+                                                     class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                            <?php else: ?>
+                                                <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                                    <i class="fa-solid fa-paw text-2xl"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <h6 class="text-xs font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-primary transition"><?php echo htmlspecialchars($p->name); ?></h6>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-t border-slate-50 flex items-center justify-between">
+                                        <span class="text-xs font-black text-primary"><?php echo number_format($p->price, 0, ',', '.'); ?>đ</span>
+                                        <span class="text-[10px] font-black text-indigo-600 group-hover:underline">Chi tiết</span>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p class="text-xs text-gray-400 col-span-2 italic text-center">Chưa có sản phẩm phù hợp.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Chatbot Advisor -->
+            <div class="lg:col-span-7 bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[600px]">
+                <!-- Chat Header -->
+                <div class="p-6 border-b border-gray-100 bg-slate-50/50 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-primary text-white flex items-center justify-center text-lg shadow-md shadow-primary/25">
+                            <i class="fa-solid fa-robot animate-pulse"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-gray-900 text-sm">Trợ lý dinh dưỡng Pawsy</h4>
+                            <p class="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Đang trực tuyến 24/7
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Area -->
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30">
+                    <template x-for="(msg, index) in aiMessages" :key="index">
+                        <div :class="msg.sender === 'user' ? 'justify-end' : 'justify-start'" class="flex items-start gap-3">
+                            <!-- Bot Avatar -->
+                            <div x-show="msg.sender === 'ai'" class="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 text-primary flex items-center justify-center text-xs shrink-0 shadow-inner">
+                                <i class="fa-solid fa-robot"></i>
+                            </div>
+
+                            <!-- Bubble -->
+                            <div :class="msg.sender === 'user' 
+                                 ? 'bg-primary text-white rounded-[1.25rem] rounded-tr-none' 
+                                 : 'bg-white border border-gray-100 text-gray-800 rounded-[1.25rem] rounded-tl-none shadow-sm'"
+                                 class="p-4 max-w-[85%] text-xs font-semibold leading-relaxed chat-bubble-content">
+                                <div x-html="msg.sender === 'user' ? msg.text : marked.parse(msg.text)"></div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Loading Bouncing Dots -->
+                    <div x-show="aiLoading" class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 text-primary flex items-center justify-center text-xs shrink-0 shadow-inner">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="bg-white border border-gray-100 p-4 rounded-[1.25rem] rounded-tl-none shadow-sm flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-slate-400 animate-bounce"></span>
+                            <span class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay: 0.2s"></span>
+                            <span class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay: 0.4s"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 border-t border-gray-100 bg-white shrink-0">
+                    <form @submit.prevent="sendAiMessage()" class="flex gap-2">
+                        <input type="text" x-model="aiInput" placeholder="Ví dụ: Bé mèo 5kg bỏ ăn kèm nôn ói nhẹ nên làm gì?" 
+                               :disabled="aiLoading"
+                               class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs font-semibold">
+                        <button type="submit" :disabled="aiLoading || !aiInput.trim()"
+                                class="px-4 py-3 bg-primary text-white rounded-xl font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-1.5 shadow-md shadow-primary/20 disabled:opacity-50">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TAB 5: Milestone Timeline -->
+    <div x-show="activeTab === 'milestones'" x-transition class="space-y-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">Kỷ niệm & Cột mốc phát triển</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Lưu giữ những khoảnh khắc đáng nhớ và cột mốc trưởng thành của bé cưng.</p>
+            </div>
+            <button @click="showAddMilestoneModal = true" 
+                    class="inline-flex items-center px-4 py-2 text-xs font-bold text-white bg-primary rounded-xl hover:bg-indigo-700 transition shadow-sm hover:shadow-primary/20">
+                <i class="fa-solid fa-camera mr-1.5"></i> Thêm kỷ niệm
+            </button>
+        </div>
+
+        <?php flash('milestone_message'); ?>
+
+        <?php if (empty($data['milestones'])): ?>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-12 text-center text-gray-500 shadow-sm">
+                <i class="fa-regular fa-images text-gray-300 text-4xl mb-4 block"></i>
+                <p class="text-sm font-medium">Bé chưa có cột mốc kỷ niệm nào được đăng tải.</p>
+                <button @click="showAddMilestoneModal = true" class="text-xs font-bold text-primary hover:underline mt-2">Đăng ảnh kỷ niệm đầu tiên</button>
+            </div>
+        <?php else: ?>
+            <div class="relative border-l-2 border-slate-100 ml-4 md:ml-8 pl-6 md:pl-10 space-y-10 py-4">
+                <?php foreach ($data['milestones'] as $milestone): ?>
+                    <div class="relative">
+                        <!-- Bullet icon -->
+                        <span class="absolute -left-[35px] md:-left-[51px] top-1.5 bg-white border-4 border-primary/25 w-6 h-6 rounded-full flex items-center justify-center">
+                            <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+                        </span>
+
+                        <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm hover:shadow-md transition flex flex-col md:flex-row gap-6">
+                            
+                            <?php if (!empty($milestone->image)): ?>
+                                <div class="w-full md:w-48 h-48 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 shrink-0">
+                                    <img src="<?php echo URLROOT . '/public/images/' . $milestone->image; ?>" 
+                                         alt="<?php echo htmlspecialchars($milestone->title); ?>" 
+                                         class="w-full h-full object-cover">
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="text-lg font-black text-gray-900 leading-tight"><?php echo htmlspecialchars($milestone->title); ?></h4>
+                                        <a href="<?php echo URLROOT; ?>/pet/delete_milestone/<?php echo $milestone->id; ?>" 
+                                           onclick="return confirm('Bạn muốn xóa kỷ niệm này?');"
+                                           class="text-red-400 hover:text-red-600 transition p-1">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    </div>
+                                    <p class="text-xs font-bold text-indigo-600">
+                                        <i class="fa-regular fa-calendar-days mr-1"></i><?php echo date('d/m/Y', strtotime($milestone->milestone_date)); ?>
+                                    </p>
+                                    <p class="text-sm text-gray-600 leading-relaxed font-semibold">
+                                        <?php echo nl2br(htmlspecialchars($milestone->description)); ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+
+
+    <!-- MODAL: Add Vaccination removed for customers -->
+    </div>
+
+    <!-- MODAL: Add Milestone -->
+    <div x-show="showAddMilestoneModal" 
          x-cloak
          class="fixed inset-0 z-[100] overflow-y-auto flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
          x-transition:enter="transition ease-out duration-300"
@@ -245,70 +569,109 @@
          x-transition:leave-end="opacity-0">
         
         <div class="bg-white rounded-[2rem] max-w-lg w-full overflow-hidden shadow-2xl border border-gray-100" 
-             @click.away="showAddLogModal = false">
+             @click.away="showAddMilestoneModal = false">
             <div class="p-6 border-b border-gray-50 bg-slate-50/50 flex justify-between items-center">
                 <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-file-signature text-primary"></i> Ghi nhật ký sức khỏe
+                    <i class="fa-solid fa-camera text-primary"></i> Đăng kỷ niệm cột mốc mới
                 </h3>
-                <button @click="showAddLogModal = false" class="text-gray-400 hover:text-gray-600 transition focus:outline-none">
+                <button @click="showAddMilestoneModal = false" class="text-gray-400 hover:text-gray-600 transition focus:outline-none">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <form action="<?php echo URLROOT; ?>/pet/add_health_log/<?php echo $pet->id; ?>" method="POST" class="p-6 space-y-4 text-sm text-gray-700">
+            <form action="<?php echo URLROOT; ?>/pet/add_milestone/<?php echo $pet->id; ?>" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 text-sm text-gray-700">
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="log_date" class="block text-xs font-bold text-gray-600 mb-1.5">Ngày ghi <span class="text-red-500">*</span></label>
-                        <input type="date" id="log_date" name="log_date" value="<?php echo date('Y-m-d'); ?>" required
+                    <div class="col-span-2 sm:col-span-1">
+                        <label for="milestone_title" class="block text-xs font-bold text-gray-600 mb-1.5">Tiêu đề sự kiện <span class="text-red-500">*</span></label>
+                        <input type="text" id="milestone_title" name="title" required placeholder="Ví dụ: Lần đầu đi spa, Sinh nhật 1 tuổi..."
                                class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
                     </div>
-                    <div>
-                        <label for="status" class="block text-xs font-bold text-gray-600 mb-1.5">Trạng thái sức khỏe</label>
-                        <select id="status" name="status" 
-                                class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                            <option value="Bình thường">Bình thường</option>
-                            <option value="Rất tốt">Rất tốt</option>
-                            <option value="Mệt mỏi">Mệt mỏi</option>
-                            <option value="Ốm yếu">Ốm yếu</option>
-                            <option value="Khác">Khác</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="weight" class="block text-xs font-bold text-gray-600 mb-1.5">Cân nặng (kg)</label>
-                        <input type="number" id="weight" name="weight" step="0.01" min="0.01" max="150" placeholder="Ví dụ: 5.2"
-                               class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    </div>
-                    <div>
-                        <label for="temperature" class="block text-xs font-bold text-gray-600 mb-1.5">Thân nhiệt (°C)</label>
-                        <input type="number" id="temperature" name="temperature" step="0.1" min="30" max="45" placeholder="Ví dụ: 38.5"
+                    <div class="col-span-2 sm:col-span-1">
+                        <label for="milestone_date" class="block text-xs font-bold text-gray-600 mb-1.5">Ngày diễn ra <span class="text-red-500">*</span></label>
+                        <input type="date" id="milestone_date" name="milestone_date" value="<?php echo date('Y-m-d'); ?>" required
                                class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
                     </div>
                 </div>
 
                 <div>
-                    <label for="symptoms" class="block text-xs font-bold text-gray-600 mb-1.5">Triệu chứng bất thường (nếu có)</label>
-                    <input type="text" id="symptoms" name="symptoms" placeholder="Ví dụ: Ho, bỏ ăn, ngứa tai..."
-                           class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                </div>
-
-                <div>
-                    <label for="notes" class="block text-xs font-bold text-gray-600 mb-1.5">Chi tiết & Ghi chú</label>
-                    <textarea id="notes" name="notes" rows="3" placeholder="Nhập mô tả hoạt động hoặc ăn uống của bé..."
+                    <label for="milestone_desc" class="block text-xs font-bold text-gray-600 mb-1.5">Nhật ký / Mô tả kỷ niệm</label>
+                    <textarea id="milestone_desc" name="description" rows="3" placeholder="Ghi lại cảm xúc hoặc câu chuyện đáng nhớ của bé..."
                               class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
                 </div>
 
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Hình ảnh kỷ niệm</label>
+                    <input type="file" name="image" accept="image/*"
+                           class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                </div>
+
                 <div class="pt-4 border-t border-gray-50 flex justify-end gap-2">
-                    <button type="button" @click="showAddLogModal = false" 
+                    <button type="button" @click="showAddMilestoneModal = false" 
                             class="px-4 py-2 border border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-slate-50">Hủy</button>
                     <button type="submit" 
-                            class="px-4 py-2 bg-primary hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-primary/20">Lưu nhật ký</button>
+                            class="px-4 py-2 bg-primary hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-primary/20">Đăng sự kiện</button>
                 </div>
             </form>
         </div>
     </div>
+
 </div>
+
+<!-- AI Vaccine Schedule Modal -->
+<div id="ai-vaccine-modal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="document.getElementById('ai-vaccine-modal').classList.add('hidden')"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 flex justify-between items-center text-white shrink-0">
+            <h3 class="font-black text-lg flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Phác Đồ Tiêm Chủng Đề Xuất (Bởi Bác Sĩ AI)
+            </h3>
+            <button onclick="document.getElementById('ai-vaccine-modal').classList.add('hidden')" class="text-white/80 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="p-8 overflow-y-auto grow custom-scrollbar bg-gray-50/50" id="ai-vaccine-content">
+            <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-500 mb-4"></i>
+                <p class="font-bold text-sm">Bác sĩ AI đang phân tích dữ liệu độ tuổi và loài...</p>
+                <p class="text-xs mt-1">Quá trình này có thể mất 10-15 giây</p>
+            </div>
+        </div>
+        <div class="p-4 bg-white border-t border-gray-100 flex justify-end shrink-0">
+            <button onclick="document.getElementById('ai-vaccine-modal').classList.add('hidden')" class="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition">Đóng lại</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fetchAiVaccineSchedule() {
+        const contentDiv = document.getElementById('ai-vaccine-content');
+        contentDiv.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-500 mb-4"></i>
+                <p class="font-bold text-sm">Bác sĩ AI đang phân tích dữ liệu độ tuổi và loài của thú cưng...</p>
+                <p class="text-xs mt-1">Quá trình này có thể mất 10-15 giây tùy thuộc vào tốc độ AI.</p>
+            </div>
+        `;
+        
+        const formData = new FormData();
+        formData.append('pet_id', '<?php echo $data['pet']->id; ?>');
+        
+        fetch('<?php echo URLROOT; ?>/ai/getVaccineSchedule', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                contentDiv.innerHTML = `<div class="prose prose-sm prose-emerald max-w-none text-gray-800">${marked.parse(data.data)}</div>`;
+            } else {
+                contentDiv.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-sm font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ${data.message}</div>`;
+            }
+        })
+        .catch(err => {
+            contentDiv.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-sm font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Đã xảy ra lỗi khi kết nối với máy chủ AI.</div>`;
+        });
+    }
+</script>
 
 <?php require APPROOT . '/views/inc/footer.php'; ?>

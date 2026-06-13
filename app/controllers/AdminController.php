@@ -40,7 +40,7 @@ class AdminController extends Controller {
             header('Location: ' . URLROOT . '/admin/services'); exit();
         }
         if ($_SESSION['user_role'] == 'manager') {
-            header('Location: ' . URLROOT . '/admin/services'); exit();
+            // manager can see overview now
         }
         if ($_SESSION['user_role'] == 'staff') {
             header('Location: ' . URLROOT . '/admin/personal_report'); exit();
@@ -195,7 +195,7 @@ class AdminController extends Controller {
 
             $this->activityLogModel->log(
                 $_SESSION['user_id'],
-                $_SESSION['user_username'],
+                ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                 $_SESSION['user_role'],
                 'Xử lý liên hệ',
                 "Đã đánh dấu liên hệ ID $id là: $status"
@@ -213,10 +213,14 @@ class AdminController extends Controller {
         $appointmentModel = $this->model('Appointment');
         $appointments = $appointmentModel->getAllAppointments(['status' => 'confirmed']);
         
-        // Lấy những dịch vụ có giá hoặc là dịch vụ Trông giữ
+        $healthRecordModel = $this->model('HealthRecord');
+        foreach ($appointments as $app) {
+            $app->prescriptions = $healthRecordModel->getPrescriptionsByAppointment($app->id);
+        }
+        
         $waiting_appointments = array_filter($appointments, function($app) {
             $is_boarding = strpos(mb_strtolower($app->category_name), 'trông giữ') !== false;
-            return $is_boarding || (!empty($app->final_price) && $app->final_price > 0);
+            return $is_boarding || ($app->final_price !== null && $app->final_price !== '');
         });
 
         // Lấy danh sách khách hàng thành viên để tìm kiếm tại POS
@@ -253,6 +257,43 @@ class AdminController extends Controller {
         $this->view('admin/pos', $data);
     }
 
+    public function medical_report() {
+        if ($_SESSION['user_role'] != 'admin' && $_SESSION['user_role'] != 'doctor') {
+            header('Location: ' . URLROOT . '/admin');
+            exit();
+        }
+
+        $db = new Database;
+        
+        // 1. Thống kê số lượng ca khám theo tháng trong 1 năm qua
+        $db->query("SELECT MONTH(appointment_date) as month, COUNT(*) as cnt 
+                    FROM appointments 
+                    WHERE status = 'completed' AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                    GROUP BY MONTH(appointment_date) ORDER BY appointment_date ASC");
+        $monthlyAppointments = $db->resultSet();
+
+        // 2. Thống kê loại vắc-xin được tiêm nhiều nhất
+        $db->query("SELECT vaccine_name, COUNT(*) as cnt 
+                    FROM pet_vaccinations 
+                    GROUP BY vaccine_name ORDER BY cnt DESC LIMIT 5");
+        $topVaccines = $db->resultSet();
+
+        // 3. Thống kê các bệnh phổ biến (dựa trên chẩn đoán)
+        $db->query("SELECT diagnosis as disease_name, COUNT(*) as cnt 
+                    FROM health_records 
+                    WHERE diagnosis IS NOT NULL AND diagnosis != '' 
+                    GROUP BY diagnosis ORDER BY cnt DESC LIMIT 5");
+        $topDiseases = $db->resultSet();
+
+        $data = [
+            'monthlyAppointments' => $monthlyAppointments,
+            'topVaccines' => $topVaccines,
+            'topDiseases' => $topDiseases
+        ];
+
+        $this->view('admin/medical_report', $data);
+    }
+
     // API lấy danh sách dịch vụ chờ thanh toán mới nhất cho POS
     public function pos_waiting_appointments() {
         if (!isset($_SESSION['user_id'])) exit;
@@ -260,9 +301,14 @@ class AdminController extends Controller {
         $appointmentModel = $this->model('Appointment');
         $appointments = $appointmentModel->getAllAppointments(['status' => 'confirmed']);
         
+        $healthRecordModel = $this->model('HealthRecord');
+        foreach ($appointments as $app) {
+            $app->prescriptions = $healthRecordModel->getPrescriptionsByAppointment($app->id);
+        }
+        
         $waiting_appointments = array_filter($appointments, function($app) {
             $is_boarding = strpos(mb_strtolower($app->category_name), 'trông giữ') !== false;
-            return $is_boarding || (!empty($app->final_price) && $app->final_price > 0);
+            return $is_boarding || ($app->final_price !== null && $app->final_price !== '');
         });
 
         header('Content-Type: application/json');
@@ -299,11 +345,15 @@ class AdminController extends Controller {
         $appointmentModel = $this->model('Appointment');
         $lastHash = '';
         
+        $healthRecordModel = $this->model('HealthRecord');
         while (true) {
             $appointments = $appointmentModel->getAllAppointments(['status' => 'confirmed']);
+            foreach ($appointments as $app) {
+                $app->prescriptions = $healthRecordModel->getPrescriptionsByAppointment($app->id);
+            }
             $waiting_appointments = array_filter($appointments, function($app) {
                 $is_boarding = strpos(mb_strtolower($app->category_name), 'trông giữ') !== false;
-                return $is_boarding || (!empty($app->final_price) && $app->final_price > 0);
+                return $is_boarding || ($app->final_price !== null && $app->final_price !== '');
             });
             $waiting_appointments = array_values($waiting_appointments);
             
@@ -352,7 +402,7 @@ class AdminController extends Controller {
 
     // Trang hiển thị Nhật ký hành vi dành cho Admin và Manager
     public function activity_logs() {
-        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'], ['admin', 'manager'])) {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
             header('Location: ' . URLROOT . '/auth/login');
             return;
         }
@@ -423,7 +473,7 @@ class AdminController extends Controller {
             if ($db->execute()) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Đặt lịch hẹn POS',
                     "Đặt dịch vụ ID " . $data['service_id'] . " cho khách: " . $data['customer_name'] . " (Bác sĩ ID: " . $data['doctor_id'] . ")"
@@ -459,7 +509,8 @@ class AdminController extends Controller {
                 'description' => trim($_POST['description']),
                 'price' => trim($_POST['price']),
                 'stock_quantity' => trim($_POST['stock_quantity']),
-                'image' => $image
+                'image' => $image,
+                'expiry_date' => trim($_POST['expiry_date'] ?? '')
             ];
 
             $insertedId = $this->productModel->addProduct($data);
@@ -480,7 +531,7 @@ class AdminController extends Controller {
 
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Thêm sản phẩm',
                     "Đã thêm sản phẩm mới: " . $data['name'] . " (Giá: " . $data['price'] . "đ)"
@@ -513,7 +564,8 @@ class AdminController extends Controller {
                 'description' => trim($_POST['description']),
                 'price' => trim($_POST['price']),
                 'stock_quantity' => trim($_POST['stock_quantity']),
-                'image' => $image
+                'image' => $image,
+                'expiry_date' => trim($_POST['expiry_date'] ?? '')
             ];
 
             if ($this->productModel->updateProduct($data)) {
@@ -547,7 +599,7 @@ class AdminController extends Controller {
 
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Sửa sản phẩm',
                     "Đã sửa sản phẩm ID " . $id . ": " . $data['name']
@@ -592,7 +644,7 @@ class AdminController extends Controller {
             if ($this->productModel->deleteProduct($id)) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Xóa sản phẩm',
                     "Đã xóa sản phẩm ID: " . $id
@@ -883,13 +935,15 @@ class AdminController extends Controller {
             $freeMinutesToday = $maxWorkingMinutes - $totalWorkingMinutesToday;
             if ($freeMinutesToday < 0) $freeMinutesToday = 0;
 
+            $products = $this->productModel->getProducts();
             $this->view('admin/services', [
                 'appointments' => $appointments,
                 'completed_appointments' => $completedAppts,
                 'is_doctor_view' => true,
                 'busy_slots' => $busySlots,
                 'work_minutes' => $totalWorkingMinutesToday,
-                'free_minutes' => $freeMinutesToday
+                'free_minutes' => $freeMinutesToday,
+                'products' => $products
             ]);
         } else {
             $filters = [];
@@ -907,12 +961,29 @@ class AdminController extends Controller {
                 $staffSchedules = $appointmentModel->getStaffSchedules();
             }
 
+            $products = $this->productModel->getProducts();
+
+            // Tính toán KPI cho Admin/Manager
+            $db = new Database();
+            $db->query("SELECT COUNT(*) as val FROM appointments WHERE DATE(appointment_date) = CURDATE()");
+            $appt_today = $db->single()->val;
+
+            $db->query("SELECT COUNT(*) as val FROM appointments WHERE status = 'confirmed'");
+            $appt_pending = $db->single()->val;
+
+            $db->query("SELECT COALESCE(SUM(final_price), 0) as val FROM appointments WHERE MONTH(appointment_date) = MONTH(NOW()) AND YEAR(appointment_date) = YEAR(NOW()) AND status = 'completed'");
+            $appt_revenue = $db->single()->val;
+
             $this->view('admin/services', [
                 'appointments' => $appointments,
                 'completed_appointments' => [],
                 'is_doctor_view' => false,
                 'doctors' => $doctors,
-                'staff_schedules' => $staffSchedules
+                'staff_schedules' => $staffSchedules,
+                'products' => $products,
+                'appt_today' => $appt_today,
+                'appt_pending' => $appt_pending,
+                'appt_revenue' => $appt_revenue
             ]);
         }
     }
@@ -949,7 +1020,7 @@ class AdminController extends Controller {
             if ($serviceModel->addService($data)) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Thêm dịch vụ',
                     "Đã thêm dịch vụ mới: " . $data['name'] . " (Giá: " . $data['price'] . "đ)"
@@ -989,7 +1060,7 @@ class AdminController extends Controller {
             if ($serviceModel->updateService($data)) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Sửa dịch vụ',
                     "Đã sửa dịch vụ ID " . $id . ": " . $data['name']
@@ -1012,7 +1083,7 @@ class AdminController extends Controller {
             if ($serviceModel->deleteService($id)) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Xóa dịch vụ',
                     "Đã xóa dịch vụ ID: " . $id
@@ -1036,7 +1107,7 @@ class AdminController extends Controller {
             if ($this->model('User')->deleteUser($id)) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Xóa khách hàng',
                     "Đã xóa tài khoản khách hàng ID: " . $id
@@ -1108,7 +1179,7 @@ class AdminController extends Controller {
                 if ($employeeModel->addEmployee($employeeData)) {
                     $this->activityLogModel->log(
                         $_SESSION['user_id'],
-                        $_SESSION['user_username'],
+                        ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                         $_SESSION['user_role'],
                         'Thêm nhân viên',
                         "Đã thêm nhân viên mới: " . $employeeData['fullname'] . " (Mã: " . $employeeData['employee_code'] . ", Chức vụ: " . $role . ")"
@@ -1132,7 +1203,7 @@ class AdminController extends Controller {
             if ($employeeModel->deleteEmployee($id)) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Xóa nhân viên',
                     "Đã xóa nhân viên ID: " . $id
@@ -1202,7 +1273,7 @@ class AdminController extends Controller {
 
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Phân công bác sĩ',
                     "Đã xếp lịch hẹn #" . $appointment_id . " cho bác sĩ/nhân viên ID: " . $doctor_id
@@ -1255,7 +1326,7 @@ class AdminController extends Controller {
             if ($newId) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Thêm danh mục',
                     "Đã thêm danh mục mới qua AJAX: " . $name . " (Loại: " . $type . ")"
@@ -1296,7 +1367,7 @@ class AdminController extends Controller {
         if ($appointmentModel->assignDoctor($id, $_SESSION['user_id'])) {
             $this->activityLogModel->log(
                 $_SESSION['user_id'],
-                $_SESSION['user_username'],
+                ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                 $_SESSION['user_role'],
                 'Nhận ca khám',
                 "Bác sĩ đã tự nhận ca khám/lịch hẹn #" . $id
@@ -1308,26 +1379,219 @@ class AdminController extends Controller {
         }
     }
 
+    public function appointment_complete_form($id) {
+        if (!in_array($_SESSION['user_role'], ['doctor', 'staff'])) {
+            die('Bạn không có quyền truy cập trang này.');
+        }
+
+        $id = (int)$id;
+        $appointmentModel = $this->model('Appointment');
+        $appointment = $appointmentModel->getAppointmentById($id);
+
+        if (!$appointment) {
+            flash('admin_error', 'Lịch hẹn không tồn tại.');
+            header('Location: ' . URLROOT . '/admin/services');
+            return;
+        }
+
+        if ($appointment->doctor_id != $_SESSION['user_id']) {
+            flash('admin_error', 'Bạn không phải người phụ trách ca này.');
+            header('Location: ' . URLROOT . '/admin/services');
+            return;
+        }
+
+        if ($appointment->status !== 'confirmed' || ($appointment->final_price !== null && $appointment->final_price !== '')) {
+            flash('admin_error', 'Ca này đã báo giá hoặc không ở trạng thái phù hợp.');
+            header('Location: ' . URLROOT . '/admin/services');
+            return;
+        }
+
+        // Chỉ lấy sản phẩm danh mục Thuốc (category_id = 12)
+        $products = $this->productModel->getProducts(['category' => 12]);
+
+        $this->view('admin/appointment_complete_form', [
+            'appointment' => $appointment,
+            'products'    => $products,
+        ]);
+    }
+
+    public function appointment_cancel_doctor($id) {
+
+        if (!in_array($_SESSION['user_role'], ['doctor', 'staff'])) {
+            die('Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        $id = (int)$id;
+        $appointmentModel = $this->model('Appointment');
+        $appointment = $appointmentModel->getAppointmentById($id);
+
+        if (!$appointment) {
+            flash('admin_error', 'Lịch hẹn không tồn tại.');
+            header('Location: ' . URLROOT . '/admin/services');
+            return;
+        }
+
+        // Chỉ cho phép hủy nếu đúng là bác sĩ đang đảm nhận và chưa báo giá
+        if ($appointment->doctor_id != $_SESSION['user_id']) {
+            flash('admin_error', 'Bạn không phải người đảm nhận ca này.');
+            header('Location: ' . URLROOT . '/admin/services');
+            return;
+        }
+        if ($appointment->final_price !== null && $appointment->final_price !== '') {
+            flash('admin_error', 'Không thể hủy ca đã báo giá. Vui lòng liên hệ quản lý.');
+            header('Location: ' . URLROOT . '/admin/services');
+            return;
+        }
+
+        // Reset về pending, xóa doctor_id
+        $db = new Database;
+        $db->query('UPDATE appointments SET status = "pending", doctor_id = NULL WHERE id = :id');
+        $db->bind(':id', $id);
+        if ($db->execute()) {
+            $this->activityLogModel->log(
+                $_SESSION['user_id'],
+                ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? 'system'),
+                $_SESSION['user_role'],
+                'Hủy ca nhận',
+                "Bác sĩ/NV đã trả lại ca #" . $id . " về trạng thái chờ nhận"
+            );
+            flash('service_success', 'Đã hủy ca #' . str_pad($id, 5, '0', STR_PAD_LEFT) . '. Lịch hẹn trở về chờ bác sĩ khác tiếp nhận.');
+        } else {
+            flash('admin_error', 'Lỗi khi hủy ca. Vui lòng thử lại.');
+        }
+        header('Location: ' . URLROOT . '/admin/services');
+    }
+
     public function appointment_set_price() {
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if ($_SESSION['user_role'] != 'doctor') {
+            if ($_SESSION['user_role'] != 'doctor' && $_SESSION['user_role'] != 'staff') {
                 die('Bạn không có quyền thực hiện thao tác này.');
             }
 
-            $id = $_POST['appointment_id'];
+            $id = (int)$_POST['appointment_id'];
             $price = $_POST['final_price'];
 
             $appointmentModel = $this->model('Appointment');
+            $appointment = $appointmentModel->getAppointmentById($id);
+            
+            if (!$appointment) {
+                die('Lịch hẹn không tồn tại.');
+            }
             
             if ($appointmentModel->updateFinalPrice($id, $price)) {
                 $this->activityLogModel->log(
                     $_SESSION['user_id'],
-                    $_SESSION['user_username'],
+                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                     $_SESSION['user_role'],
                     'Báo giá ca khám',
-                    "Bác sĩ đã báo giá ca khám #" . $id . ": " . $price . "đ"
+                    "Bác sĩ/Nhân viên đã báo giá ca khám #" . $id . ": " . $price . "đ"
                 );
-                flash('service_success', 'Đã gửi báo giá thành công. Yêu cầu đang chờ thu ngân thanh toán.');
+
+                // Lưu bệnh án vào Y bạ lâm sàng hoặc sổ tiêm phòng tùy thuộc vào loại dịch vụ
+                $pet_id = $appointment->pet_id;
+                $diagnosis = trim($_POST['diagnosis'] ?? '');
+                $treatment = trim($_POST['treatment'] ?? '');
+                $notes = trim($_POST['notes'] ?? '');
+
+                $categoryNameLower = !empty($appointment->category_name) ? mb_strtolower($appointment->category_name, 'UTF-8') : '';
+                $serviceNameLower = mb_strtolower($appointment->service_name, 'UTF-8');
+                
+                $isVaccine = (
+                    strpos($categoryNameLower, 'tiêm') !== false ||
+                    strpos($categoryNameLower, 'vắc') !== false ||
+                    strpos($categoryNameLower, 'vaccin') !== false ||
+                    strpos($serviceNameLower, 'tiêm') !== false ||
+                    strpos($serviceNameLower, 'vắc xin') !== false ||
+                    strpos($serviceNameLower, 'vaccin') !== false ||
+                    strpos($serviceNameLower, 'chủng') !== false ||
+                    strpos($serviceNameLower, 'tẩy giun') !== false
+                );
+
+                if ($isVaccine) {
+                    $vaccinationModel = $this->model('Vaccination');
+                    $vaccine_name = trim($_POST['vaccine_name'] ?? '');
+                    if (empty($vaccine_name)) {
+                        $vaccine_name = $appointment->service_name;
+                    }
+                    
+                    // Trừ tồn kho nếu chọn vắc-xin từ danh sách sản phẩm
+                    $product_id = !empty($_POST['product_id']) ? (int)$_POST['product_id'] : null;
+                    if ($product_id) {
+                        $productModel = $this->model('Product');
+                        $productModel->decreaseStock($product_id, 1);
+                    }
+
+                    $vaccinated_date = trim($_POST['vaccinated_date'] ?? date('Y-m-d'));
+                    $next_due_date = !empty($_POST['next_due_date']) ? trim($_POST['next_due_date']) : null;
+                    
+                    // Lấy các trường thông tin y khoa mới
+                    $weight = !empty($_POST['weight']) ? (float)$_POST['weight'] : null;
+                    $temperature = !empty($_POST['temperature']) ? (float)$_POST['temperature'] : null;
+                    $batch_number = trim($_POST['batch_number'] ?? '');
+                    $test_result = trim($_POST['test_result'] ?? '');
+                    $reaction_notes = trim($_POST['reaction_notes'] ?? '');
+                    $veterinarian_name = $_SESSION['user_name'] ?? $_SESSION['user_username'] ?? 'Bác sĩ';
+                    
+                    $vaccinationModel->addVaccination([
+                        'pet_id' => !empty($pet_id) ? $pet_id : null,
+                        'vaccine_name' => $vaccine_name,
+                        'vaccinated_date' => $vaccinated_date,
+                        'next_due_date' => $next_due_date,
+                        'notes' => $notes,
+                        'appointment_id' => $id,
+                        'weight' => $weight,
+                        'temperature' => $temperature,
+                        'batch_number' => $batch_number,
+                        'veterinarian_name' => $veterinarian_name,
+                        'test_result' => $test_result,
+                        'reaction_notes' => $reaction_notes
+                    ]);
+                } else {
+                    if (!empty($diagnosis) || !empty($treatment) || !empty($notes) || !empty($_POST['prescription_products'])) {
+                        if (empty($diagnosis)) {
+                            $diagnosis = 'Khám dịch vụ';
+                        }
+                        $healthRecordModel = $this->model('HealthRecord');
+                        $recordData = [
+                            'pet_id' => !empty($pet_id) ? $pet_id : null,
+                            'appointment_id' => $id,
+                            'doctor_id' => $_SESSION['user_id'],
+                            'diagnosis' => $diagnosis,
+                            'treatment' => $treatment,
+                            'notes' => $notes,
+                            'visit_date' => date('Y-m-d')
+                        ];
+                        
+                        $recordId = $healthRecordModel->addRecord($recordData);
+                        
+                        if ($recordId) {
+                            // Xử lý lưu đơn thuốc kê kèm theo
+                            $p_products = $_POST['prescription_products'] ?? [];
+                            $p_quantities = $_POST['prescription_quantities'] ?? [];
+                            $p_instructions = $_POST['prescription_instructions'] ?? [];
+                            
+                            $prescriptions = [];
+                            if (is_array($p_products)) {
+                                for ($i = 0; $i < count($p_products); $i++) {
+                                    if (!empty($p_products[$i])) {
+                                        $prescriptions[] = [
+                                            'product_id' => (int)$p_products[$i],
+                                            'quantity' => (int)($p_quantities[$i] ?? 1),
+                                            'instruction' => trim($p_instructions[$i] ?? '')
+                                        ];
+                                    }
+                                }
+                            }
+                            
+                            if (!empty($prescriptions)) {
+                                $healthRecordModel->addPrescriptions($recordId, $prescriptions);
+                            }
+                        }
+                    }
+                }
+
+                flash('service_success', 'Đã gửi báo giá và lưu hồ sơ y bạ thành công. Yêu cầu đang chờ thu ngân thanh toán.');
                 header('Location: ' . URLROOT . '/admin/services');
             } else {
                 die('Lỗi khi cập nhật thành tiền.');
@@ -1355,9 +1619,52 @@ class AdminController extends Controller {
                 ]);
             }
 
+            // Tự động liên kết vào Sổ tiêm chủng nếu dịch vụ liên quan đến tiêm chủng
+            if ($appt && $appt->pet_id) {
+                $categoryNameLower = !empty($appt->category_name) ? mb_strtolower($appt->category_name, 'UTF-8') : '';
+                $serviceNameLower = mb_strtolower($appt->service_name, 'UTF-8');
+                
+                $isVaccine = (
+                    strpos($categoryNameLower, 'tiêm') !== false ||
+                    strpos($categoryNameLower, 'vắc') !== false ||
+                    strpos($categoryNameLower, 'vaccin') !== false ||
+                    strpos($serviceNameLower, 'tiêm') !== false ||
+                    strpos($serviceNameLower, 'vắc xin') !== false ||
+                    strpos($serviceNameLower, 'vaccin') !== false ||
+                    strpos($serviceNameLower, 'chủng') !== false ||
+                    strpos($serviceNameLower, 'tẩy giun') !== false
+                );
+                
+                if ($isVaccine) {
+                    $vaccinationModel = $this->model('Vaccination');
+                    
+                    // Kiểm tra xem đã có lịch sử tiêm phòng nào được liên kết với ca này chưa
+                    $db = new Database();
+                    $db->query("SELECT id FROM pet_vaccinations WHERE appointment_id = :appointment_id LIMIT 1");
+                    $db->bind(':appointment_id', $id);
+                    $existingVac = $db->single();
+                    
+                    if (!$existingVac) {
+                        // Thử tìm ngày hẹn tái khám và ghi chú từ health_records
+                        $db->query("SELECT notes FROM health_records WHERE appointment_id = :appointment_id LIMIT 1");
+                        $db->bind(':appointment_id', $id);
+                        $hRecord = $db->single();
+                        
+                        $vaccinationModel->addVaccination([
+                            'pet_id' => $appt->pet_id,
+                            'vaccine_name' => $appt->service_name,
+                            'vaccinated_date' => date('Y-m-d'),
+                            'next_due_date' => null,
+                            'notes' => 'Tự động lưu từ ca hoàn thành #' . str_pad($id, 5, '0', STR_PAD_LEFT) . ($hRecord && !empty($hRecord->notes) ? ' (Bác sĩ ghi chú: ' . $hRecord->notes . ')' : ''),
+                            'appointment_id' => $id
+                        ]);
+                    }
+                }
+            }
+
             $this->activityLogModel->log(
                 $_SESSION['user_id'],
-                $_SESSION['user_username'],
+                ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                 $_SESSION['user_role'],
                 'Thanh toán lịch hẹn',
                 "Thu ngân xác nhận thanh toán & hoàn thành dịch vụ #" . $id
@@ -1368,6 +1675,40 @@ class AdminController extends Controller {
         } else {
             die('Lỗi khi cập nhật trạng thái thanh toán.');
         }
+    }
+
+    public function appointment_detail($id) {
+        $this->checkAccess(['admin', 'doctor', 'manager', 'cashier', 'staff']);
+        
+        $appointmentModel = $this->model('Appointment');
+        $appointment = $appointmentModel->getAppointmentById($id);
+        
+        if (!$appointment) {
+            die('Lịch hẹn không tồn tại.');
+        }
+        
+        $healthRecordModel = $this->model('HealthRecord');
+        $db = new Database();
+        $db->query("SELECT * FROM health_records WHERE appointment_id = :appointment_id LIMIT 1");
+        $db->bind(':appointment_id', $id);
+        $record = $db->single();
+        
+        $prescriptions = [];
+        if ($record) {
+            $prescriptions = $healthRecordModel->getPrescriptionsByRecord($record->id);
+        }
+        
+        // Truy vấn thông tin tiêm chủng nếu có
+        $db->query("SELECT * FROM pet_vaccinations WHERE appointment_id = :appointment_id LIMIT 1");
+        $db->bind(':appointment_id', $id);
+        $vaccineRecord = $db->single();
+        
+        $this->view('admin/appointment_detail', [
+            'appointment' => $appointment,
+            'record' => $record,
+            'prescriptions' => $prescriptions,
+            'vaccineRecord' => $vaccineRecord
+        ]);
     }
 
     // Quản lý trông giữ thú cưng
@@ -1436,7 +1777,7 @@ class AdminController extends Controller {
             }
             $this->activityLogModel->log(
                 $_SESSION['user_id'],
-                $_SESSION['user_username'],
+                ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                 $_SESSION['user_role'],
                 'Cập nhật tồn kho',
                 "Đã cập nhật số lượng tồn kho cho các mặt hàng"
@@ -1522,7 +1863,7 @@ class AdminController extends Controller {
             
             $this->activityLogModel->log(
                 $_SESSION['user_id'],
-                $_SESSION['user_username'],
+                ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
                 $_SESSION['user_role'],
                 'Chấm công',
                 "Đã lưu bảng chấm công ngày: " . $date
@@ -1757,7 +2098,7 @@ class AdminController extends Controller {
         $db->query("SELECT 
             (SELECT COUNT(*) FROM appointments WHERE status = 'pending') as pending_count,
             (SELECT COUNT(*) FROM orders WHERE status = 'pending') as pending_order_count,
-            (SELECT COUNT(*) FROM appointments WHERE status = 'confirmed' AND final_price IS NOT NULL AND final_price > 0) as waiting_pay_count
+            (SELECT COUNT(*) FROM appointments WHERE status = 'confirmed' AND final_price IS NOT NULL) as waiting_pay_count
         ");
         $counts = $db->single();
         header('Content-Type: application/json');
@@ -1800,11 +2141,18 @@ class AdminController extends Controller {
         
         $logs = $healthLogModel->getLogsByPet($id);
         $records = $healthRecordModel->getRecordsByPet($id);
+        foreach ($records as $record) {
+            $record->prescriptions = $healthRecordModel->getPrescriptionsByRecord($record->id);
+        }
+        
+        $vaccinationModel = $this->model('Vaccination');
+        $vaccinations = $vaccinationModel->getVaccinationsByPet($id);
         
         $this->view('admin/pet_detail', [
             'pet' => $pet,
             'logs' => $logs,
-            'records' => $records
+            'records' => $records,
+            'vaccinations' => $vaccinations
         ]);
     }
 
@@ -1862,4 +2210,117 @@ class AdminController extends Controller {
         header('Location: ' . URLROOT . '/admin/pet_detail/' . $record->pet_id);
         exit;
     }
+
+    // Thêm mũi tiêm phòng (dành cho Admin, Manager, Staff, Doctor)
+    public function pet_vaccination_add($pet_id) {
+        $this->checkAccess(['admin', 'manager', 'staff', 'doctor']);
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            
+            $vaccinationModel = $this->model('Vaccination');
+            $data = [
+                'pet_id' => $pet_id,
+                'vaccine_name' => trim($_POST['vaccine_name'] ?? ''),
+                'vaccinated_date' => trim($_POST['vaccinated_date'] ?? ''),
+                'next_due_date' => trim($_POST['next_due_date'] ?? ''),
+                'notes' => trim($_POST['notes'] ?? '')
+            ];
+            
+            if (empty($data['vaccine_name']) || empty($data['vaccinated_date'])) {
+                flash('record_message', 'Vui lòng nhập đầy đủ Tên Vắc xin và Ngày tiêm.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+            } else {
+                if ($vaccinationModel->addVaccination($data)) {
+                    flash('record_message', 'Ghi nhận mũi tiêm chủng thành công!');
+                } else {
+                    flash('record_message', 'Có lỗi xảy ra, không thể ghi nhận mũi tiêm.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+                }
+            }
+        }
+        
+        header('Location: ' . URLROOT . '/admin/pet_detail/' . $pet_id);
+        exit;
+    }
+
+    // Xóa mũi tiêm chủng (dành cho Admin, Manager, Doctor)
+    public function pet_vaccination_delete($id) {
+        $this->checkAccess(['admin', 'manager', 'doctor']);
+        
+        $vaccinationModel = $this->model('Vaccination');
+        $vaccine = $vaccinationModel->getVaccinationById($id);
+        
+        if (!$vaccine) {
+            header('Location: ' . URLROOT . '/admin/pets');
+            exit;
+        }
+        
+        if ($vaccinationModel->deleteVaccination($id)) {
+            flash('record_message', 'Đã xóa thông tin tiêm chủng!');
+        } else {
+            flash('record_message', 'Không thể xóa thông tin tiêm chủng.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+        }
+        
+        header('Location: ' . URLROOT . '/admin/pet_detail/' . $vaccine->pet_id);
+        exit;
+    }
+
+    // Thêm hồ sơ khám bệnh bằng mã thú cưng (dành cho Admin, Manager, Staff, Doctor)
+    public function pet_health_record_add_by_code() {
+        $this->checkAccess(['admin', 'manager', 'staff', 'doctor']);
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            
+            $pet_code = strtoupper(trim($_POST['pet_code'] ?? ''));
+            $diagnosis = trim($_POST['diagnosis'] ?? '');
+            $treatment = trim($_POST['treatment'] ?? '');
+            $notes = trim($_POST['notes'] ?? '');
+            $visit_date = trim($_POST['visit_date'] ?? date('Y-m-d'));
+            
+            if (empty($pet_code)) {
+                flash('admin_pet_error', 'Vui lòng nhập mã thú cưng.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+                header('Location: ' . URLROOT . '/admin/pets');
+                exit;
+            }
+            
+            $petModel = $this->model('Pet');
+            $pet = $petModel->getPetByCode($pet_code);
+            
+            if (!$pet) {
+                flash('admin_pet_error', 'Mã thú cưng "' . htmlspecialchars($pet_code) . '" không tồn tại trong hệ thống.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+                header('Location: ' . URLROOT . '/admin/pets');
+                exit;
+            }
+            
+            if (empty($diagnosis)) {
+                flash('record_message', 'Vui lòng nhập chẩn đoán.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+                header('Location: ' . URLROOT . '/admin/pet_detail/' . $pet->id);
+                exit;
+            }
+            
+            $healthRecordModel = $this->model('HealthRecord');
+            $data = [
+                'pet_id' => $pet->id,
+                'appointment_id' => null,
+                'doctor_id' => $_SESSION['user_id'],
+                'diagnosis' => $diagnosis,
+                'treatment' => $treatment,
+                'notes' => $notes,
+                'visit_date' => $visit_date
+            ];
+            
+            if ($healthRecordModel->addRecord($data)) {
+                flash('record_message', 'Thêm hồ sơ khám bệnh cho bé ' . htmlspecialchars($pet->name) . ' thành công!');
+                header('Location: ' . URLROOT . '/admin/pet_detail/' . $pet->id);
+            } else {
+                flash('admin_pet_error', 'Có lỗi xảy ra khi lưu hồ sơ khám bệnh, vui lòng thử lại.', 'bg-red-100 text-red-700 p-4 rounded-xl mb-4');
+                header('Location: ' . URLROOT . '/admin/pets');
+            }
+            exit;
+        } else {
+            header('Location: ' . URLROOT . '/admin/pets');
+            exit;
+        }
+    }
 }
+

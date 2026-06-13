@@ -1,6 +1,6 @@
 <?php require APPROOT . '/views/admin/header.php'; ?>
 
-<div class="p-6 lg:p-8 space-y-6" x-data="{ activeTab: 'clinic_records', showAddRecordForm: false }">
+<div class="p-6 lg:p-8 space-y-6" x-data="{ activeTab: 'clinic_records', showAddRecordForm: false, showAddVaccineForm: false }">
     <!-- Breadcrumb & Header -->
     <nav class="flex text-xs text-gray-500 mb-2" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1">
@@ -129,10 +129,10 @@
                     class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
                 <i class="fa-solid fa-prescription-bottle-medical mr-2"></i> Y bạ Lâm sàng (Khám chữa bệnh)
             </button>
-            <button @click="activeTab = 'daily_logs'" 
-                    :class="activeTab === 'daily_logs' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            <button @click="activeTab = 'vaccinations'" 
+                    :class="activeTab === 'vaccinations' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
-                <i class="fa-solid fa-notes-medical mr-2"></i> Nhật ký Theo dõi tại nhà (Khách hàng ghi)
+                <i class="fa-solid fa-syringe mr-2"></i> Lịch sử tiêm chủng
             </button>
         </nav>
     </div>
@@ -232,6 +232,29 @@
                                     <i class="fa-solid fa-pills"></i> Kế hoạch điều trị & Đơn thuốc
                                 </span>
                                 <p class="text-gray-800 leading-relaxed"><?php echo !empty($record->treatment) ? nl2br(htmlspecialchars($record->treatment)) : 'Chưa nhập chỉ định.'; ?></p>
+                                
+                                <?php if (!empty($record->prescriptions)): ?>
+                                    <div class="mt-4 pt-3 border-t border-emerald-100/40 space-y-2">
+                                        <p class="text-[10px] font-black uppercase text-emerald-600 tracking-widest flex items-center gap-1">
+                                            <i class="fa-solid fa-receipt"></i> Chi tiết thuốc kê đơn:
+                                        </p>
+                                        <div class="space-y-2">
+                                            <?php foreach ($record->prescriptions as $pres): ?>
+                                                <div class="bg-white/80 p-2.5 rounded-xl border border-emerald-150 text-xs">
+                                                    <div class="flex justify-between font-bold text-gray-800">
+                                                        <span><?php echo htmlspecialchars($pres->product_name); ?></span>
+                                                        <span class="text-primary">x<?php echo $pres->quantity; ?></span>
+                                                    </div>
+                                                    <?php if (!empty($pres->instruction)): ?>
+                                                        <p class="text-[11px] text-gray-500 italic mt-1 pl-2 border-l border-emerald-500/30">
+                                                            HDSD: <?php echo htmlspecialchars($pres->instruction); ?>
+                                                        </p>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -257,62 +280,117 @@
         <?php endif; ?>
     </div>
 
-    <!-- TAB 2: Owner Health Logs (Daily) -->
-    <div x-show="activeTab === 'daily_logs'" x-transition class="space-y-6">
-        <div>
-            <h3 class="text-base font-black text-gray-800 uppercase tracking-wider">Nhật ký sức khỏe chủ nuôi ghi tại nhà</h3>
-            <p class="text-xs text-gray-500 mt-1">Thông tin sinh học và các triệu chứng bất thường do chủ nuôi tự lưu lại để bác sĩ tham khảo.</p>
+    <!-- TAB 2: Vaccinations -->
+    <div x-show="activeTab === 'vaccinations'" x-transition class="space-y-6" x-cloak>
+        <!-- Section actions -->
+        <div class="flex justify-between items-center">
+            <h3 class="text-base font-black text-gray-800 uppercase tracking-wider">Lịch sử tiêm phòng / chủng ngừa</h3>
+            <button @click="showAddVaccineForm = !showAddVaccineForm" 
+                    class="px-4 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition flex items-center gap-1.5 shadow-sm hover:shadow-primary/20">
+                <i class="fa-solid" :class="showAddVaccineForm ? 'fa-minus' : 'fa-plus'"></i>
+                <span x-text="showAddVaccineForm ? 'Đóng form nhập' : 'Thêm lịch sử tiêm phòng'"></span>
+            </button>
         </div>
 
-        <?php if (empty($data['logs'])): ?>
+        <!-- Add Vaccine Form -->
+        <div x-show="showAddVaccineForm" x-transition x-cloak 
+             class="bg-white rounded-3xl p-6 border border-indigo-100 shadow-sm shadow-indigo-100/30">
+            <h4 class="text-sm font-black text-gray-800 mb-4 flex items-center gap-1.5">
+                <i class="fa-solid fa-syringe text-indigo-600"></i> Ghi nhận mũi tiêm phòng mới
+            </h4>
+            <form action="<?php echo URLROOT; ?>/admin/pet_vaccination_add/<?php echo $pet->id; ?>" method="POST" class="space-y-4 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="vaccine_name" class="block text-xs font-bold text-gray-600 mb-1">Tên Vắc xin <span class="text-red-500">*</span></label>
+                        <input type="text" id="vaccine_name" name="vaccine_name" required placeholder="Ví dụ: Vắc xin dại, 5-in-1, 7-in-1..."
+                               class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                    </div>
+                    <div>
+                        <label for="vaccinated_date" class="block text-xs font-bold text-gray-600 mb-1">Ngày tiêm <span class="text-red-500">*</span></label>
+                        <input type="date" id="vaccinated_date" name="vaccinated_date" value="<?php echo date('Y-m-d'); ?>" required
+                               class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                    </div>
+                    <div>
+                        <label for="next_due_date" class="block text-xs font-bold text-gray-600 mb-1">Ngày tiêm nhắc lại (nếu có)</label>
+                        <input type="date" id="next_due_date" name="next_due_date"
+                               class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="notes" class="block text-xs font-bold text-gray-600 mb-1">Ghi chú</label>
+                    <textarea id="notes" name="notes" rows="2" placeholder="Thông tin chi tiết về phản ứng sau tiêm, nhà sản xuất, số lô..."
+                              class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" @click="showAddVaccineForm = false" 
+                            class="px-4 py-2 border border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-slate-50">Hủy</button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-md shadow-indigo-600/20">Lưu thông tin</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Vaccinations List -->
+        <?php if (empty($data['vaccinations'])): ?>
             <div class="bg-white rounded-3xl p-12 text-center text-gray-500 border border-gray-100 shadow-sm">
-                <i class="fa-regular fa-clipboard text-gray-300 text-4xl mb-4 block"></i>
-                <p class="text-sm font-bold">Chủ nuôi chưa ghi nhận nhật ký sức khỏe nào tại nhà.</p>
+                <i class="fa-solid fa-syringe text-gray-300 text-4xl mb-4 block"></i>
+                <p class="text-sm font-bold">Chưa có lịch sử tiêm chủng nào được ghi nhận</p>
+                <p class="text-xs text-gray-400 mt-1">Sử dụng nút "Thêm lịch sử tiêm phòng" phía trên để lưu thông tin.</p>
             </div>
         <?php else: ?>
-            <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+            <div class="bg-white rounded-3xl border border-gray-150 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-100 text-sm">
-                        <thead class="bg-gray-50 text-[10px] text-gray-400 font-black uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4 text-left">Ngày ghi</th>
-                                <th class="px-6 py-4 text-left">Cân nặng</th>
-                                <th class="px-6 py-4 text-left">Nhiệt độ</th>
-                                <th class="px-6 py-4 text-left">Trạng thái</th>
-                                <th class="px-6 py-4 text-left">Triệu chứng & Ghi chú</th>
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                           <tr class="bg-slate-50 border-b border-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider">
+                                <th class="py-4 px-6">Tên Vắc xin</th>
+                                <th class="py-4 px-6">Ngày tiêm</th>
+                                <th class="py-4 px-6">Ngày tái chủng dự kiến</th>
+                                <th class="py-4 px-6">Ghi chú</th>
+                                <th class="py-4 px-6 text-right">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 text-gray-700 font-medium">
-                            <?php foreach ($data['logs'] as $log): ?>
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-bold">
-                                        <?php echo date('d/m/Y', strtotime($log->log_date)); ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php echo !empty($log->weight) ? floatval($log->weight) . ' kg' : '-'; ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php echo !empty($log->temperature) ? floatval($log->temperature) . ' °C' : '-'; ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php
-                                            $badgeClass = "bg-gray-100 text-gray-700";
-                                            if ($log->status === 'Rất tốt') $badgeClass = "bg-green-50 text-green-700 border border-green-100";
-                                            elseif ($log->status === 'Bình thường') $badgeClass = "bg-blue-50 text-blue-700 border border-blue-100";
-                                            elseif ($log->status === 'Mệt mỏi') $badgeClass = "bg-amber-50 text-amber-700 border border-amber-100";
-                                            elseif ($log->status === 'Ốm yếu') $badgeClass = "bg-red-50 text-red-700 border border-red-100";
-                                        ?>
-                                        <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider <?php echo $badgeClass; ?>">
-                                            <?php echo htmlspecialchars($log->status); ?>
+                        <tbody class="divide-y divide-gray-100 text-gray-700">
+                            <?php foreach ($data['vaccinations'] as $vaccine): ?>
+                                <tr class="hover:bg-slate-50/50 transition duration-150">
+                                    <td class="py-4 px-6 font-extrabold text-gray-900">
+                                        <span class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                            <?php echo htmlspecialchars($vaccine->vaccine_name); ?>
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <?php if (!empty($log->symptoms)): ?>
-                                            <div class="text-xs text-red-500 font-semibold mb-0.5">Triệu chứng: <?php echo htmlspecialchars($log->symptoms); ?></div>
-                                        <?php endif; ?>
-                                        <div class="text-xs text-gray-500"><?php echo htmlspecialchars($log->notes); ?></div>
+                                    <td class="py-4 px-6 font-semibold">
+                                        <?php echo date('d/m/Y', strtotime($vaccine->vaccinated_date)); ?>
                                     </td>
-                                </tr>
+                                    <td class="py-4 px-6">
+                                        <?php if (!empty($vaccine->next_due_date)): ?>
+                                            <?php 
+                                                $isOverdue = strtotime($vaccine->next_due_date) < time();
+                                                $badgeClass = $isOverdue 
+                                                    ? 'bg-rose-50 text-rose-700 border-rose-100' 
+                                                    : 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                                            ?>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 border text-xs font-bold rounded-lg <?php echo $badgeClass; ?>">
+                                                <i class="fa-solid <?php echo $isOverdue ? 'fa-triangle-exclamation' : 'fa-calendar-check'; ?> text-[10px]"></i>
+                                                <?php echo date('d/m/Y', strtotime($vaccine->next_due_date)); ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="text-gray-400 italic text-xs">Không có lịch nhắc</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="py-4 px-6 text-gray-500 max-w-xs truncate" title="<?php echo htmlspecialchars($vaccine->notes ?? ''); ?>">
+                                        <?php echo !empty($vaccine->notes) ? htmlspecialchars($vaccine->notes) : '<span class="text-gray-300">-</span>'; ?>
+                                    </td>
+                                    <td class="py-4 px-6 text-right">
+                                        <a href="<?php echo URLROOT; ?>/admin/pet_vaccination_delete/<?php echo $vaccine->id; ?>" 
+                                           onclick="return confirm('Bạn có chắc chắn muốn xóa lịch sử tiêm chủng này?');"
+                                           class="inline-flex items-center gap-1 text-xs font-bold text-red-500 hover:text-red-700 transition">
+                                            <i class="fa-solid fa-trash-can"></i> Xóa
+                                        </a>
+                                    </td>
+                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -320,6 +398,7 @@
             </div>
         <?php endif; ?>
     </div>
+
 </div>
 
 <?php require APPROOT . '/views/admin/footer.php'; ?>

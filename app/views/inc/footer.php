@@ -172,9 +172,9 @@
                             </div>
                             
                             <!-- Message bubble -->
-                            <div class="text-[11px] py-2 px-3 rounded-2xl leading-relaxed font-medium"
+                            <div class="text-[11px] py-2 px-3 rounded-2xl leading-relaxed font-medium [&_a]:text-blue-300 [&_a]:underline [&_a]:font-bold hover:[&_a]:text-blue-200"
                                  :class="msg.sender === 'user' ? 'bg-gradient-to-r from-primary to-indigo-600 text-white rounded-tr-none' : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800'">
-                                <span x-text="msg.text"></span>
+                                <span x-html="formatMessage(msg.text)"></span>
                             </div>
                         </div>
                     </template>
@@ -256,6 +256,18 @@
                             this.messages = JSON.parse(saved);
                         }
                     }
+                },
+
+                formatMessage(text) {
+                    if (!text) return '';
+                    let formatted = text;
+                    // Replace bold
+                    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                    // Replace links (with optional space between ] and ()
+                    formatted = formatted.replace(/\[(.*?)\]\s*\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+                    // Replace newlines
+                    formatted = formatted.replace(/\r?\n/g, '<br>');
+                    return formatted;
                 },
 
                 toggleChat() {

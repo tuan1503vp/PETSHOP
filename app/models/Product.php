@@ -36,9 +36,22 @@ class Product {
         // Filter by target pet (Dog / Cat)
         if(!empty($params['target_pet'])) {
             if($params['target_pet'] === 'dog') {
-                $sql .= ' AND (p.name LIKE :dog_name1 OR p.name LIKE :dog_name2 OR p.name LIKE :dog_name3 OR p.description LIKE :dog_desc1 OR p.description LIKE :dog_desc2)';
+                $sql .= " AND (c.name LIKE BINARY '%Chó%' OR c.name LIKE BINARY '%chó%'
+                            OR p.name LIKE BINARY '%Chó%' OR p.name LIKE BINARY '%chó%' 
+                            OR p.name LIKE BINARY '%Cún%' OR p.name LIKE BINARY '%cún%'
+                            OR p.name LIKE '% dog %' OR p.name LIKE 'dog %' OR p.name LIKE '% dog' OR p.name = 'dog'
+                            OR p.name LIKE '% Dog %' OR p.name LIKE 'Dog %' OR p.name LIKE '% Dog' OR p.name = 'Dog'
+                            OR p.description LIKE BINARY '%Chó%' OR p.description LIKE BINARY '%chó%' 
+                            OR p.description LIKE BINARY '%Cún%' OR p.description LIKE BINARY '%cún%')";
             } elseif($params['target_pet'] === 'cat') {
-                $sql .= ' AND (p.name LIKE :cat_name1 OR p.name LIKE :cat_name2 OR p.name LIKE :cat_name3 OR p.description LIKE :cat_desc1 OR p.description LIKE :cat_desc2)';
+                $sql .= " AND (c.name LIKE BINARY '%Mèo%' OR c.name LIKE BINARY '%mèo%'
+                            OR p.name LIKE BINARY '%Mèo%' OR p.name LIKE BINARY '%mèo%'
+                            OR p.name LIKE '% miu %' OR p.name LIKE 'miu %' OR p.name LIKE '% miu' OR p.name = 'miu'
+                            OR p.name LIKE '% Miu %' OR p.name LIKE 'Miu %' OR p.name LIKE '% Miu' OR p.name = 'Miu'
+                            OR p.name LIKE '% cat %' OR p.name LIKE 'cat %' OR p.name LIKE '% cat' OR p.name = 'cat'
+                            OR p.name LIKE '% Cat %' OR p.name LIKE 'Cat %' OR p.name LIKE '% Cat' OR p.name = 'Cat'
+                            OR p.description LIKE BINARY '%Mèo%' OR p.description LIKE BINARY '%mèo%'
+                            OR p.description LIKE '% miu %' OR p.description LIKE 'miu %' OR p.description LIKE '% miu' OR p.description = 'miu')";
             }
         }
 
@@ -73,21 +86,6 @@ class Product {
         if(!empty($params['price_max'])) {
             $this->db->bind(':price_max', $params['price_max']);
         }
-        if(!empty($params['target_pet'])) {
-            if($params['target_pet'] === 'dog') {
-                $this->db->bind(':dog_name1', '%chó%');
-                $this->db->bind(':dog_name2', '%cún%');
-                $this->db->bind(':dog_name3', '%dog%');
-                $this->db->bind(':dog_desc1', '%chó%');
-                $this->db->bind(':dog_desc2', '%cún%');
-            } elseif($params['target_pet'] === 'cat') {
-                $this->db->bind(':cat_name1', '%mèo%');
-                $this->db->bind(':cat_name2', '%miu%');
-                $this->db->bind(':cat_name3', '%cat%');
-                $this->db->bind(':cat_desc1', '%mèo%');
-                $this->db->bind(':cat_desc2', '%miu%');
-            }
-        }
         
         return $this->db->resultSet();
     }
@@ -111,8 +109,8 @@ class Product {
 
     // Thêm sản phẩm mới
     public function addProduct($data) {
-        $this->db->query('INSERT INTO products (category_id, name, description, price, stock_quantity, image) 
-                          VALUES (:category_id, :name, :description, :price, :stock_quantity, :image)');
+        $this->db->query('INSERT INTO products (category_id, name, description, price, stock_quantity, image, expiry_date) 
+                          VALUES (:category_id, :name, :description, :price, :stock_quantity, :image, :expiry_date)');
         
         $this->db->bind(':category_id', $data['category_id']);
         $this->db->bind(':name', $data['name']);
@@ -120,6 +118,7 @@ class Product {
         $this->db->bind(':price', $data['price']);
         $this->db->bind(':stock_quantity', $data['stock_quantity']);
         $this->db->bind(':image', $data['image']);
+        $this->db->bind(':expiry_date', !empty($data['expiry_date']) ? $data['expiry_date'] : null);
 
         if ($this->db->execute()) {
             return $this->db->lastInsertId();
@@ -130,7 +129,7 @@ class Product {
     // Cập nhật sản phẩm
     public function updateProduct($data) {
         $sql = 'UPDATE products SET category_id = :category_id, name = :name, description = :description, 
-                price = :price, stock_quantity = :stock_quantity';
+                price = :price, stock_quantity = :stock_quantity, expiry_date = :expiry_date';
         
         if(!empty($data['image'])) {
             $sql .= ', image = :image';
@@ -146,6 +145,7 @@ class Product {
         $this->db->bind(':description', $data['description']);
         $this->db->bind(':price', $data['price']);
         $this->db->bind(':stock_quantity', $data['stock_quantity']);
+        $this->db->bind(':expiry_date', !empty($data['expiry_date']) ? $data['expiry_date'] : null);
 
         if(!empty($data['image'])) {
             $this->db->bind(':image', $data['image']);

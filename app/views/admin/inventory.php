@@ -60,6 +60,87 @@
 
     <?php flash('inventory_success'); ?>
 
+    <?php 
+        // Lọc danh sách sản phẩm sắp hết hạn (<= 30 ngày)
+        $expiringProducts = [];
+        $today = date_create(date('Y-m-d'));
+        foreach($data['groupedProducts'] as $cat) {
+            foreach($cat as $p) {
+                if (!empty($p->expiry_date)) {
+                    $expiry = date_create($p->expiry_date);
+                    $diff = date_diff($today, $expiry);
+                    $days = (int)$diff->format("%r%a");
+                    if ($days <= 30) {
+                        $p->days_to_expiry = $days;
+                        $expiringProducts[] = $p;
+                    }
+                }
+            }
+        }
+        
+        usort($expiringProducts, function($a, $b) {
+            return $a->days_to_expiry <=> $b->days_to_expiry;
+        });
+    ?>
+
+    <?php if(!empty($expiringProducts)): ?>
+    <div class="mb-10">
+        <h2 class="text-xl font-bold text-red-600 mb-4 flex items-center">
+            <i class="fa-solid fa-triangle-exclamation mr-2 animate-pulse"></i> Cảnh báo: Lô hàng sắp/đã hết hạn (<?php echo count($expiringProducts); ?>)
+        </h2>
+        <div class="bg-red-50 rounded-3xl shadow-sm border border-red-200 overflow-hidden">
+            <table class="min-w-full divide-y divide-red-200">
+                <thead class="bg-red-100/50">
+                    <tr>
+                        <th class="px-8 py-4 text-left text-xs font-bold text-red-800 uppercase tracking-widest">Sản phẩm</th>
+                        <th class="px-8 py-4 text-center text-xs font-bold text-red-800 uppercase tracking-widest">Tồn kho</th>
+                        <th class="px-8 py-4 text-left text-xs font-bold text-red-800 uppercase tracking-widest">Tình trạng HSD</th>
+                        <th class="px-8 py-4 text-right text-xs font-bold text-red-800 uppercase tracking-widest">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-red-100">
+                    <?php foreach($expiringProducts as $ep): ?>
+                        <tr class="hover:bg-red-50/30 transition-colors">
+                            <td class="px-8 py-6 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <img class="h-10 w-10 rounded-lg object-cover border border-gray-100" src="<?php echo !empty($ep->image) ? URLROOT . '/public/images/' . $ep->image : 'https://placehold.co/100x100?text=' . urlencode($ep->name); ?>" alt="">
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-bold text-gray-900"><?php echo $ep->name; ?></div>
+                                        <div class="text-xs text-gray-500"><?php echo $ep->category_name ?? 'Chưa phân loại'; ?></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 whitespace-nowrap text-center">
+                                <span class="text-sm font-bold <?php echo $ep->stock_quantity <= 5 ? 'text-red-600' : 'text-gray-800'; ?>">
+                                    <?php echo $ep->stock_quantity; ?>
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 whitespace-nowrap">
+                                <?php if ($ep->days_to_expiry < 0): ?>
+                                    <span class="px-2.5 py-1.5 rounded-lg text-xs font-bold border bg-red-100 text-red-800 border-red-200">
+                                        Đã hết hạn (<?php echo date('d/m/Y', strtotime($ep->expiry_date)); ?>)
+                                    </span>
+                                <?php else: ?>
+                                    <span class="px-2.5 py-1.5 rounded-lg text-xs font-bold border bg-amber-100 text-amber-800 border-amber-200 animate-pulse">
+                                        Còn <?php echo $ep->days_to_expiry; ?> ngày (<?php echo date('d/m/Y', strtotime($ep->expiry_date)); ?>)
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-8 py-6 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="<?php echo URLROOT; ?>/admin/product_edit/<?php echo $ep->id; ?>" class="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <form action="<?php echo URLROOT; ?>/admin/inventory_update" method="POST">
         <?php foreach($data['groupedProducts'] as $catName => $products): ?>
         <div class="mb-10">

@@ -1,8 +1,50 @@
 <?php require APPROOT . '/views/admin/header.php'; ?>
 <style>[x-cloak] { display: none !important; }</style>
 
-<div class="p-6" x-data="{ showModal: false, selectedApp: null, availableDoctors: [], loadingDoctors: false, requiredRoleLabel: '',
-    openModal(app) { this.selectedApp = app; this.showModal = true; this.availableDoctors = []; },
+<div class="p-6" x-data="{ 
+    showModal: false, 
+    selectedApp: null, 
+    availableDoctors: [], 
+    loadingDoctors: false, 
+    requiredRoleLabel: '',
+    prescriptions: [],
+    availableProducts: <?php echo json_encode(array_values(array_map(function($p) {
+        $expiry_text = '';
+        $is_expired = false;
+        $is_near_expiry = false;
+        if (!empty($p->expiry_date)) {
+            $expiry_time = strtotime($p->expiry_date);
+            $now = time();
+            $diff_days = ($expiry_time - $now) / (60 * 60 * 24);
+            if ($expiry_time < $now) {
+                $is_expired = true;
+                $expiry_text = ' (HẾT HẠN - ' . date('d/m/Y', $expiry_time) . ')';
+            } elseif ($diff_days <= 30) {
+                $is_near_expiry = true;
+                $expiry_text = ' (SẮP HẾT HẠN - ' . date('d/m/Y', $expiry_time) . ')';
+            } else {
+                $expiry_text = ' (HSD: ' . date('d/m/Y', $expiry_time) . ')';
+            }
+        }
+        return [
+            'id'           => (int)$p->id,
+            'name'         => $p->name . $expiry_text,
+            'price'        => (float)$p->price,
+            'stock'        => (int)$p->stock_quantity,
+            'is_expired'   => $is_expired,
+            'is_near_expiry' => $is_near_expiry
+        ];
+    }, array_filter($data['products'] ?? [], function($p) {
+        // Chỉ hiển thị danh mục Thuốc (category_id = 12)
+        return (int)$p->category_id === 12;
+    })))); ?>,
+    
+    openModal(app) { 
+        this.selectedApp = app; 
+        this.showModal = true; 
+        this.availableDoctors = []; 
+        this.prescriptions = []; 
+    },
     async fetchDoctors() { 
         this.loadingDoctors = true; 
         try { 
@@ -11,6 +53,12 @@
             const r = await fetch(`<?php echo URLROOT; ?>/admin/get_available_staff?date=${this.selectedApp.appointment_date}&time=${this.selectedApp.appointment_time}&role=${role}`); 
             this.availableDoctors = await r.json(); 
         } catch(e){} finally { this.loadingDoctors = false; } 
+    },
+    addPrescription() {
+        this.prescriptions.push({ product_id: '', quantity: 1, instruction: '' });
+    },
+    removePrescription(index) {
+        this.prescriptions.splice(index, 1);
     }
 }">
 
@@ -109,7 +157,24 @@
             });
         });
     </script>
+    <?php else: ?>
+    <!-- ADMIN/MANAGER VIEW: KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center">
+            <div class="h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-calendar-day"></i></div>
+            <div><p class="text-xs font-black text-gray-400 uppercase tracking-widest">Lịch hôm nay</p><p class="text-2xl font-black text-gray-800"><?php echo $data['appt_today']; ?></p></div>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center">
+            <div class="h-12 w-12 rounded-2xl bg-yellow-50 text-yellow-500 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div><p class="text-xs font-black text-gray-400 uppercase tracking-widest">Đang chờ thực hiện</p><p class="text-2xl font-black text-gray-800"><?php echo $data['appt_pending']; ?></p></div>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center">
+            <div class="h-12 w-12 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <div><p class="text-xs font-black text-gray-400 uppercase tracking-widest">Doanh thu tháng (DV)</p><p class="text-2xl font-black text-green-600"><?php echo number_format($data['appt_revenue'], 0, ',', '.'); ?> đ</p></div>
+        </div>
+    </div>
     <?php endif; ?>
+
 
     <!-- BẢNG LỊCH HẸN ĐANG HOẠT ĐỘNG -->
     <?php if($data['is_doctor_view'] ?? false): ?>
@@ -148,11 +213,20 @@
                             <div class="flex items-center"><div class="h-8 w-8 rounded-full bg-indigo-50 text-primary flex items-center justify-center font-bold text-xs mr-3"><?php echo strtoupper(substr($app->customer_name, 0, 1)); ?></div><span class="text-sm font-bold text-gray-700"><?php echo $app->customer_name; ?></span></div>
                         </td>
                         <td class="px-6 py-5"><span class="text-sm font-medium text-gray-900"><?php echo $app->service_name; ?></span></td>
-                        <td class="px-6 py-5"><span class="text-sm text-gray-700"><?php echo $app->pet_name ?? 'N/A'; ?></span><br><span class="text-[10px] text-gray-400 uppercase font-bold"><?php echo $app->pet_species ?? ''; ?></span></td>
+                        <td class="px-6 py-5">
+                            <?php if(!empty($app->pet_id)): ?>
+                                <a href="<?php echo URLROOT; ?>/admin/pet_detail/<?php echo $app->pet_id; ?>" class="text-sm font-bold text-primary hover:underline flex items-center gap-1">
+                                    <i class="fa-solid fa-paw text-[10px]"></i> <?php echo htmlspecialchars($app->pet_name); ?>
+                                </a>
+                            <?php else: ?>
+                                <span class="text-sm text-gray-700"><?php echo htmlspecialchars($app->pet_name ?? 'N/A'); ?></span>
+                            <?php endif; ?>
+                            <br><span class="text-[10px] text-gray-400 uppercase font-bold"><?php echo htmlspecialchars($app->pet_species ?? ''); ?></span>
+                        </td>
                         <td class="px-6 py-5"><span class="text-sm font-black text-primary"><?php echo date('H:i', strtotime($app->appointment_time)); ?></span><br><span class="text-xs text-gray-500"><?php echo date('d/m/Y', strtotime($app->appointment_date)); ?></span></td>
                         <?php if($_SESSION['user_role'] == 'cashier' || $_SESSION['user_role'] == 'admin'): ?>
                         <td class="px-6 py-5 text-right">
-                            <?php if(!empty($app->final_price)): ?>
+                            <?php if($app->final_price !== null && $app->final_price !== ''): ?>
                                 <span class="text-sm font-bold text-green-600"><?php echo number_format($app->final_price, 0, ',', '.'); ?> đ</span>
                             <?php else: ?>
                                 <span class="text-xs text-gray-400 italic">Chưa báo giá</span>
@@ -164,7 +238,7 @@
                                 $sClass = 'bg-yellow-50 text-yellow-600 border-yellow-100';
                                 $sLabel = 'Chờ xác nhận';
                                 if($app->status=='confirmed'){
-                                    if(!empty($app->final_price)) {
+                                    if($app->final_price !== null && $app->final_price !== '') {
                                         $sClass='bg-red-50 text-red-600 border-red-100 animate-pulse shadow-sm shadow-red-500/20'; 
                                         $sLabel='Chờ thanh toán';
                                     } else {
@@ -220,24 +294,36 @@
                             <?php endif; ?>
                         </td>
                         <?php endif; ?>
-                        <td class="px-6 py-5 text-right space-x-1">
-                            <?php if(($_SESSION['user_role'] == 'cashier' || $_SESSION['user_role'] == 'admin') && $app->status == 'confirmed' && !empty($app->final_price)): ?>
-                            <a href="<?php echo URLROOT; ?>/admin/appointment_pay/<?php echo $app->id; ?>" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold text-[10px] uppercase hover:bg-green-700 transition inline-block"><i class="fa-solid fa-money-check-dollar mr-1"></i>Thanh toán</a>
+                        <td class="px-6 py-5 text-right space-x-1 whitespace-nowrap">
+                            <?php if(($_SESSION['user_role'] == 'cashier' || $_SESSION['user_role'] == 'admin') && $app->status == 'confirmed' && $app->final_price !== null && $app->final_price !== ''): ?>
+                            <a href="<?php echo URLROOT; ?>/admin/pos?appointment_id=<?php echo $app->id; ?>" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold text-[10px] uppercase hover:bg-green-700 transition inline-block"><i class="fa-solid fa-money-check-dollar mr-1"></i>Thanh toán</a>
                             <?php endif; ?>
-                            <?php if($_SESSION['user_role'] != 'cashier'): ?>
+
+                            <?php if(in_array($_SESSION['user_role'], ['doctor','staff']) && !empty($app->doctor_id) && $app->doctor_id == $_SESSION['user_id'] && $app->status == 'confirmed' && ($app->final_price === null || $app->final_price === '')): ?>
+                            <?php /* Bác sĩ/NV đang có ca: Xác nhận hoàn thành + Hủy ca */ ?>
+                            <a href="<?php echo URLROOT; ?>/admin/appointment_complete_form/<?php echo $app->id; ?>"
+                               class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase hover:bg-indigo-700 transition inline-flex items-center gap-1 shadow-sm shadow-indigo-500/20">
+                                <i class="fa-solid fa-circle-check text-[9px]"></i> Xác nhận hoàn thành
+                            </a>
+                            <a href="<?php echo URLROOT; ?>/admin/appointment_cancel_doctor/<?php echo $app->id; ?>"
+                               class="bg-red-50 border border-red-200 text-red-500 px-2 py-1.5 rounded-lg font-bold text-[10px] uppercase hover:bg-red-100 transition inline-flex items-center gap-1"
+                               onclick="return confirm('Hủy ca #<?php echo str_pad($app->id,5,'0',STR_PAD_LEFT); ?>? Đơn sẽ trở về chờ nhận.')">
+                                <i class="fa-solid fa-rotate-left text-[9px]"></i> Hủy ca
+                            </a>
+
+                            <?php elseif($app->status == 'completed'): ?>
+                            <a href="<?php echo URLROOT; ?>/admin/appointment_detail/<?php echo $app->id; ?>" target="_blank" class="bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-green-100 transition inline-flex items-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-eye"></i> Xem
+                            </a>
+
+                            <?php elseif(!($data['is_doctor_view'] ?? false) && $_SESSION['user_role'] != 'cashier'): ?>
+                            <?php /* Admin/Manager: Phân công */ ?>
                             <button type="button" @click="openModal(<?php echo htmlspecialchars(json_encode($app)); ?>)" class="text-indigo-600 hover:text-indigo-900 font-bold text-sm">
-                                <?php 
-                                    if ($_SESSION['user_role'] == 'manager') {
-                                        echo 'Xem';
-                                    } elseif ($_SESSION['user_role'] == 'doctor' || $_SESSION['user_role'] == 'staff') {
-                                        echo 'Xác nhận hoàn thành';
-                                    } else {
-                                        echo 'Phân công';
-                                    }
-                                ?>
+                                <?php echo ($_SESSION['user_role'] == 'manager') ? 'Xem' : 'Phân công'; ?>
                             </button>
                             <?php endif; ?>
                         </td>
+
                     </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -327,7 +413,9 @@
                     <td class="px-6 py-5"><span class="text-sm text-gray-700"><?php echo $app->pet_name ?? 'N/A'; ?></span></td>
                     <td class="px-6 py-5"><span class="text-sm text-gray-600"><?php echo date('d/m/Y H:i', strtotime($app->appointment_date . ' ' . $app->appointment_time)); ?></span></td>
                     <td class="px-6 py-5 text-right">
-                        <button type="button" @click="openModal(<?php echo htmlspecialchars(json_encode($app)); ?>)" class="text-green-600 hover:text-green-800 font-bold text-sm">Xem</button>
+                        <a href="<?php echo URLROOT; ?>/admin/appointment_detail/<?php echo $app->id; ?>" target="_blank" class="bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-green-100 transition inline-flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-eye"></i> Xem
+                        </a>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -365,29 +453,25 @@
                 <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 mb-6">
                     <div class="flex items-center justify-between">
                         <div><p class="text-[10px] text-gray-400 font-bold uppercase">Dịch vụ</p><p class="text-sm font-black text-gray-900" x-text="selectedApp?.service_name"></p></div>
-                        <div class="text-right"><p class="text-[10px] text-gray-400 font-bold uppercase">Thời gian</p><p class="text-sm font-black text-primary" x-text="selectedApp?.appointment_time + ' | ' + new Date(selectedApp?.appointment_date).toLocaleDateString('vi-VN')"></p></div>
+                        <div class="text-right"><p class="text-[10px] text-gray-400 font-bold uppercase">Thời gian</p><p class="text-sm font-black text-primary" x-text="selectedApp ? selectedApp.appointment_time + ' | ' + (selectedApp.appointment_date ? new Date(selectedApp.appointment_date).toLocaleDateString('vi-VN') : '') : ''"></p></div>
                     </div>
                 </div>
                 <div class="p-4 bg-gray-50 rounded-2xl border-l-4 border-primary text-sm text-gray-600 italic mb-6" x-text="selectedApp?.notes || 'Không có ghi chú'"></div>
 
-                <!-- Phân công bác sĩ (admin/manager) -->
+                <?php if(!($data['is_doctor_view'] ?? false)): ?>
+                <!-- Phân công bác sĩ (admin/manager/staff) -->
                 <div class="p-5 bg-orange-50 rounded-2xl border border-orange-100">
                     <div class="flex items-center gap-3 mb-3">
                         <i class="fa-solid fa-user-doctor text-orange-500 text-lg"></i>
                         <div><p class="text-[10px] text-orange-400 font-bold uppercase">Người thực hiện</p><p class="text-sm font-black text-gray-900" x-text="selectedApp?.doctor_name || 'Chưa phân công'"></p></div>
                     </div>
 
-                    <?php if($_SESSION['user_role'] == 'doctor'): ?>
-                    <template x-if="!selectedApp?.doctor_name && selectedApp?.status === 'pending'">
-                        <a :href="'<?php echo URLROOT; ?>/admin/appointment_take/' + selectedApp?.id" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition inline-flex items-center mt-2"><i class="fa-solid fa-user-check mr-2"></i> Nhận dịch vụ này</a>
-                    </template>
-                    <?php elseif($_SESSION['user_role'] != 'cashier'): ?>
+                    <?php if($_SESSION['user_role'] != 'cashier'): ?>
                     <template x-if="!selectedApp?.doctor_name && availableDoctors.length === 0">
                         <button @click="fetchDoctors()" class="bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-600 transition inline-flex items-center mt-2"><i class="fa-solid fa-search mr-2"></i> Kiểm tra <span x-text="requiredRoleLabel" class="mx-1"></span> rảnh</button>
                     </template>
                     <?php endif; ?>
 
-                    <?php if($_SESSION['user_role'] != 'doctor'): ?>
                     <template x-if="availableDoctors.length > 0">
                         <form action="<?php echo URLROOT; ?>/admin/appointment_assign" method="POST" class="mt-3 pt-3 border-t border-orange-100">
                             <input type="hidden" name="appointment_id" :value="selectedApp?.id">
@@ -400,24 +484,154 @@
                         </form>
                     </template>
                     <template x-if="loadingDoctors"><p class="text-xs text-orange-400 animate-pulse font-bold mt-2">Đang tìm...</p></template>
-                    <?php endif; ?>
+                </div>
+                <?php endif; /* end !is_doctor_view */ ?>
+
+                <?php if($data['is_doctor_view'] ?? false): ?>
+                <!-- Doctor view: hiển thị bác sĩ phụ trách + nút nhận nếu chưa ai nhận -->
+                <div class="p-5 bg-indigo-50/60 rounded-2xl border border-indigo-100">
+                    <div class="flex items-center gap-3 mb-2">
+                        <i class="fa-solid fa-stethoscope text-indigo-400 text-lg"></i>
+                        <div>
+                            <p class="text-[10px] text-indigo-400 font-bold uppercase">Trạng thái tiếp nhận</p>
+                            <p class="text-sm font-black text-gray-900" x-text="selectedApp?.doctor_id ? 'BS. ' + (selectedApp?.doctor_name || 'Bạn') : 'Chưa có bác sĩ nhận'"></p>
+                        </div>
+                    </div>
+                    <template x-if="!selectedApp?.doctor_id && selectedApp?.status === 'pending'">
+                        <a :href="'<?php echo URLROOT; ?>/admin/appointment_take/' + selectedApp?.id"
+                           class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition inline-flex items-center gap-2 shadow-md shadow-indigo-500/20">
+                            <i class="fa-solid fa-hand"></i> Nhận yêu cầu này
+                        </a>
+                    </template>
+                </div>
+                <?php endif; ?>
 
                     <!-- Form báo giá cho Bác sĩ / Nhân viên -->
                     <?php if(in_array($_SESSION['user_role'], ['doctor', 'staff'])): ?>
-                    <template x-if="selectedApp?.status === 'confirmed' && selectedApp?.doctor_id == <?php echo $_SESSION['user_id']; ?> && !selectedApp?.final_price">
-                        <form action="<?php echo URLROOT; ?>/admin/appointment_set_price" method="POST" class="mt-3 pt-3 border-t border-orange-100">
+                    <div x-show="selectedApp?.status === 'confirmed' && String(selectedApp?.doctor_id) === '<?php echo $_SESSION['user_id']; ?>' && (selectedApp?.final_price === null || selectedApp?.final_price === undefined)" x-cloak>
+                        <form action="<?php echo URLROOT; ?>/admin/appointment_set_price" method="POST" class="mt-3 pt-3 border-t border-orange-100 space-y-3">
                             <input type="hidden" name="appointment_id" :value="selectedApp?.id">
-                            <p class="text-[10px] text-orange-400 font-bold uppercase mb-2">Nhập Thành Tiền (Báo giá / Xác nhận hoàn thành)</p>
-                            <div class="flex gap-2">
-                                <input type="number" name="final_price" required :value="selectedApp?.service_price" placeholder="VD: 500000" class="flex-1 px-3 py-2 rounded-xl border border-orange-100 text-sm">
-                                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition">Xác nhận Hoàn thành</button>
+                            
+                            <div>
+                                <label class="block text-[10px] text-orange-500 font-bold uppercase mb-1">Nhập Thành Tiền (Báo giá) <span class="text-red-500">*</span></label>
+                                <input type="number" name="final_price" step="any" min="0" required :value="selectedApp?.service_price ?? 0" placeholder="VD: 500000" class="w-full px-3 py-2 rounded-xl border border-orange-100 text-sm">
                             </div>
+
+                            <!-- Nhập thông tin khám chữa bệnh nếu có thú cưng liên kết -->
+                            <div x-show="selectedApp?.pet_id">
+                                <div class="space-y-3 p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                                    <p class="text-[10px] text-primary font-black uppercase flex items-center gap-1">
+                                        <i class="fa-solid fa-file-medical"></i> Ghi nhận bệnh án vào Y bạ lâm sàng
+                                    </p>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-600 mb-1">Chẩn đoán lâm sàng <span class="text-red-500">*</span></label>
+                                        <textarea name="diagnosis" rows="2" placeholder="Chẩn đoán triệu chứng, tên bệnh..." 
+                                                  class="w-full px-3 py-2 rounded-xl border border-indigo-100/30 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:bg-white bg-white/70"
+                                                  :required="!!selectedApp?.pet_id"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-600 mb-1">Chỉ định điều trị &amp; Đơn thuốc</label>
+                                        <textarea name="treatment" rows="2" placeholder="Tên thuốc, liều lượng, số ngày dùng..." 
+                                                  class="w-full px-3 py-2 rounded-xl border border-indigo-100/30 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:bg-white bg-white/70"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-600 mb-1">Ghi chú &amp; Hẹn tái khám</label>
+                                        <textarea name="notes" rows="1" placeholder="Ví dụ: Tái khám sau 3 ngày..." 
+                                                  class="w-full px-3 py-2 rounded-xl border border-indigo-100/30 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:bg-white bg-white/70"></textarea>
+                                    </div>
+
+                                    <!-- Kê đơn thuốc điện tử (Sản phẩm kho) -->
+                                    <div class="mt-4 pt-3 border-t border-indigo-100/30">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="block text-[10px] font-black text-indigo-700 uppercase tracking-wider">
+                                                <i class="fa-solid fa-pills mr-1"></i> Kê đơn thuốc từ kho hàng
+                                            </label>
+                                            <button type="button" @click="addPrescription()" 
+                                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-sm">
+                                                <i class="fa-solid fa-plus text-[9px]"></i> Thêm thuốc
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Danh sách thuốc kê đơn -->
+                                        <div class="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
+                                            <template x-for="(pres, index) in prescriptions" :key="index">
+                                                <div class="bg-white/80 p-2.5 rounded-xl border border-indigo-200/50 flex flex-col gap-2 relative">
+                                                    <div class="flex gap-2">
+                                                        <!-- Chọn sản phẩm thuốc -->
+                                                        <div class="flex-1">
+                                                            <select name="prescription_products[]" required 
+                                                                    x-model="pres.product_id"
+                                                                    class="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-primary bg-white text-gray-800 font-medium">
+                                                                <option value="">-- Chọn thuốc/sản phẩm --</option>
+                                                                <?php 
+                                                                foreach ($data['products'] ?? [] as $p) {
+                                                                    $expiry_text = '';
+                                                                    $is_expired = false;
+                                                                    if (!empty($p->expiry_date)) {
+                                                                        $expiry_time = strtotime($p->expiry_date);
+                                                                        if ($expiry_time !== false) {
+                                                                            $now = time();
+                                                                            $diff_days = ($expiry_time - $now) / (60 * 60 * 24);
+                                                                            if ($expiry_time < $now) {
+                                                                                $is_expired = true;
+                                                                                $expiry_text = ' (HẾT HẠN - ' . date('d/m/Y', $expiry_time) . ')';
+                                                                            } elseif ($diff_days <= 30) {
+                                                                                $expiry_text = ' (SẮP HẾT HẠN - ' . date('d/m/Y', $expiry_time) . ')';
+                                                                            } else {
+                                                                                $expiry_text = ' (HSD: ' . date('d/m/Y', $expiry_time) . ')';
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    $disabled = ($p->stock_quantity <= 0 || $is_expired) ? 'disabled' : '';
+                                                                    $option_text = htmlspecialchars($p->name . $expiry_text) . ' (Giá: ' . number_format($p->price, 0, ',', '.') . 'đ - Tồn: ' . $p->stock_quantity . ')';
+                                                                    echo '<option value="' . $p->id . '" ' . $disabled . '>' . $option_text . '</option>';
+                                                                }
+                                                                ?>
+                                                            </select>
+                                                        </div>
+                                                        <!-- Số lượng -->
+                                                        <div class="w-16">
+                                                            <input type="number" name="prescription_quantities[]" required min="1" 
+                                                                   x-model.number="pres.quantity"
+                                                                   placeholder="SL"
+                                                                   class="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary bg-white text-gray-800 font-bold">
+                                                        </div>
+                                                        <!-- Nút xóa -->
+                                                        <button type="button" @click="removePrescription(index)" 
+                                                                class="bg-red-50 hover:bg-red-100 text-red-500 w-8 h-8 rounded-lg flex items-center justify-center transition border border-red-100">
+                                                            <i class="fa-solid fa-trash-can text-xs"></i>
+                                                        </button>
+                                                    </div>
+                                                    <!-- Hướng dẫn sử dụng thuốc -->
+                                                    <div>
+                                                        <input type="text" name="prescription_instructions[]" required
+                                                               x-model="pres.instruction"
+                                                               placeholder="Cách dùng: Ngày uống 2 lần, mỗi lần 1/2 viên..." 
+                                                               class="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-primary bg-white text-gray-700 font-medium">
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            
+                                            <!-- Trạng thái trống -->
+                                            <template x-if="prescriptions.length === 0">
+                                                <div class="text-center py-4 bg-white/40 border border-dashed border-indigo-200/50 rounded-xl">
+                                                    <p class="text-xs text-indigo-400 italic">Chưa kê đơn thuốc nào từ kho.</p>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/10">
+                                <i class="fa-solid fa-circle-check"></i> Xác nhận Hoàn thành &amp; Lưu bệnh án
+                            </button>
                         </form>
-                    </template>
+                    </div>
                     <?php endif; ?>
 
                     <!-- Hiển thị báo giá nếu đã có -->
-                    <template x-if="selectedApp?.final_price">
+                    <template x-if="selectedApp?.final_price !== null && selectedApp?.final_price !== undefined">
                         <div class="mt-3 pt-3 border-t border-orange-100 flex items-center justify-between">
                             <p class="text-[10px] text-green-500 font-bold uppercase">Thành tiền (Đã báo giá)</p>
                             <p class="text-lg font-black text-green-600" x-text="new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedApp?.final_price)"></p>
@@ -428,8 +642,8 @@
             <div class="px-8 py-5 bg-gray-50 flex justify-end gap-3">
                 <button @click="showModal = false" class="px-6 py-2 rounded-xl text-sm font-bold text-gray-500 hover:text-gray-800 transition">Đóng</button>
                 <?php if($_SESSION['user_role'] == 'cashier' || $_SESSION['user_role'] == 'admin'): ?>
-                <template x-if="selectedApp?.status === 'confirmed' && selectedApp?.final_price">
-                    <a :href="'<?php echo URLROOT; ?>/admin/appointment_pay/' + selectedApp?.id" class="px-6 py-2 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition inline-flex items-center"><i class="fa-solid fa-money-check-dollar mr-2"></i> Thanh toán</a>
+                <template x-if="selectedApp?.status === 'confirmed' && selectedApp?.final_price !== null && selectedApp?.final_price !== undefined">
+                    <a :href="'<?php echo URLROOT; ?>/admin/pos?appointment_id=' + selectedApp?.id" class="px-6 py-2 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition inline-flex items-center"><i class="fa-solid fa-money-check-dollar mr-2"></i> Thanh toán</a>
                 </template>
                 <?php endif; ?>
             </div>
