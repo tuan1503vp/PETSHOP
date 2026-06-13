@@ -26,10 +26,19 @@ if (file_exists(APPROOT . '/config/secrets.php')) {
 }
 
 // Cấu hình Database
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'petshop_db');
+if ($host === 'localhost' || strpos($host, '127.0.0.1') !== false) {
+    // Môi trường Local (XAMPP trên máy tính)
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+    define('DB_NAME', 'petshop_db');
+} else {
+    // Môi trường Live (InfinityFree Hosting)
+    define('DB_HOST', 'sql302.infinityfree.com');
+    define('DB_USER', 'if0_41982653');
+    define('DB_PASS', 'pF5bZygy7oK');
+    define('DB_NAME', 'if0_41982653_petshop_db');
+}
 
 // Cấu hình AI (OpenRouter API)
 if (!defined('OPENROUTER_API_KEY')) {
