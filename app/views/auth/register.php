@@ -22,6 +22,15 @@
 }
 .pet-paw {
     box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom center;
+}
+/* Hiệu ứng che mắt */
+.covering-eyes .left-paw {
+    transform: translateY(-35px) translateX(10px) rotate(35deg) scale(1.15);
+}
+.covering-eyes .right-paw {
+    transform: translateY(-35px) translateX(-10px) rotate(-35deg) scale(1.15);
 }
 </style>
 
@@ -39,17 +48,17 @@
         <!-- Thú cưng tương tác trên khung -->
         <div class="absolute top-0 left-0 w-full h-0 pointer-events-none z-20">
             <!-- Bé Cún bên trái -->
-            <div class="absolute -top-[60px] left-[15%] w-16 h-16">
+            <div class="absolute -top-[60px] left-[15%] w-16 h-16" id="dog-container">
                 <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dog%20Face.png" alt="Dog" class="pet-head" id="dog-head">
-                <div class="pet-paw absolute -bottom-[6px] left-[6px] w-[18px] h-[22px] bg-[#d39f72] rounded-t-full border-[3px] border-white z-10"></div>
-                <div class="pet-paw absolute -bottom-[6px] right-[6px] w-[18px] h-[22px] bg-[#d39f72] rounded-t-full border-[3px] border-white z-10"></div>
+                <div class="pet-paw left-paw absolute -bottom-[6px] left-[6px] w-[18px] h-[22px] bg-[#d39f72] rounded-t-full border-[3px] border-white z-10"></div>
+                <div class="pet-paw right-paw absolute -bottom-[6px] right-[6px] w-[18px] h-[22px] bg-[#d39f72] rounded-t-full border-[3px] border-white z-10"></div>
             </div>
             
             <!-- Bé Mèo bên phải -->
-            <div class="absolute -top-[60px] right-[15%] w-16 h-16">
+            <div class="absolute -top-[60px] right-[15%] w-16 h-16" id="cat-container">
                 <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Cat%20Face.png" alt="Cat" class="pet-head" id="cat-head">
-                <div class="pet-paw absolute -bottom-[6px] left-[6px] w-[18px] h-[22px] bg-[#fac842] rounded-t-full border-[3px] border-white z-10"></div>
-                <div class="pet-paw absolute -bottom-[6px] right-[6px] w-[18px] h-[22px] bg-[#fac842] rounded-t-full border-[3px] border-white z-10"></div>
+                <div class="pet-paw left-paw absolute -bottom-[6px] left-[6px] w-[18px] h-[22px] bg-[#fac842] rounded-t-full border-[3px] border-white z-10"></div>
+                <div class="pet-paw right-paw absolute -bottom-[6px] right-[6px] w-[18px] h-[22px] bg-[#fac842] rounded-t-full border-[3px] border-white z-10"></div>
             </div>
         </div>
         
@@ -180,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     validateField(password, passwordRegex, '', 'password-error');
     confirm_password.addEventListener('input', validateConfirmPassword);
     
-    // JS Logic: Show/Hide Password
+    // JS Logic: Show/Hide Password and Update Cover Eyes logic
     function setupTogglePassword(toggleBtnId, inputId, iconId) {
         document.getElementById(toggleBtnId).addEventListener('click', function() {
             const input = document.getElementById(inputId);
@@ -189,15 +198,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.type = 'text';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
+                uncoverEyes(); // Bỏ tay che mắt khi đang xem mật khẩu
             } else {
                 input.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
+                // Nếu đang focus thì che mắt lại
+                if (document.activeElement === input) {
+                    coverEyes();
+                }
             }
         });
     }
     setupTogglePassword('togglePassword', 'password', 'eyeIcon');
     setupTogglePassword('toggleConfirmPassword', 'confirm_password', 'eyeIconConfirm');
+    
+    // JS Logic: Cover Eyes when focusing password
+    const dogContainer = document.getElementById('dog-container');
+    const catContainer = document.getElementById('cat-container');
+    
+    function coverEyes() {
+        dogContainer.classList.add('covering-eyes');
+        catContainer.classList.add('covering-eyes');
+    }
+    
+    function uncoverEyes() {
+        dogContainer.classList.remove('covering-eyes');
+        catContainer.classList.remove('covering-eyes');
+    }
+    
+    password.addEventListener('focus', function() {
+        if(this.type === 'password') coverEyes();
+    });
+    password.addEventListener('blur', uncoverEyes);
+    
+    confirm_password.addEventListener('focus', function() {
+        if(this.type === 'password') coverEyes();
+    });
+    confirm_password.addEventListener('blur', uncoverEyes);
     
     // JS Logic: Password Strength Meter
     const strBars = [document.getElementById('str-1'), document.getElementById('str-2'), document.getElementById('str-3'), document.getElementById('str-4')];
@@ -268,15 +306,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const windowHeight = window.innerHeight;
             
             // Tính toán mức độ di chuyển và xoay
-            const maxMoveX = 12; // Di chuyển tối đa sang 2 bên
-            const maxMoveY = 8;  // Di chuyển tối đa lên xuống
-            const maxRotate = 30; // Góc xoay tối đa
+            const maxMoveX = 15; // Di chuyển tối đa sang 2 bên rộng hơn
+            const maxMoveY = 12; // Nhìn xuống sâu hơn
+            const maxRotate = 35; 
             
-            const moveX = (dx / windowWidth) * maxMoveX * 2;
-            let moveY = (dy / windowHeight) * maxMoveY * 2;
+            const moveX = (dx / windowWidth) * maxMoveX * 2.5;
+            let moveY = (dy / windowHeight) * maxMoveY * 2.5;
             
-            // Giới hạn để đầu không lún quá sâu vào viền (bị đè)
-            if (moveY > 3) moveY = 3; 
+            // Giới hạn để đầu lún sâu vừa phải (thể hiện việc đang nhìn chằm chằm xuống tay người dùng)
+            if (moveY > 12) moveY = 12; 
+            if (moveY < -5) moveY = -5; // Không cho ngước nhìn lên quá cao
             
             const rotate = (dx / windowWidth) * maxRotate * 2;
             
