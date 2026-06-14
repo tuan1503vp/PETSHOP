@@ -90,9 +90,23 @@ class AuthController extends Controller {
                 $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
                 // Đăng ký user
-                if ($this->userModel->register($data)) {
-                    flash('register_success', 'Đăng ký thành công và có thể đăng nhập');
-                    header('Location: ' . URLROOT . '/auth/login');
+                $user_id = $this->userModel->register($data);
+                if ($user_id) {
+                    require_once APPROOT . '/helpers/Mailer.php';
+                    $otp = sprintf("%06d", mt_rand(1, 999999));
+                    $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+                    $this->userModel->updateOTP($data['email'], $otp, $expiresAt);
+                    
+                    $mailer = new Mailer();
+                    $subject = "Mã xác thực tài khoản PetShop";
+                    $body = "<h2>Xin chào {$data['fullname']}</h2>
+                             <p>Cảm ơn bạn đã đăng ký tài khoản. Mã xác thực OTP của bạn là:</p>
+                             <h1 style='color:#4F46E5; letter-spacing: 5px;'>{$otp}</h1>
+                             <p>Mã này sẽ hết hạn sau 10 phút.</p>";
+                    $mailer->sendEmail($data['email'], $subject, $body);
+
+                    $_SESSION['verify_email'] = $data['email'];
+                    header('Location: ' . URLROOT . '/auth/verify');
                 } else {
                     die('Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.');
                 }
@@ -159,8 +173,30 @@ class AuthController extends Controller {
                 $loggedInUser = $this->userModel->login($data['email'], $data['password']);
 
                 if ($loggedInUser) {
-                    // Tạo Session
-                    $this->createUserSession($loggedInUser);
+                    if (isset($loggedInUser->is_verified) && $loggedInUser->is_verified == 0) {
+                        // User chưa xác minh
+                        $_SESSION['verify_email'] = $loggedInUser->email;
+                        
+                        // Gửi lại mã OTP
+                        require_once APPROOT . '/helpers/Mailer.php';
+                        $otp = sprintf("%06d", mt_rand(1, 999999));
+                        $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+                        $this->userModel->updateOTP($loggedInUser->email, $otp, $expiresAt);
+                        
+                        $mailer = new Mailer();
+                        $subject = "Mã xác thực tài khoản PetShop";
+                        $body = "<h2>Xin chào {$loggedInUser->fullname}</h2>
+                                 <p>Bạn đang cố đăng nhập nhưng tài khoản chưa được xác thực. Mã xác thực OTP của bạn là:</p>
+                                 <h1 style='color:#4F46E5; letter-spacing: 5px;'>{$otp}</h1>
+                                 <p>Mã này sẽ hết hạn sau 10 phút.</p>";
+                        $mailer->sendEmail($loggedInUser->email, $subject, $body);
+
+                        flash('verify_msg', 'Vui lòng xác thực email trước khi đăng nhập. Một mã OTP mới đã được gửi.', 'bg-yellow-100 text-yellow-700 p-3 rounded-md mb-4 text-sm');
+                        header('Location: ' . URLROOT . '/auth/verify');
+                    } else {
+                        // Tạo Session
+                        $this->createUserSession($loggedInUser);
+                    }
                 } else {
                     $data['password_err'] = 'Mật khẩu không chính xác';
                     $this->view('auth/login', $data);
@@ -181,6 +217,61 @@ class AuthController extends Controller {
 
             // Load view
             $this->view('auth/login', $data);
+        }
+    }
+
+    public function verify() {
+        if (!isset($_SESSION['verify_email'])) {
+            header('Location: ' . URLROOT . '/auth/login');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $otp = trim($_POST['otp']);
+            $email = $_SESSION['verify_email'];
+
+            if (empty($otp)) {
+                $data = ['otp_err' => 'Vui lòng nhập mã OTP'];
+                $this->view('auth/verify', $data);
+            } else {
+                if ($this->userModel->verifyOTP($email, $otp)) {
+                    // Success
+                    unset($_SESSION['verify_email']);
+                    flash('register_success', 'Xác nhận Email thành công! Bạn đã có thể đăng nhập.');
+                    header('Location: ' . URLROOT . '/auth/login');
+                } else {
+                    $data = ['otp_err' => 'Mã OTP không chính xác hoặc đã hết hạn'];
+                    $this->view('auth/verify', $data);
+                }
+            }
+        } else {
+            $this->view('auth/verify', []);
+        }
+    }
+
+    public function resend_otp() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['verify_email'])) {
+            $email = $_SESSION['verify_email'];
+            $user = $this->userModel->getUserByEmail($email);
+            if ($user && isset($user->is_verified) && $user->is_verified == 0) {
+                require_once APPROOT . '/helpers/Mailer.php';
+                $otp = sprintf("%06d", mt_rand(1, 999999));
+                $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+                $this->userModel->updateOTP($email, $otp, $expiresAt);
+                
+                $mailer = new Mailer();
+                $subject = "Mã xác thực tài khoản PetShop (Gửi lại)";
+                $body = "<h2>Xin chào {$user->fullname}</h2>
+                         <p>Mã xác thực OTP mới của bạn là:</p>
+                         <h1 style='color:#4F46E5; letter-spacing: 5px;'>{$otp}</h1>
+                         <p>Mã này sẽ hết hạn sau 10 phút.</p>";
+                $mailer->sendEmail($email, $subject, $body);
+                
+                flash('verify_msg', 'Đã gửi lại mã OTP mới đến email của bạn', 'bg-green-100 text-green-700 p-3 rounded-md mb-4 text-sm');
+            }
+            header('Location: ' . URLROOT . '/auth/verify');
+        } else {
+            header('Location: ' . URLROOT . '/auth/login');
         }
     }
 
