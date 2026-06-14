@@ -264,8 +264,7 @@
                             <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-600"></span> <strong class="text-yellow-700">Đồng</strong> — Tích lũy từ 500.000đ</li>
                             <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-500"></span> <strong class="text-slate-600">Bạc</strong> — Tích lũy từ 2.000.000đ</li>
                             <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-400"></span> <strong class="text-yellow-600">Vàng</strong> — Tích lũy từ 5.000.000đ</li>
-                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-blonde-400"></span> <strong class="text-yellow-600">Bạch Kim</strong> — Tích lũy từ 10.000.000đ</li>
-
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-300"></span>  <strong class="text-slate-500">Bạch Kim</strong> — Tích lũy từ 10.000.000đ</li>
                         </ul>
                     </div>
                 </div>
