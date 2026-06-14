@@ -45,8 +45,23 @@ if (!defined('OPENROUTER_API_KEY')) {
     define('OPENROUTER_API_KEY', 'mock');
 }
 
-// Cấu hình SMTP Email (dự phòng - InfinityFree thường chặn cổng này)
-define('SMTP_HOST', 'smtp.gmail.com');
+// Cấu hình OAuth (Google & Facebook)
+if (!defined('GOOGLE_CLIENT_ID')) {
+    define('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID');
+    define('GOOGLE_CLIENT_SECRET', 'YOUR_GOOGLE_CLIENT_SECRET');
+    define('GOOGLE_REDIRECT_URL', URLROOT . '/auth/google_callback');
+}
+
+if (!defined('FACEBOOK_APP_ID')) {
+    define('FACEBOOK_APP_ID', 'YOUR_FACEBOOK_APP_ID');
+    define('FACEBOOK_APP_SECRET', 'YOUR_FACEBOOK_APP_SECRET');
+    define('FACEBOOK_REDIRECT_URL', URLROOT . '/auth/facebook_callback');
+}
+
+// Cấu hình gửi mail (SMTP)
+if (!defined('SMTP_HOST')) {
+    define('SMTP_HOST', 'smtp.gmail.com');
+}
 define('SMTP_PORT', 587); // 587 cho TLS/STARTTLS, hoặc 465 cho SSL
 define('SMTP_USER', 'nmtvp11223311@gmail.com');
 if (!defined('SMTP_PASS')) {

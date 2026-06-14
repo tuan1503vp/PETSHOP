@@ -63,7 +63,7 @@ PETSHOP/
 ├── app/                      # Mã nguồn ứng dụng chính (PHP MVC)
 │   ├── config/               # Chứa các file cấu hình hệ thống
 │   │   ├── config.php        # Cấu hình chính (chỉ nạp secrets.php nếu có)
-│   │   └── secrets.php       # Lưu trữ API keys bí mật (Không commit lên Git)
+│   │   └── secrets.php       # Lưu trữ API keys bí mật
 │   ├── controllers/          # Bộ điều hướng (Controllers)
 │   ├── core/                 # Core Framework (App, Controller, Database)
 │   ├── helpers/              # Các hàm bổ trợ (Session, Mailer, Flash)

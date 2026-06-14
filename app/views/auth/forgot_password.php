@@ -37,6 +37,7 @@
         </div>
 
         <form class="mt-8 space-y-6" action="<?php echo URLROOT; ?>/auth/forgot_password" method="POST">
+            <?php echo csrf_field(); ?>
             <div class="rounded-md shadow-sm space-y-4">
                 <div>
                     <label for="email-address" class="block text-sm font-medium text-gray-700">Địa chỉ Email</label>

@@ -22,6 +22,7 @@ class AuthController extends Controller {
 
         // Kiểm tra phương thức POST
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            verify_csrf_token();
             // Xử lý form (Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1)
 
             $data = [
@@ -96,11 +97,14 @@ class AuthController extends Controller {
                     $otp = sprintf("%06d", mt_rand(1, 999999));
                     $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
                     $this->userModel->updateOTP($data['email'], $otp, $expiresAt);
-                    
                     $mailer = new Mailer();
                     $mailer->sendOTP($data['email'], $data['fullname'], $otp);
 
+                    // Set cooldown
+                    $_SESSION['last_otp_time'] = time();
+
                     $_SESSION['verify_email'] = $data['email'];
+                    flash('verify_msg', 'Vui lòng kiểm tra email của bạn để lấy mã xác thực.');
                     header('Location: ' . URLROOT . '/auth/verify');
                 } else {
                     die('Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.');
@@ -139,6 +143,8 @@ class AuthController extends Controller {
 
         // Kiểm tra phương thức POST
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            verify_csrf_token();
+            
             // Xử lý form (Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1)
 
             $data = [
@@ -217,6 +223,7 @@ class AuthController extends Controller {
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            verify_csrf_token();
             $otp = trim($_POST['otp']);
             $email = $_SESSION['verify_email'];
 
@@ -241,6 +248,16 @@ class AuthController extends Controller {
 
     public function resend_otp() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['verify_email'])) {
+            verify_csrf_token();
+            
+            $cooldown = 60;
+            if (isset($_SESSION['last_otp_time']) && (time() - $_SESSION['last_otp_time'] < $cooldown)) {
+                $remaining = $cooldown - (time() - $_SESSION['last_otp_time']);
+                flash('verify_msg', 'Vui lòng đợi ' . $remaining . ' giây trước khi gửi lại mã.', 'error');
+                header('Location: ' . URLROOT . '/auth/verify');
+                exit;
+            }
+
             $email = $_SESSION['verify_email'];
             $user = $this->userModel->getUserByEmail($email);
             if ($user && isset($user->is_verified) && $user->is_verified == 0) {
@@ -252,9 +269,11 @@ class AuthController extends Controller {
                 $mailer = new Mailer();
                 $mailer->sendOTP($email, $user->fullname, $otp);
                 
-                flash('verify_msg', 'Đã gửi lại mã OTP mới đến email của bạn', 'bg-green-100 text-green-700 p-3 rounded-md mb-4 text-sm');
+                $_SESSION['last_otp_time'] = time();
+                
+                flash('verify_msg', 'Đã gửi lại mã OTP mới đến email của bạn', 'success');
+                header('Location: ' . URLROOT . '/auth/verify');
             }
-            header('Location: ' . URLROOT . '/auth/verify');
         } else {
             header('Location: ' . URLROOT . '/auth/login');
         }
@@ -262,7 +281,17 @@ class AuthController extends Controller {
 
     public function forgot_password() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            verify_csrf_token();
             $email = trim($_POST['email']);
+            
+            $cooldown = 60;
+            if (isset($_SESSION['last_otp_time']) && (time() - $_SESSION['last_otp_time'] < $cooldown)) {
+                $remaining = $cooldown - (time() - $_SESSION['last_otp_time']);
+                $data = ['email_err' => 'Vui lòng đợi ' . $remaining . ' giây trước khi gửi lại mã.'];
+                $this->view('auth/forgot_password', $data);
+                return;
+            }
+
             if (empty($email)) {
                 $data = ['email_err' => 'Vui lòng nhập email'];
                 $this->view('auth/forgot_password', $data);
@@ -277,6 +306,8 @@ class AuthController extends Controller {
                     $mailer = new Mailer();
                     // Chúng ta sử dụng hàm sendOTP tương tự, hoặc có thể tạo thêm template sendPasswordResetOTP nếu cần
                     $mailer->sendOTP($email, $user->fullname, $otp);
+                    
+                    $_SESSION['last_otp_time'] = time();
                     
                     $_SESSION['reset_email'] = $email;
                     header('Location: ' . URLROOT . '/auth/reset_password');
@@ -297,6 +328,7 @@ class AuthController extends Controller {
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            verify_csrf_token();
             $otp = trim($_POST['otp']);
             $password = trim($_POST['password']);
             $confirm_password = trim($_POST['confirm_password']);
@@ -374,9 +406,18 @@ class AuthController extends Controller {
         unset($_SESSION['user_username']);
         unset($_SESSION['user_role']);
         
-        // Tắt session_regenerate_id(true) trên host dùng chung để tránh lỗi mất cookie
         // session_regenerate_id(true);
         session_destroy();
+        header('Location: ' . URLROOT . '/auth/login');
+    }
+
+    public function google() {
+        flash('login_err', 'Tính năng đăng nhập bằng Google đang được cấu hình API. Vui lòng thử lại sau!', 'warning');
+        header('Location: ' . URLROOT . '/auth/login');
+    }
+
+    public function facebook() {
+        flash('login_err', 'Tính năng đăng nhập bằng Facebook đang được cấu hình API. Vui lòng thử lại sau!', 'warning');
         header('Location: ' . URLROOT . '/auth/login');
     }
 }

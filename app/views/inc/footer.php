@@ -318,5 +318,76 @@
             }
         }
     </script>
+
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <style>
+        .toast {
+            min-width: 250px;
+            max-width: 350px;
+            pointer-events: auto;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    </style>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toastContainer = document.getElementById('toast-container');
+        
+        window.showToast = function(message, type = 'success') {
+            const toast = document.createElement('div');
+            
+            let icon = 'fa-check-circle';
+            let bgClass = 'bg-white border-l-4 border-green-500 text-gray-800';
+            let iconColor = 'text-green-500';
+            
+            if (type === 'error') {
+                icon = 'fa-circle-xmark';
+                bgClass = 'bg-white border-l-4 border-red-500 text-gray-800';
+                iconColor = 'text-red-500';
+            } else if (type === 'warning') {
+                icon = 'fa-triangle-exclamation';
+                bgClass = 'bg-white border-l-4 border-yellow-500 text-gray-800';
+                iconColor = 'text-yellow-500';
+            }
+
+            toast.className = `toast flex items-center p-4 rounded-md shadow-lg ${bgClass}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} ${iconColor} text-xl mr-3"></i>
+                <div class="font-medium text-sm flex-1 leading-snug">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 transition ml-3">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Trigger animation
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // Auto remove after 4s
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400); // Wait for transition
+            }, 4000);
+        }
+
+        // Check for hidden toast elements rendered by PHP flash()
+        const hiddenToasts = document.querySelectorAll('.custom-toast');
+        hiddenToasts.forEach(t => {
+            showToast(t.dataset.message, t.dataset.type);
+            t.remove();
+        });
+    });
+    </script>
 </body>
 </html>

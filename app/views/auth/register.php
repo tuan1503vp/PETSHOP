@@ -39,6 +39,7 @@
             </p>
         </div>
         <form class="mt-8 space-y-6" action="<?php echo URLROOT; ?>/auth/register" method="POST">
+            <?php echo csrf_field(); ?>
             <div class="rounded-md shadow-sm space-y-4">
                 <div>
                     <label for="fullname" class="sr-only">Họ và tên</label>
@@ -90,6 +91,27 @@
                 </button>
             </div>
         </form>
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">Hoặc tiếp tục với</span>
+                </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                <a href="<?php echo URLROOT; ?>/auth/google" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                    <img class="h-5 w-5 mr-2" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google">
+                    Google
+                </a>
+                <a href="<?php echo URLROOT; ?>/auth/facebook" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                    <img class="h-5 w-5 mr-2" src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook">
+                    Facebook
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 

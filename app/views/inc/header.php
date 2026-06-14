@@ -512,6 +512,16 @@
                                     </div>
 
                                     <div class="space-y-2 mt-2">
+                                        <a href="<?php echo URLROOT; ?>/profile" class="flex items-center justify-between w-full p-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-xl transition border border-gray-100 shadow-sm group">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                                    <i class="fa-solid fa-user"></i>
+                                                </div>
+                                                Hồ sơ cá nhân
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right text-xs text-gray-300 group-hover:translate-x-1 transition-transform"></i>
+                                        </a>
+
                                         <a href="<?php echo URLROOT; ?>/order/history" class="flex items-center justify-between w-full p-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-xl transition border border-gray-100 shadow-sm group">
                                             <div class="flex items-center">
                                                 <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">

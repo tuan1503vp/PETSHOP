@@ -36,6 +36,7 @@
         </div>
 
         <form class="mt-8 space-y-6" action="<?php echo URLROOT; ?>/auth/reset_password" method="POST">
+            <?php echo csrf_field(); ?>
             <div class="space-y-4">
                 <!-- Nhập OTP -->
                 <div>
