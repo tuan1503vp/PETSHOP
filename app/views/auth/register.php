@@ -1,6 +1,47 @@
 <?php require APPROOT . '/views/inc/header.php'; ?>
-<div class="flex items-center justify-center min-h-[calc(100vh-64px)] py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
+<style>
+/* Hiệu ứng Paws nổi lơ lửng */
+.paw-bg { position: absolute; font-size: 2rem; color: rgba(99, 102, 241, 0.15); z-index: 0; animation: floatPaw 8s infinite ease-in-out; }
+.paw-bg.paw-1 { top: 10%; left: 10%; animation-delay: 0s; transform: rotate(-20deg); }
+.paw-bg.paw-2 { top: 70%; left: 15%; animation-delay: 2s; transform: rotate(15deg); font-size: 3rem; }
+.paw-bg.paw-3 { top: 20%; right: 15%; animation-delay: 4s; transform: rotate(25deg); }
+.paw-bg.paw-4 { top: 80%; right: 10%; animation-delay: 1s; transform: rotate(-15deg); font-size: 2.5rem; }
+.paw-bg.paw-5 { top: 40%; left: 5%; animation-delay: 5s; transform: rotate(45deg); font-size: 1.5rem; }
+.paw-bg.paw-6 { top: 50%; right: 5%; animation-delay: 3s; transform: rotate(-45deg); font-size: 1.8rem; }
+@keyframes floatPaw {
+    0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.5; }
+    50% { transform: translateY(-20px) scale(1.1) rotate(10deg); opacity: 1; }
+}
+
+/* Hiệu ứng bé mèo ngó đầu */
+.peeking-pet {
+    position: absolute;
+    top: -55px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85px;
+    z-index: -1;
+    animation: peekaboo 5s infinite ease-in-out;
+}
+@keyframes peekaboo {
+    0%, 10%, 100% { top: -20px; opacity: 0; }
+    20%, 80% { top: -65px; opacity: 1; }
+}
+</style>
+
+<div class="flex items-center justify-center min-h-[calc(100vh-64px)] py-12 px-4 sm:px-6 lg:px-8 bg-indigo-50 relative overflow-hidden">
+    <!-- Những dấu chân lơ lửng -->
+    <i class="fa-solid fa-paw paw-bg paw-1"></i>
+    <i class="fa-solid fa-paw paw-bg paw-2"></i>
+    <i class="fa-solid fa-paw paw-bg paw-3"></i>
+    <i class="fa-solid fa-paw paw-bg paw-4"></i>
+    <i class="fa-solid fa-paw paw-bg paw-5"></i>
+    <i class="fa-solid fa-paw paw-bg paw-6"></i>
+
+    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-indigo-100 relative z-10 mt-12">
+        <!-- Bé mèo ngó đầu -->
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Cat%20Face.png" alt="Cute Cat" class="peeking-pet">
+        
         <div>
             <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100 text-primary">
                 <i class="fa-solid fa-user-plus text-2xl"></i>
