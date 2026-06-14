@@ -293,6 +293,19 @@
                 <span class="flex items-center"><i class="fa-solid fa-tag mr-1"></i>Ưu đãi hội viên (<span x-text="customerLevel"></span>):</span>
                 <span x-text="'- ' + formatMoney(discountAmount)"></span>
             </div>
+            
+            <div class="flex items-center gap-2 mb-3">
+                <input type="text" x-model="voucherCode" placeholder="Nhập mã voucher..." class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary px-3 py-2 outline-none">
+                <button @click="applyVoucher()" class="px-3 py-2 bg-emerald-600 text-white rounded-md text-sm font-medium hover:bg-emerald-700 transition">
+                    Áp dụng
+                </button>
+            </div>
+            <div class="flex justify-between mb-2 text-sm text-emerald-600 font-bold" x-show="voucherDiscount > 0">
+                <span class="flex items-center"><i class="fa-solid fa-ticket mr-1"></i>Voucher (<span x-text="voucherTitle"></span>):</span>
+                <span x-text="'- ' + formatMoney(voucherDiscount)"></span>
+            </div>
+            <div x-show="voucherMessage" class="text-xs text-red-500 mb-2 font-medium" x-text="voucherMessage"></div>
+
             <div class="flex justify-between items-end mb-4 border-t border-gray-200 pt-2">
                 <span class="text-base font-medium text-gray-800">Khách phải trả:</span>
                 <span class="text-2xl font-bold text-primary" x-text="formatMoney(finalPrice)"></span>
@@ -729,6 +742,11 @@ document.addEventListener('alpine:init', () => {
         completedOrder: null,
         cashReceived: 0,
         
+        voucherCode: '',
+        voucherDiscount: 0,
+        voucherTitle: '',
+        voucherMessage: '',
+
         customerId: null,
 
         init() {
@@ -878,6 +896,62 @@ document.addEventListener('alpine:init', () => {
             return Math.round(productDiscount + serviceDiscount);
         },
 
+        get finalPrice() {
+            const appliedMemDiscount = this.disableMembershipDiscount ? 0 : this.discountAmount;
+            return Math.max(0, this.totalPrice - appliedMemDiscount - this.voucherDiscount);
+        },
+
+        async applyVoucher() {
+            this.voucherMessage = '';
+            this.disableMembershipDiscount = false;
+            if (!this.voucherCode) {
+                this.voucherDiscount = 0;
+                this.voucherTitle = '';
+                return;
+            }
+            if (!this.customerId) {
+                this.voucherMessage = 'Vui lòng chọn khách hàng trước khi áp dụng voucher.';
+                return;
+            }
+            
+            try {
+                const res = await fetch('<?php echo URLROOT; ?>/order/validate_voucher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: this.voucherCode, customer_id: this.customerId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const discount = parseInt(data.discount);
+                    const isCombinable = data.is_combinable;
+                    const memDiscount = this.discountAmount;
+                    
+                    if (!isCombinable && memDiscount > 0) {
+                        if (discount <= memDiscount) {
+                            this.voucherDiscount = 0;
+                            this.voucherTitle = '';
+                            this.voucherMessage = `Ưu đãi hạng thẻ (${new Intl.NumberFormat('vi-VN').format(memDiscount)}đ) cao hơn. Không áp dụng mã!`;
+                        } else {
+                            this.disableMembershipDiscount = true;
+                            this.voucherDiscount = discount;
+                            this.voucherTitle = data.title;
+                            this.voucherMessage = `Mã không áp dụng cộng dồn. Đã dùng mã (giảm ${new Intl.NumberFormat('vi-VN').format(discount)}đ)!`;
+                        }
+                    } else {
+                        this.voucherDiscount = discount;
+                        this.voucherTitle = data.title;
+                        this.voucherMessage = '';
+                    }
+                } else {
+                    this.voucherDiscount = 0;
+                    this.voucherTitle = '';
+                    this.voucherMessage = data.message;
+                }
+            } catch (err) {
+                this.voucherMessage = 'Lỗi kiểm tra voucher.';
+            }
+        },
+
         selectCustomer(c) {
             this.customerId = c.id;
             this.customerName = c.fullname;
@@ -914,6 +988,7 @@ document.addEventListener('alpine:init', () => {
             this.showCustomerSearch = false;
             this.customerAiHistory = [];
             this.showAiHistoryPanel = false;
+            this.disableMembershipDiscount = false;
         },
 
         async fetchCustomerAiHistory(phone, name) {
@@ -1101,11 +1176,13 @@ document.addEventListener('alpine:init', () => {
             const info = this.discountInfo;
             const finalCart = this.cart.map(item => {
                 let finalItemPrice = item.price;
-                if (item.is_appointment) {
-                    if (info.freeService) finalItemPrice = 0;
-                    else if (info.percent > 0) finalItemPrice = item.price * (1 - info.percent / 100);
-                } else if (info.percent > 0) {
-                    finalItemPrice = item.price * (1 - info.percent / 100);
+                if (!this.disableMembershipDiscount) {
+                    if (item.is_appointment) {
+                        if (info.freeService) finalItemPrice = 0;
+                        else if (info.percent > 0) finalItemPrice = item.price * (1 - info.percent / 100);
+                    } else if (info.percent > 0) {
+                        finalItemPrice = item.price * (1 - info.percent / 100);
+                    }
                 }
                 return { ...item, price: Math.round(finalItemPrice) };
             });
@@ -1119,7 +1196,8 @@ document.addEventListener('alpine:init', () => {
                     cart: finalCart,
                     customer_name: this.customerName || 'Khách lẻ',
                     customer_phone: this.customerPhone || '',
-                    payment_method: this.paymentMethod
+                    payment_method: this.paymentMethod,
+                    voucher_code: this.voucherDiscount > 0 ? this.voucherCode : null
                 })
             })
             .then(async response => {
@@ -1146,6 +1224,7 @@ document.addEventListener('alpine:init', () => {
                     this.customerLevel = '';
                     this.customerAiHistory = [];
                     this.showAiHistoryPanel = false;
+                    this.disableMembershipDiscount = false;
                 } else {
                     alert('Lỗi: ' + data.message);
                 }

@@ -565,14 +565,22 @@
                 </div>
 
                 <!-- Tổng kết -->
-                <div class="flex justify-between items-end pt-6 border-t border-gray-100">
-                    <div class="text-sm text-gray-500 italic flex items-center gap-1">
-                        <i class="fa-solid fa-circle-check text-green-500"></i>
-                        <span x-text="selectedOrder?.order_type === 'pos' ? 'Đã thanh toán tại quầy' : 'Đơn hàng đã được xác nhận'"></span>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng thanh toán</p>
-                        <p class="text-3xl font-black text-primary" x-text="new Intl.NumberFormat('vi-VN').format(selectedOrder?.total_amount) + ' đ'"></p>
+                <div class="pt-6 border-t border-gray-100 flex flex-col gap-3">
+                    <template x-if="selectedOrder?.discount_amount > 0">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="font-bold text-green-600">Giảm giá Voucher: <span x-text="selectedOrder?.voucher_code"></span></span>
+                            <span class="font-black text-green-600" x-text="'-' + new Intl.NumberFormat('vi-VN').format(selectedOrder?.discount_amount) + ' đ'"></span>
+                        </div>
+                    </template>
+                    <div class="flex justify-between items-end">
+                        <div class="text-sm text-gray-500 italic flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check text-green-500"></i>
+                            <span x-text="selectedOrder?.order_type === 'pos' ? 'Đã thanh toán tại quầy' : 'Đơn hàng đã được xác nhận'"></span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng thanh toán</p>
+                            <p class="text-3xl font-black text-primary" x-text="new Intl.NumberFormat('vi-VN').format(Number(selectedOrder?.total_amount) || 0) + ' đ'"></p>
+                        </div>
                     </div>
                 </div>
             </div>

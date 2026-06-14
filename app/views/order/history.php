@@ -250,9 +250,16 @@
                             </div>
                         </template>
 
-                        <div class="pt-6 border-t border-gray-100 flex justify-between items-center">
+                        <template x-if="detailData.type === 'order' && detailData.order.discount_amount > 0">
+                            <div class="pt-6 border-t border-gray-100 flex justify-between items-center mb-2">
+                                <p class="text-sm font-bold text-green-600 uppercase tracking-widest">Voucher <span x-text="detailData.order.voucher_code"></span></p>
+                                <p class="text-lg font-black text-green-600" x-text="'-' + new Intl.NumberFormat('vi-VN').format(detailData.order.discount_amount) + 'đ'"></p>
+                            </div>
+                        </template>
+
+                        <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
                             <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Tổng cộng</p>
-                            <p class="text-2xl font-black text-primary" x-text="new Intl.NumberFormat('vi-VN').format(detailData.type === 'order' ? detailData.order.total_amount : detailData.data.final_price) + 'đ'"></p>
+                            <p class="text-2xl font-black text-primary" x-text="new Intl.NumberFormat('vi-VN').format(detailData.type === 'order' ? (Number(detailData.order.total_amount)) : detailData.data.final_price) + 'đ'"></p>
                         </div>
                     </div>
                 </div>

@@ -209,6 +209,15 @@
                 </li>
                 <?php endif; ?>
 
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'manager'])): ?>
+                <li>
+                    <a href="<?php echo URLROOT; ?>/admin/vouchers" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/vouchers') !== false ? $active_class : $inactive_class; ?>">
+                        <i class="fa-solid fa-ticket w-6 text-emerald-400"></i>
+                        <span>Quản lý Voucher</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+
                 <?php if(in_array($_SESSION['user_role'], ['admin', 'manager', 'doctor', 'staff'])): ?>
                 <?php $is_admin_pets = strpos($current_url, '/admin/pets') !== false || strpos($current_url, '/admin/pet_') !== false; ?>
                 <li>

@@ -25,19 +25,88 @@ class OrderController extends Controller {
                 $total_amount += $item['price'] * $item['quantity'];
             }
 
+            $userModel = $this->model('User');
+            $memDiscountInfo = $userModel->getMembershipDiscount($_SESSION['user_id']);
+            $memDiscountAmount = floor(($total_amount * $memDiscountInfo['discount_percent']) / 100);
+
+            $voucher_code = trim($_POST['voucher_code'] ?? '');
+            $discount_amount = 0;
+            $finalMemDiscount = $memDiscountAmount;
+
+            if ($voucher_code) {
+                require_once APPROOT . '/models/Voucher.php';
+                $voucherModel = new Voucher();
+                $voucher = $voucherModel->getVoucherByCode($voucher_code, $_SESSION['user_id']);
+                if ($voucher && $total_amount >= $voucher->min_order_value) {
+                    $eligible_amount = 0;
+                    if (!empty($voucher->category_id)) {
+                        foreach ($_SESSION['cart'] as $item) {
+                            $item_cat_id = $item['category_id'] ?? null;
+                            if (!$item_cat_id) {
+                                $p = $this->productModel->getProductById($item['id']);
+                                $item_cat_id = $p->category_id ?? null;
+                            }
+                            if ($item_cat_id == $voucher->category_id) {
+                                $eligible_amount += $item['price'] * $item['quantity'];
+                            }
+                        }
+                    } else {
+                        $eligible_amount = $total_amount;
+                    }
+
+                    if ($eligible_amount > 0) {
+                        if ($voucher->discount_type == 'percent') {
+                            $discount_amount = $eligible_amount * ($voucher->discount_amount / 100);
+                            if (!empty($voucher->max_discount) && $discount_amount > $voucher->max_discount) {
+                                $discount_amount = $voucher->max_discount;
+                            }
+                        } else {
+                            $discount_amount = min($voucher->discount_amount, $eligible_amount);
+                        }
+                        $discount_amount = floor($discount_amount);
+                        
+                        // Check combinability
+                        if (!$voucher->is_combinable && $memDiscountAmount > 0) {
+                            if ($discount_amount <= $memDiscountAmount) {
+                                $discount_amount = 0;
+                                $voucher_code = ''; // Ignore voucher
+                            } else {
+                                $finalMemDiscount = 0; // Disable membership discount
+                            }
+                        }
+                    } else {
+                        $voucher_code = ''; // Ignore if no eligible items
+                    }
+                } else {
+                    $voucher_code = ''; // Invalid voucher
+                }
+            }
+
+            $final_amount = max(0, $total_amount - $finalMemDiscount - $discount_amount);
+
             $data = [
-                'customer_id'      => $_SESSION['user_id'],
-                'total_amount'     => $total_amount,
-                'payment_method'   => trim($_POST['payment_method']),
-                'shipping_name'    => trim($_POST['fullname']),
-                'shipping_phone'   => trim($_POST['phone']),
+                'customer_id' => $_SESSION['user_id'],
+                'customer_name' => $_SESSION['user_name'],
+                'customer_phone' => $_POST['phone'] ?? '',
+                'total_amount' => $final_amount,
+                'payment_method' => trim($_POST['payment_method']),
+                'order_type' => 'online',
+                'status' => 'pending',
+                'shipping_name' => trim($_POST['fullname']),
+                'shipping_phone' => trim($_POST['phone']),
                 'shipping_address' => trim($_POST['address']),
+                'voucher_code' => $voucher_code ?: null,
+                'discount_amount' => $discount_amount + $finalMemDiscount
             ];
 
             // Tạo đơn hàng
             $order_id = $this->orderModel->createOrder($data);
 
             if ($order_id) {
+                if ($voucher_code) {
+                    $voucherModel->markVoucherAsUsed($voucher_code);
+                }
+                
                 // Thêm chi tiết đơn hàng
                 foreach ($_SESSION['cart'] as $item) {
                     $this->orderModel->addOrderItem($order_id, $item['id'], $item['quantity'], $item['price']);
@@ -106,6 +175,32 @@ class OrderController extends Controller {
             'status'  => $order->status,
             'paid'    => in_array($order->status, ['shipping', 'completed'])
         ]);
+    }
+
+    // API: Validate voucher
+    public function validate_voucher() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+            $code = trim($data['code'] ?? '');
+            $customer_id = $data['customer_id'] ?? null;
+            
+            if (!$code || !$customer_id) {
+                echo json_encode(['success' => false, 'message' => 'Dữ liệu không hợp lệ']);
+                return;
+            }
+            
+            require_once APPROOT . '/models/Voucher.php';
+            $voucherModel = new Voucher();
+            $voucher = $voucherModel->getVoucherByCode($code, $customer_id);
+            
+            if ($voucher) {
+                echo json_encode(['success' => true, 'discount' => $voucher->discount_amount, 'title' => $voucher->title]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Mã không hợp lệ hoặc đã sử dụng']);
+            }
+        }
     }
 
     // API: Tải lên biên lai chuyển khoản
@@ -228,6 +323,7 @@ class OrderController extends Controller {
                 $customer_name = !empty($input['customer_name']) ? $input['customer_name'] : 'Khách lẻ';
                 $customer_phone = !empty($input['customer_phone']) ? $input['customer_phone'] : null;
                 $payment_method = !empty($input['payment_method']) ? $input['payment_method'] : 'cash';
+                $voucher_code = !empty($input['voucher_code']) ? trim($input['voucher_code']) : null;
                 
                 $customer_id = null;
                 $userModel = $this->model('User');
@@ -260,6 +356,19 @@ class OrderController extends Controller {
                 
                 $grand_total = $product_total + $appointment_total;
 
+                $discount_amount = 0;
+                if ($voucher_code && $customer_id) {
+                    require_once APPROOT . '/models/Voucher.php';
+                    $voucherModel = new Voucher();
+                    $voucher = $voucherModel->getVoucherByCode($voucher_code, $customer_id);
+                    if ($voucher) {
+                        $discount_amount = $voucher->discount_amount;
+                        $voucherModel->markVoucherAsUsed($voucher_code);
+                    }
+                }
+                
+                $grand_total = max(0, $grand_total - $discount_amount);
+
                 // Tạo đơn hàng chính nếu có sản phẩm
                 $order_id = null;
                 if ($product_total > 0) {
@@ -267,11 +376,17 @@ class OrderController extends Controller {
                         'customer_id' => $customer_id,
                         'customer_name' => $customer_name,
                         'customer_phone' => $customer_phone,
-                        'total_amount' => $product_total, // Tổng tiền sản phẩm
+                        'total_amount' => $grand_total,
                         'payment_method' => $payment_method,
                         'order_type' => 'pos',
-                        'status' => 'completed'
+                        'status' => 'completed',
+                        'voucher_code' => $voucher_code ?: null,
+                        'discount_amount' => $discount_amount
                     ];
+                    
+                    if ($payment_method == 'vnpay') {
+                        $orderData['status'] = 'pending';
+                    }
 
                     $order_id = $this->orderModel->createOrder($orderData);
                 }
@@ -298,6 +413,25 @@ class OrderController extends Controller {
                     // Cập nhật hạng thành viên nếu là khách hàng đã đăng ký
                     if ($customer_id) {
                         $userModel->updateMembershipTier($customer_id);
+
+                        require_once APPROOT . '/models/Coin.php';
+                        $coinModel = new Coin();
+                        $customer = $userModel->getUserById($customer_id);
+                        if ($customer) {
+                            $level = $customer->membership_level ?? 'Đồng';
+                            $multiplier = 1;
+                            switch($level) {
+                                case 'Đồng': $multiplier = 1; break;
+                                case 'Bạc': $multiplier = 1.2; break;
+                                case 'Vàng': $multiplier = 1.5; break;
+                                case 'Bạch Kim': $multiplier = 2; break;
+                                case 'VIP': $multiplier = 3; break;
+                            }
+                            $coins_earned = floor(($grand_total / 100000) * $multiplier);
+                            if ($coins_earned > 0) {
+                                $coinModel->addCoins($customer->id, $coins_earned, 'Hoàn xu đơn hàng POS #ORD-' . str_pad($order_id, 5, '0', STR_PAD_LEFT));
+                            }
+                        }
                     }
 
                     // Ghi nhật ký hành vi thanh toán POS thành công

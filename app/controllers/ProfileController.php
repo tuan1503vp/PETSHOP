@@ -17,9 +17,23 @@ class ProfileController extends Controller {
             $userInfo = $this->userModel->getUserById($user_id);
             $membershipInfo = $this->userModel->getMembershipFullInfo($user_id);
             
+            $petModel = $this->model('Pet');
+            $orderModel = $this->model('Order');
+            $appointmentModel = $this->model('Appointment');
+            require_once APPROOT . '/models/Voucher.php';
+            require_once APPROOT . '/models/Coin.php';
+            $voucherModel = new Voucher();
+            $coinModel = new Coin();
+            
             $data = [
                 'user' => $userInfo,
-                'membership' => $membershipInfo
+                'membership' => $membershipInfo,
+                'pets' => $petModel->getPetsByCustomer($user_id),
+                'orders' => $orderModel->getOrdersByUser($user_id),
+                'appointments' => $appointmentModel->getAppointmentsByCustomer($user_id),
+                'vouchers' => $voucherModel->getAllActiveVouchers(),
+                'my_vouchers' => $voucherModel->getActiveUserVouchers($user_id),
+                'coin_history' => $coinModel->getHistory($user_id)
             ];
             
             $this->view('profile/index', $data);

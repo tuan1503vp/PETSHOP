@@ -53,7 +53,8 @@ class CartController extends Controller {
                         'name' => $product->name,
                         'price' => $product->price,
                         'image' => $product->image,
-                        'quantity' => $quantity
+                        'quantity' => $quantity,
+                        'category_id' => $product->category_id
                     ];
                 }
                 flash('cart_success', 'Đã thêm sản phẩm vào giỏ hàng');
@@ -153,13 +154,121 @@ class CartController extends Controller {
             return;
         }
 
+        require_once APPROOT . '/models/Voucher.php';
+        $voucherModel = new Voucher();
+
+        // Fetch user's active internal vouchers
+        $allUserVouchers = $voucherModel->getActiveUserVouchers($_SESSION['user_id']);
+        
+        $usableVouchers = [];
+        $total = $this->calculateTotal();
+        
+        foreach ($allUserVouchers as $v) {
+            // Check min_order_value
+            if ($total < $v->min_order_value) continue;
+            
+            // Check category logic
+            $eligible_amount = 0;
+            if ($v->category_id) {
+                foreach ($_SESSION['cart'] as $item) {
+                    if ($item['category_id'] == $v->category_id) {
+                        $eligible_amount += $item['price'] * $item['quantity'];
+                    }
+                }
+                if ($eligible_amount <= 0) continue;
+            } else {
+                $eligible_amount = $total;
+            }
+            
+            $usableVouchers[] = $v;
+        }
+
+        $userModel = $this->model('User');
+        $memDiscountInfo = $userModel->getMembershipDiscount($_SESSION['user_id']);
+
         // Tạm thời chỉ hiển thị form xác nhận
         $data = [
             'cart' => $_SESSION['cart'],
-            'total' => $this->calculateTotal(),
-            'user' => $this->model('User')->getUserById($_SESSION['user_id'])
+            'total' => $total,
+            'user' => $userModel->getUserById($_SESSION['user_id']),
+            'vouchers' => $usableVouchers,
+            'membership_discount' => $memDiscountInfo
         ];
 
         $this->view('cart/checkout', $data);
+    }
+
+    public function apply_voucher() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && $this->isAjaxRequest()) {
+            if (!isLoggedIn()) {
+                echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập']);
+                return;
+            }
+
+            $code = trim($_POST['code'] ?? '');
+            if (empty($code)) {
+                echo json_encode(['success' => false, 'message' => 'Vui lòng nhập mã voucher']);
+                return;
+            }
+
+            if (empty($_SESSION['cart'])) {
+                echo json_encode(['success' => false, 'message' => 'Giỏ hàng trống']);
+                return;
+            }
+
+            require_once APPROOT . '/models/Voucher.php';
+            $voucherModel = new Voucher();
+            $voucher = $voucherModel->getVoucherByCode($code, $_SESSION['user_id']);
+
+            if (!$voucher) {
+                echo json_encode(['success' => false, 'message' => 'Mã voucher không hợp lệ, không áp dụng được hoặc đã hết lượt sử dụng']);
+                return;
+            }
+
+            $total = $this->calculateTotal();
+            if ($total < $voucher->min_order_value) {
+                echo json_encode(['success' => false, 'message' => 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($voucher->min_order_value, 0, ',', '.') . 'đ']);
+                return;
+            }
+
+            $eligible_amount = 0;
+            if (!empty($voucher->category_id)) {
+                // Fetch product category mapping if missing in session
+                $this->productModel = $this->model('Product');
+                foreach ($_SESSION['cart'] as $item) {
+                    $item_cat_id = $item['category_id'] ?? null;
+                    if (!$item_cat_id) {
+                        $p = $this->productModel->getProductById($item['id']);
+                        $item_cat_id = $p->category_id ?? null;
+                    }
+                    if ($item_cat_id == $voucher->category_id) {
+                        $eligible_amount += $item['price'] * $item['quantity'];
+                    }
+                }
+                if ($eligible_amount == 0) {
+                    echo json_encode(['success' => false, 'message' => 'Giỏ hàng không có sản phẩm nào thuộc danh mục được giảm giá']);
+                    return;
+                }
+            } else {
+                $eligible_amount = $total;
+            }
+
+            $discount = 0;
+            if ($voucher->discount_type == 'percent') {
+                $discount = $eligible_amount * ($voucher->discount_amount / 100);
+                if (!empty($voucher->max_discount) && $discount > $voucher->max_discount) {
+                    $discount = $voucher->max_discount;
+                }
+            } else {
+                $discount = min($voucher->discount_amount, $eligible_amount);
+            }
+
+            echo json_encode([
+                'success' => true, 
+                'discount_amount' => floor($discount),
+                'code' => $voucher->code,
+                'is_combinable' => $voucher->is_combinable == 1
+            ]);
+        }
     }
 }

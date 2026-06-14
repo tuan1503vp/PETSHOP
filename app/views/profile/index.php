@@ -4,6 +4,8 @@
     $user = $data['user'];
     $stats = $data['membership']['stats'];
     $member = $data['membership']['member'];
+    $vouchers = $data['vouchers'] ?? [];
+    $my_vouchers = $data['my_vouchers'] ?? [];
     
     $level = $member->membership_level ?? 'Đồng';
     
@@ -329,7 +331,91 @@
                     </div>
                 </div>
 
-            </div>
+                <!-- Ví Xu & Đổi Thưởng -->
+                <div class="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 mt-6" id="reward">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-black text-gray-900 flex items-center">
+                            <i class="fa-solid fa-coins mr-3 text-yellow-500"></i> Ví Xu & Đổi Thưởng
+                        </h3>
+                        <div class="bg-yellow-50 text-yellow-600 px-4 py-2 rounded-xl font-black flex items-center gap-2">
+                            <span>Số dư:</span>
+                            <span class="text-xl"><?php echo number_format($user->coins); ?></span>
+                            <i class="fa-solid fa-coins text-yellow-500"></i>
+                        </div>
+                    </div>
+
+                    <?php if (isset($_SESSION['profile_success'])): ?>
+                        <div class="mb-6 bg-emerald-50 text-emerald-600 p-4 rounded-xl border border-emerald-100 text-sm font-bold flex items-center">
+                            <i class="fa-solid fa-check-circle mr-2 text-lg"></i>
+                            <?php echo $_SESSION['profile_success']; unset($_SESSION['profile_success']); ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if (isset($_SESSION['profile_error'])): ?>
+                        <div class="mb-6 bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 text-sm font-bold flex items-center">
+                            <i class="fa-solid fa-triangle-exclamation mr-2 text-lg"></i>
+                            <?php echo $_SESSION['profile_error']; unset($_SESSION['profile_error']); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Voucher Store -->
+                    <div class="mb-8">
+                        <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Cửa hàng Voucher</h4>
+                        <div class="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <?php if(empty($vouchers)): ?>
+                                    <p class="text-gray-500 italic col-span-2">Hiện tại chưa có voucher nào để đổi.</p>
+                                <?php else: ?>
+                                    <?php foreach($vouchers as $v): ?>
+                                        <div class="border-2 border-dashed border-gray-200 rounded-2xl p-4 flex justify-between items-center hover:border-primary/50 transition">
+                                            <div>
+                                                <h5 class="font-bold text-gray-900"><?php echo $v->title; ?></h5>
+                                                <p class="text-xs text-gray-500 mb-2"><?php echo $v->description; ?></p>
+                                                <span class="inline-block bg-yellow-100 text-yellow-700 text-xs font-black px-2 py-1 rounded-lg">
+                                                    <i class="fa-solid fa-coins mr-1"></i> <?php echo number_format($v->cost_coins); ?> Xu
+                                                </span>
+                                            </div>
+                                            <form action="<?php echo URLROOT; ?>/reward/exchange" method="POST" class="ml-4 shrink-0">
+                                                <input type="hidden" name="voucher_id" value="<?php echo $v->id; ?>">
+                                                <button type="submit" onclick="return confirm('Bạn có chắc muốn dùng <?php echo $v->cost_coins; ?> Xu để đổi voucher này?')" <?php echo ($user->coins < $v->cost_coins) ? 'disabled' : ''; ?> class="w-10 h-10 rounded-full flex items-center justify-center <?php echo ($user->coins >= $v->cost_coins) ? 'bg-primary text-white hover:bg-secondary hover:shadow-lg hover:-translate-y-1 transition' : 'bg-gray-100 text-gray-400 cursor-not-allowed'; ?>">
+                                                    <i class="fa-solid fa-exchange-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Vouchers -->
+                    <div>
+                        <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Kho Voucher của tôi</h4>
+                        <div class="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="space-y-3">
+                                <?php if(empty($my_vouchers)): ?>
+                                    <p class="text-gray-500 italic text-sm">Bạn chưa đổi voucher nào.</p>
+                                <?php else: ?>
+                                    <?php foreach($my_vouchers as $uv): ?>
+                                        <div class="flex items-center justify-between p-4 rounded-xl <?php echo $uv->status == 'active' ? 'bg-emerald-50 border border-emerald-100' : 'bg-gray-50 border border-gray-200 opacity-60'; ?>">
+                                            <div>
+                                                <h5 class="font-bold <?php echo $uv->status == 'active' ? 'text-emerald-700' : 'text-gray-600'; ?>"><?php echo $uv->title; ?></h5>
+                                                <p class="text-xs font-mono mt-1 font-bold tracking-widest <?php echo $uv->status == 'active' ? 'text-gray-800 select-all' : 'text-gray-500 line-through'; ?>"><?php echo $uv->unique_code; ?></p>
+                                            </div>
+                                            <div class="text-right">
+                                                <?php if($uv->status == 'active'): ?>
+                                                    <span class="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-md">Có thể dùng</span>
+                                                <?php else: ?>
+                                                    <span class="text-xs font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded-md">Đã sử dụng</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
         </div>
     </div>
 </div>

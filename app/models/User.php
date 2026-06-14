@@ -381,4 +381,20 @@ class User {
             'member' => $member
         ];
     }
+
+    public function getMembershipDiscount($user_id) {
+        $this->db->query("SELECT b.discount_percent, m.membership_level
+                          FROM members m
+                          LEFT JOIN membership_benefits b ON m.membership_level = b.membership_level
+                          WHERE m.user_id = :id");
+        $this->db->bind(':id', $user_id);
+        $row = $this->db->single();
+        if ($row) {
+            return [
+                'level' => $row->membership_level,
+                'discount_percent' => (float)($row->discount_percent ?? 0)
+            ];
+        }
+        return ['level' => 'Đồng', 'discount_percent' => 0];
+    }
 }

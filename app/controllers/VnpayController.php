@@ -95,21 +95,91 @@ class VnpayController extends Controller {
             $total_amount += $item['price'] * $item['quantity'];
         }
 
+        // Get membership discount
+        $userModel = $this->model('User');
+        $memDiscountInfo = $userModel->getMembershipDiscount($_SESSION['user_id']);
+        $memDiscountAmount = floor(($total_amount * $memDiscountInfo['discount_percent']) / 100);
+
+        // Kiểm tra voucher
+        $voucher_code = trim($_POST['voucher_code'] ?? '');
+        $discount_amount = 0;
+        $finalMemDiscount = $memDiscountAmount;
+
+        if ($voucher_code) {
+            require_once APPROOT . '/models/Voucher.php';
+            $voucherModel = new Voucher();
+            $voucher = $voucherModel->getVoucherByCode($voucher_code, $_SESSION['user_id']);
+            if ($voucher && $total_amount >= $voucher->min_order_value) {
+                $eligible_amount = 0;
+                if (!empty($voucher->category_id)) {
+                    $this->productModel = $this->model('Product');
+                    foreach ($_SESSION['cart'] as $item) {
+                        $item_cat_id = $item['category_id'] ?? null;
+                        if (!$item_cat_id) {
+                            $p = $this->productModel->getProductById($item['id']);
+                            $item_cat_id = $p->category_id ?? null;
+                        }
+                        if ($item_cat_id == $voucher->category_id) {
+                            $eligible_amount += $item['price'] * $item['quantity'];
+                        }
+                    }
+                } else {
+                    $eligible_amount = $total_amount;
+                }
+
+                if ($eligible_amount > 0) {
+                    if ($voucher->discount_type == 'percent') {
+                        $discount_amount = $eligible_amount * ($voucher->discount_amount / 100);
+                        if (!empty($voucher->max_discount) && $discount_amount > $voucher->max_discount) {
+                            $discount_amount = $voucher->max_discount;
+                        }
+                    } else {
+                        $discount_amount = min($voucher->discount_amount, $eligible_amount);
+                    }
+                    $discount_amount = floor($discount_amount);
+
+                    // Check combinability
+                    if (!$voucher->is_combinable && $memDiscountAmount > 0) {
+                        if ($discount_amount <= $memDiscountAmount) {
+                            $discount_amount = 0;
+                            $voucher_code = ''; // Ignore voucher
+                        } else {
+                            $finalMemDiscount = 0; // Disable membership discount
+                        }
+                    }
+                } else {
+                    $voucher_code = ''; // Ignore if no eligible items
+                }
+            } else {
+                $voucher_code = ''; // Invalid voucher
+            }
+        }
+
+        $final_amount = max(0, $total_amount - $finalMemDiscount - $discount_amount);
+
         // Tạo đơn hàng với status = 'pending'
         $orderData = [
             'customer_id'      => $_SESSION['user_id'],
-            'total_amount'     => $total_amount,
+            'customer_name'    => $_SESSION['user_name'] ?? null,
+            'customer_phone'   => $_POST['phone'] ?? '',
+            'total_amount'     => $final_amount,
             'payment_method'   => 'vnpay',
             'shipping_name'    => trim($_POST['fullname'] ?? ''),
             'shipping_phone'   => trim($_POST['phone'] ?? ''),
             'shipping_address' => trim($_POST['address'] ?? ''),
             'status'           => 'pending',
             'order_type'       => 'online',
+            'voucher_code'     => $voucher_code ?: null,
+            'discount_amount'  => $discount_amount + $finalMemDiscount
         ];
 
         $order_id = $this->orderModel->createOrder($orderData);
         if (!$order_id) {
             die('Có lỗi khi tạo đơn hàng. Vui lòng thử lại.');
+        }
+
+        if ($voucher_code) {
+            $voucherModel->markVoucherAsUsed($voucher_code);
         }
 
         // Lưu chi tiết sản phẩm
@@ -124,7 +194,7 @@ class VnpayController extends Controller {
         // Lưu ý: vnp_OrderInfo KHÔNG dùng ký tự đặc biệt (#, &, =, ...)
         $vnp_TxnRef    = $order_id . '_' . time();
         $vnp_OrderInfo = 'PETSHOP don hang ' . str_pad($order_id, 6, '0', STR_PAD_LEFT);
-        $vnp_Amount    = (int)($total_amount * 100); // VNPay tính x100
+        $vnp_Amount    = (int)($final_amount * 100); // VNPay tính x100
         $vnp_IpAddr    = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
         $inputData = [

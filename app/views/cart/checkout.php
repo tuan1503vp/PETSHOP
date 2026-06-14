@@ -283,7 +283,36 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
                     </div>
                 </div>
 
-                <!-- ③ GHI CHÚ -->
+                <!-- ③ KHUYẾN MÃI (VOUCHER) -->
+                <div class="bg-white shadow-sm rounded-3xl border border-gray-100 p-6 relative overflow-hidden mb-6">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-emerald-400 to-teal-400 rounded-l-3xl"></div>
+                    <h2 class="text-sm font-black text-gray-900 mb-4 pl-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs"><i class="fa-solid fa-ticket"></i></span>
+                        Áp dụng mã giảm giá
+                    </h2>
+                    
+                    <div class="space-y-4 pl-3">
+                        <div class="flex gap-2">
+                            <input type="text" id="voucherInput" placeholder="Nhập mã giảm giá..." class="flex-1 border border-gray-200 rounded-2xl text-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-300/40 transition bg-white uppercase font-bold text-emerald-700">
+                            <button type="button" onclick="applyVoucher()" class="px-6 py-3 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition">Áp dụng</button>
+                        </div>
+                        <p id="voucherMessage" class="text-xs font-bold text-gray-500 hidden"></p>
+
+                        <?php if (!empty($data['vouchers'])): ?>
+                            <div class="pt-3 border-t border-gray-100">
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Voucher của bạn</p>
+                                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                    <?php foreach ($data['vouchers'] as $v): ?>
+                                        <button type="button" onclick="document.getElementById('voucherInput').value='<?php echo htmlspecialchars($v->unique_code); ?>'; applyVoucher()" class="flex-shrink-0 text-left border border-emerald-100 bg-emerald-50 hover:bg-emerald-100 rounded-xl px-3 py-2 transition min-w-[150px]">
+                                            <p class="text-xs font-black text-emerald-700"><?php echo htmlspecialchars($v->title); ?></p>
+                                            <p class="text-[10px] text-emerald-600 mt-0.5">Mã: <?php echo htmlspecialchars($v->unique_code); ?></p>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
                 <div class="bg-white shadow-sm rounded-3xl border border-gray-100 p-6 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-400 to-orange-400 rounded-l-3xl"></div>
                     <h2 class="text-sm font-black text-gray-900 mb-3 pl-3 flex items-center gap-2">
@@ -304,6 +333,7 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
                     <input type="hidden" name="phone"     id="cod_phone">
                     <input type="hidden" name="address"   id="cod_address">
                     <input type="hidden" name="note"      id="cod_note">
+                    <input type="hidden" name="voucher_code" id="cod_voucher">
                 </form>
 
                 <!-- Form Transfer -->
@@ -313,6 +343,7 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
                     <input type="hidden" name="phone"     id="tf_phone">
                     <input type="hidden" name="address"   id="tf_address">
                     <input type="hidden" name="note"      id="tf_note">
+                    <input type="hidden" name="voucher_code" id="tf_voucher">
                 </form>
 
                 <!-- Form VNPay -->
@@ -322,6 +353,7 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
                     <input type="hidden" name="phone"     id="vp_phone">
                     <input type="hidden" name="address"   id="vp_address">
                     <input type="hidden" name="note"      id="vp_note">
+                    <input type="hidden" name="voucher_code" id="vp_voucher">
                 </form>
 
                 <!-- SUBMIT BUTTON -->
@@ -370,19 +402,35 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
                             <?php endforeach; ?>
                         </ul>
                         <div class="border-t border-gray-100 p-5 space-y-3 bg-gray-50/40">
+                            <?php
+                            $memDiscountInfo = $data['membership_discount'] ?? ['level' => 'Đồng', 'discount_percent' => 0];
+                            $memDiscountPercent = $memDiscountInfo['discount_percent'];
+                            $memDiscountAmount = floor(($data['total'] * $memDiscountPercent) / 100);
+                            $initialTotal = max(0, $data['total'] - $memDiscountAmount);
+                            ?>
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-gray-500">Tạm tính</span>
                                 <span class="font-semibold text-gray-700"><?php echo number_format($data['total'],0,',','.'); ?>đ</span>
                             </div>
+                            <?php if($memDiscountPercent > 0): ?>
+                            <div class="flex items-center justify-between text-sm" id="mem_discount_row">
+                                <span class="text-gray-500">Ưu đãi hạng thẻ (<?php echo $memDiscountInfo['level']; ?> - <?php echo $memDiscountPercent; ?>%)</span>
+                                <span class="font-bold text-orange-500">-<?php echo number_format($memDiscountAmount,0,',','.'); ?>đ</span>
+                            </div>
+                            <?php endif; ?>
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-gray-500">Phí vận chuyển</span>
                                 <span class="font-bold text-green-600 flex items-center gap-1"><i class="fa-solid fa-truck-fast text-xs"></i> Miễn phí</span>
                             </div>
+                            <div class="flex items-center justify-between text-sm hidden" id="discount_row">
+                                <span class="text-gray-500">Giảm giá (Voucher)</span>
+                                <span class="font-bold text-primary" id="discount_amount_text">-0đ</span>
+                            </div>
                             <div class="border-t border-dashed border-gray-200 my-1"></div>
                             <div class="flex items-center justify-between">
                                 <span class="font-black text-gray-900">Tổng cộng</span>
-                                <span class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-600">
-                                    <?php echo number_format($data['total'],0,',','.'); ?>đ
+                                <span id="checkout_total_price" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-600">
+                                    <?php echo number_format($initialTotal,0,',','.'); ?>đ
                                 </span>
                             </div>
                         </div>
@@ -421,8 +469,8 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
                             <i class="fa-solid fa-headset text-lg"></i>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500">Hỗ trợ đặt hàng</p>
-                            <p class="font-black text-gray-800 text-sm">Hotline: <a href="tel:19008888" class="text-primary hover:underline">1900 8888</a></p>
+                            <p class="text-[10px] text-gray-400 font-medium">Hỗ trợ đặt hàng</p>
+                            <p class="font-black text-gray-800 text-sm">Hotline: <a href="tel:0947647052" class="text-primary hover:underline">0947 647 052</a></p>
                         </div>
                     </div>
                 </div>
@@ -438,12 +486,115 @@ $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-co
 
 <script>
 let currentMethod = 'cod';
+const originalTotal = <?php echo $data['total']; ?>;
+let memDiscountAmount = <?php echo $memDiscountAmount; ?>;
 
 const methodConfig = {
     cod:      { text: 'Đặt Hàng Ngay (COD)',            icon: 'fa-money-bill-wave', btnClass: 'from-orange-500 via-orange-600 to-amber-600'  },
     transfer: { text: 'Xác Nhận & Đặt Hàng (CK)',        icon: 'fa-building-columns', btnClass: 'from-green-600 via-emerald-600 to-teal-600' },
     vnpay:    { text: 'Tiếp tục thanh toán qua VNPay',   icon: 'fa-arrow-up-right-from-square', btnClass: 'from-blue-600 via-blue-700 to-indigo-700' },
 };
+
+function applyVoucher() {
+    const code = document.getElementById('voucherInput').value.trim();
+    const msgEl = document.getElementById('voucherMessage');
+    const discountRow = document.getElementById('discount_row');
+    const discountText = document.getElementById('discount_amount_text');
+    const memDiscountRow = document.getElementById('mem_discount_row');
+    const totalEl = document.getElementById('checkout_total_price');
+
+    if (!code) {
+        msgEl.classList.remove('hidden', 'text-emerald-600', 'text-red-500');
+        msgEl.classList.add('text-gray-500');
+        msgEl.innerText = 'Vui lòng nhập mã!';
+        
+        document.getElementById('cod_voucher').value = '';
+        document.getElementById('tf_voucher').value = '';
+        document.getElementById('vp_voucher').value = '';
+        
+        msgEl.classList.add('hidden');
+        if (discountRow) discountRow.classList.add('hidden');
+        if (totalEl) totalEl.innerHTML = new Intl.NumberFormat('vi-VN').format(originalTotal) + 'đ';
+        return;
+    }
+
+    // Call API via fetch
+    fetch('<?php echo URLROOT; ?>/cart/apply_voucher', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new URLSearchParams({
+            'code': code
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        msgEl.classList.remove('hidden', 'text-gray-500', 'text-emerald-600', 'text-red-500', 'text-amber-500');
+        if (data.success) {
+            const discount = data.discount_amount;
+            const isCombinable = data.is_combinable;
+            
+            let finalMemDiscount = memDiscountAmount;
+            
+            if (!isCombinable && memDiscountAmount > 0) {
+                if (discount <= memDiscountAmount) {
+                    // Reject voucher
+                    msgEl.classList.add('text-amber-500');
+                    msgEl.innerText = `Ưu đãi hạng thẻ (${new Intl.NumberFormat('vi-VN').format(memDiscountAmount)}đ) đang cao hơn mã này. Bạn không cần dùng mã!`;
+                    
+                    document.getElementById('cod_voucher').value = '';
+                    document.getElementById('tf_voucher').value = '';
+                    document.getElementById('vp_voucher').value = '';
+                    
+                    if (discountRow) discountRow.classList.add('hidden');
+                    if (memDiscountRow) memDiscountRow.classList.remove('opacity-50', 'line-through');
+                    if (totalEl) totalEl.innerHTML = new Intl.NumberFormat('vi-VN').format(Math.max(0, originalTotal - memDiscountAmount)) + 'đ';
+                    return;
+                } else {
+                    // Voucher is better, disable mem discount
+                    finalMemDiscount = 0;
+                    if (memDiscountRow) memDiscountRow.classList.add('opacity-50', 'line-through');
+                    msgEl.classList.add('text-emerald-600');
+                    msgEl.innerText = `Mã không áp dụng cộng dồn. Đã chuyển sang dùng mã (giảm ${new Intl.NumberFormat('vi-VN').format(discount)}đ)!`;
+                }
+            } else {
+                if (memDiscountRow) memDiscountRow.classList.remove('opacity-50', 'line-through');
+                msgEl.classList.add('text-emerald-600');
+                msgEl.innerText = `Đã áp dụng giảm ${new Intl.NumberFormat('vi-VN').format(discount)}đ!`;
+            }
+            
+            document.getElementById('cod_voucher').value = data.code;
+            document.getElementById('tf_voucher').value = data.code;
+            document.getElementById('vp_voucher').value = data.code;
+
+            const newTotal = Math.max(0, originalTotal - finalMemDiscount - discount);
+            if (totalEl) totalEl.innerHTML = new Intl.NumberFormat('vi-VN').format(newTotal) + 'đ';
+
+            if (discount > 0) {
+                if (discountRow) discountRow.classList.remove('hidden');
+                if (discountText) discountText.innerText = `-${new Intl.NumberFormat('vi-VN').format(discount)}đ`;
+            } else {
+                if (discountRow) discountRow.classList.add('hidden');
+            }
+        } else {
+            document.getElementById('cod_voucher').value = '';
+            document.getElementById('tf_voucher').value = '';
+            document.getElementById('vp_voucher').value = '';
+
+            if (totalEl) totalEl.innerHTML = new Intl.NumberFormat('vi-VN').format(Math.max(0, originalTotal - memDiscountAmount)) + 'đ';
+            if (discountRow) discountRow.classList.add('hidden');
+            if (memDiscountRow) memDiscountRow.classList.remove('opacity-50', 'line-through');
+
+            msgEl.classList.add('text-red-500');
+            msgEl.innerText = data.message;
+        }
+    })
+    .catch(error => {
+        console.error('Error applying voucher:', error);
+    });
+}
 
 function selectMethod(method) {
     currentMethod = method;

@@ -102,8 +102,14 @@
             <div class="w-64 space-y-3">
                 <div class="flex justify-between text-sm text-gray-500 font-medium">
                     <span>Tạm tính</span>
-                    <span><?php echo number_format($data['type'] == 'order' ? $data['order']->total_amount : $data['detail']->final_price, 0, ',', '.'); ?>đ</span>
+                    <span><?php echo number_format($data['type'] == 'order' ? $data['order']->total_amount + ($data['order']->discount_amount??0) : $data['detail']->final_price, 0, ',', '.'); ?>đ</span>
                 </div>
+                <?php if ($data['type'] == 'order' && !empty($data['order']->discount_amount) && $data['order']->discount_amount > 0): ?>
+                <div class="flex justify-between text-sm text-green-600 font-medium">
+                    <span>Voucher (<?php echo $data['order']->voucher_code; ?>)</span>
+                    <span>-<?php echo number_format($data['order']->discount_amount, 0, ',', '.'); ?>đ</span>
+                </div>
+                <?php endif; ?>
                 <div class="flex justify-between text-sm text-gray-500 font-medium pb-3 border-b border-gray-100">
                     <span>Giảm giá (Hội viên)</span>
                     <span>-0đ</span>

@@ -8,8 +8,8 @@ class Order {
 
     // Tạo đơn hàng mới
     public function createOrder($data) {
-        $this->db->query('INSERT INTO orders (customer_id, customer_name, customer_phone, total_amount, payment_method, order_type, status, shipping_name, shipping_phone, shipping_address) 
-                          VALUES (:customer_id, :customer_name, :customer_phone, :total_amount, :payment_method, :order_type, :status, :shipping_name, :shipping_phone, :shipping_address)');
+        $this->db->query('INSERT INTO orders (customer_id, customer_name, customer_phone, total_amount, payment_method, order_type, status, shipping_name, shipping_phone, shipping_address, voucher_code, discount_amount) 
+                          VALUES (:customer_id, :customer_name, :customer_phone, :total_amount, :payment_method, :order_type, :status, :shipping_name, :shipping_phone, :shipping_address, :voucher_code, :discount_amount)');
         
         $this->db->bind(':customer_id', $data['customer_id'] ?? null);
         $this->db->bind(':customer_name', $data['customer_name'] ?? null);
@@ -21,6 +21,8 @@ class Order {
         $this->db->bind(':shipping_name', $data['shipping_name'] ?? null);
         $this->db->bind(':shipping_phone', $data['shipping_phone'] ?? null);
         $this->db->bind(':shipping_address', $data['shipping_address'] ?? null);
+        $this->db->bind(':voucher_code', $data['voucher_code'] ?? null);
+        $this->db->bind(':discount_amount', $data['discount_amount'] ?? 0);
 
         if ($this->db->execute()) {
             return $this->db->lastInsertId();

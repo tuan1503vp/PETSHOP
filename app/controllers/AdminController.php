@@ -802,6 +802,9 @@ class AdminController extends Controller {
             $orderModel = $this->model('Order');
             $notificationModel = $this->model('Notification');
             
+            $order = $orderModel->getOrderById($id);
+            $old_status = $order ? $order->status : '';
+
             $success = false;
             if ($status == 'cancelled' && !empty($reason)) {
                 $success = $orderModel->updateStatusWithReason($id, $status, $reason);
@@ -812,6 +815,30 @@ class AdminController extends Controller {
             }
 
             if ($success) {
+                // Nếu hoàn thành đơn hàng online
+                if ($status == 'completed' && $old_status != 'completed' && $order && $order->customer_id) {
+                    $userModel = $this->model('User');
+                    $userModel->updateMembershipTier($order->customer_id);
+
+                    require_once APPROOT . '/models/Coin.php';
+                    $coinModel = new Coin();
+                    $customer = $userModel->getUserById($order->customer_id);
+                    if ($customer) {
+                        $level = $customer->membership_level ?? 'Đồng';
+                        $multiplier = 1;
+                        switch($level) {
+                            case 'Đồng': $multiplier = 1; break;
+                            case 'Bạc': $multiplier = 1.2; break;
+                            case 'Vàng': $multiplier = 1.5; break;
+                            case 'Bạch Kim': $multiplier = 2; break;
+                            case 'VIP': $multiplier = 3; break;
+                        }
+                        $coins_earned = floor(($order->total_amount / 100000) * $multiplier);
+                        if ($coins_earned > 0) {
+                            $coinModel->addCoins($customer->id, $coins_earned, 'Hoàn xu đơn hàng Online #ORD-' . str_pad($id, 5, '0', STR_PAD_LEFT));
+                        }
+                    }
+                }
                 // Gửi thông báo cho khách hàng
                 $db_temp = new Database();
                 $db_temp->query("SELECT customer_id, payment_method FROM orders WHERE id = :id");
@@ -2325,6 +2352,104 @@ class AdminController extends Controller {
             header('Location: ' . URLROOT . '/admin/pets');
             exit;
         }
+    }
+
+    // --- VOUCHER MANAGEMENT ---
+
+    public function vouchers() {
+        $this->checkAccess(['admin', 'manager']);
+        require_once APPROOT . '/models/Voucher.php';
+        $voucherModel = new Voucher();
+        $categories = $this->productModel->getProductCategories();
+        $data = [
+            'vouchers' => $voucherModel->getAllVouchers(),
+            'categories' => $categories
+        ];
+        $this->view('admin/vouchers', $data);
+    }
+
+    public function voucher_add() {
+        $this->checkAccess(['admin', 'manager']);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            require_once APPROOT . '/models/Voucher.php';
+            $voucherModel = new Voucher();
+            
+            $code = trim($_POST['code'] ?? '');
+            $start_date = trim($_POST['start_date'] ?? '');
+            $end_date = trim($_POST['end_date'] ?? '');
+            $data = [
+                'code' => $code === '' ? null : $code,
+                'title' => trim($_POST['title']),
+                'description' => trim($_POST['description'] ?? ''),
+                'discount_type' => $_POST['discount_type'] ?? 'fixed',
+                'discount_amount' => (float)$_POST['discount_amount'],
+                'max_discount' => !empty($_POST['max_discount']) ? (float)$_POST['max_discount'] : null,
+                'min_order_value' => !empty($_POST['min_order_value']) ? (float)$_POST['min_order_value'] : 0,
+                'category_id' => !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null,
+                'cost_coins' => !empty($_POST['cost_coins']) ? (int)$_POST['cost_coins'] : 0,
+                'usage_limit' => !empty($_POST['usage_limit']) ? (int)$_POST['usage_limit'] : null,
+                'usage_per_user' => !empty($_POST['usage_per_user']) ? (int)$_POST['usage_per_user'] : 1,
+                'start_date' => $start_date === '' ? null : $start_date,
+                'end_date' => $end_date === '' ? null : $end_date,
+                'is_combinable' => isset($_POST['is_combinable']) ? 1 : 0,
+                'is_active' => isset($_POST['is_active']) ? 1 : 0
+            ];
+            if ($voucherModel->addVoucher($data)) {
+                flash('admin_msg', 'Thêm mã giảm giá thành công');
+            } else {
+                flash('admin_msg', 'Có lỗi xảy ra hoặc mã code bị trùng', 'alert-danger');
+            }
+            header('Location: ' . URLROOT . '/admin/vouchers');
+            exit;
+        }
+    }
+
+    public function voucher_edit($id) {
+        $this->checkAccess(['admin', 'manager']);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            require_once APPROOT . '/models/Voucher.php';
+            $voucherModel = new Voucher();
+            $code = trim($_POST['code'] ?? '');
+            $start_date = trim($_POST['start_date'] ?? '');
+            $end_date = trim($_POST['end_date'] ?? '');
+            $data = [
+                'code' => $code === '' ? null : $code,
+                'title' => trim($_POST['title']),
+                'description' => trim($_POST['description'] ?? ''),
+                'discount_type' => $_POST['discount_type'] ?? 'fixed',
+                'discount_amount' => (float)$_POST['discount_amount'],
+                'max_discount' => !empty($_POST['max_discount']) ? (float)$_POST['max_discount'] : null,
+                'min_order_value' => !empty($_POST['min_order_value']) ? (float)$_POST['min_order_value'] : 0,
+                'category_id' => !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null,
+                'cost_coins' => !empty($_POST['cost_coins']) ? (int)$_POST['cost_coins'] : 0,
+                'usage_limit' => !empty($_POST['usage_limit']) ? (int)$_POST['usage_limit'] : null,
+                'usage_per_user' => !empty($_POST['usage_per_user']) ? (int)$_POST['usage_per_user'] : 1,
+                'start_date' => $start_date === '' ? null : $start_date,
+                'end_date' => $end_date === '' ? null : $end_date,
+                'is_combinable' => isset($_POST['is_combinable']) ? 1 : 0,
+                'is_active' => isset($_POST['is_active']) ? 1 : 0
+            ];
+            if ($voucherModel->updateVoucher($id, $data)) {
+                flash('admin_msg', 'Cập nhật mã giảm giá thành công');
+            } else {
+                flash('admin_msg', 'Có lỗi xảy ra hoặc mã code bị trùng', 'alert-danger');
+            }
+            header('Location: ' . URLROOT . '/admin/vouchers');
+            exit;
+        }
+    }
+
+    public function voucher_delete($id) {
+        $this->checkAccess(['admin', 'manager']);
+        require_once APPROOT . '/models/Voucher.php';
+        $voucherModel = new Voucher();
+        if ($voucherModel->deleteVoucher($id)) {
+            flash('admin_msg', 'Xóa mã giảm giá thành công');
+        } else {
+            flash('admin_msg', 'Có lỗi xảy ra', 'alert-danger');
+        }
+        header('Location: ' . URLROOT . '/admin/vouchers');
+        exit;
     }
 }
 

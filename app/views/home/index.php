@@ -211,41 +211,41 @@
                 <!-- FAQ Item 1 -->
                 <div class="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden group">
                     <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-gray-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                        <span class="font-bold text-gray-800 dark:text-slate-200">Làm thế nào để đặt lịch Spa cho thú cưng?</span>
+                        <span class="font-bold text-gray-800 dark:text-slate-200">Làm thế nào để đặt dịch vụ?</span>
                         <i class="fa-solid fa-chevron-down text-gray-400 dark:text-slate-500 group-hover:text-primary transition-colors"></i>
                     </button>
                     <div class="hidden px-6 py-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-700">
-                        Bạn có thể dễ dàng đặt lịch Spa bằng cách nhấn vào nút "Đặt Lịch Ngay" trên trang chủ hoặc truy cập phần Dịch Vụ, chọn gói Spa phù hợp và điền thông tin thú cưng của bạn.
+                        Bạn có thể dễ dàng đặt dịch vụ bằng cách nhấn vào nút "Đặt Lịch Ngay" trên trang chủ hoặc truy cập phần Dịch Vụ, chọn gói phù hợp và điền thông tin thú cưng của bạn.
                     </div>
                 </div>
                 <!-- FAQ Item 2 -->
                 <div class="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden group">
                     <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-gray-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                        <span class="font-bold text-gray-800 dark:text-slate-200">Hệ thống AI chuẩn đoán có chính xác không?</span>
+                        <span class="font-bold text-gray-800 dark:text-slate-200">Làm thế nào để nhận và sử dụng Voucher giảm giá?</span>
                         <i class="fa-solid fa-chevron-down text-gray-400 dark:text-slate-500 group-hover:text-primary transition-colors"></i>
                     </button>
                     <div class="hidden px-6 py-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-700">
-                        Hệ thống AI của chúng tôi được huấn luyện trên hàng triệu hình ảnh với độ chính xác lên tới 92%. Tuy nhiên, đây chỉ là chuẩn đoán sơ bộ và không thể thay thế hoàn toàn ý kiến của bác sĩ thú y chuyên môn.
+                        Bạn có thể nhận Voucher thông qua các chương trình khuyến mãi, sự kiện đặc biệt, hoặc khi đạt một số mốc mua sắm nhất định. Khi thanh toán trực tuyến hoặc tại quầy, bạn chỉ cần nhập hoặc cung cấp mã Voucher để được áp dụng giảm giá tự động.
                     </div>
                 </div>
                 <!-- FAQ Item 3 -->
                 <div class="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden group">
                     <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-gray-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                        <span class="font-bold text-gray-800 dark:text-slate-200">Chính sách đổi trả hàng như thế nào?</span>
+                        <span class="font-bold text-gray-800 dark:text-slate-200">Voucher có áp dụng chung với chiết khấu hạng thành viên không?</span>
                         <i class="fa-solid fa-chevron-down text-gray-400 dark:text-slate-500 group-hover:text-primary transition-colors"></i>
                     </button>
                     <div class="hidden px-6 py-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-700">
-                        Chúng tôi hỗ trợ đổi trả trong vòng 7 ngày đối với các sản phẩm thức ăn và phụ kiện chưa bóc tem, hư hỏng do lỗi nhà sản xuất. Vui lòng giữ lại hóa đơn khi đổi trả.
+                        Tùy thuộc vào từng loại mã giảm giá, hệ thống sẽ quy định mã có được "Cộng dồn" với chiết khấu hạng hội viên hay không. Chi tiết về khả năng kết hợp sẽ được chú thích rõ trong điều kiện của từng mã Voucher.
                     </div>
                 </div>
                 <!-- FAQ Item 4 -->
                 <div class="border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden group">
                     <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-gray-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors focus:outline-none" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                        <span class="font-bold text-gray-800 dark:text-slate-200">Cửa hàng có dịch vụ giao hàng tận nơi không?</span>
+                        <span class="font-bold text-gray-800 dark:text-slate-200">Chuyện gì xảy ra nếu Voucher của tôi không được cộng dồn?</span>
                         <i class="fa-solid fa-chevron-down text-gray-400 dark:text-slate-500 group-hover:text-primary transition-colors"></i>
                     </button>
                     <div class="hidden px-6 py-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-700">
-                        Có, PetShop hỗ trợ giao hàng toàn quốc. Freeship cho các đơn hàng từ 500.000đ trở lên tại khu vực nội thành.
+                        Nếu Voucher không áp dụng cộng dồn, hệ thống của chúng tôi sẽ tính toán thông minh để đem lại lợi ích tốt nhất cho bạn: tự động sử dụng Voucher nếu mức giảm giá sâu hơn hạng thẻ, hoặc từ chối áp dụng mã nếu chiết khấu hạng thẻ của bạn mang lại ưu đãi tốt hơn.
                     </div>
                 </div>
                 <!-- FAQ Item 5 -->
