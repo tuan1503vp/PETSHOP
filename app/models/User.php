@@ -209,12 +209,7 @@ class User {
         return $this->db->execute();
     }
 
-    public function updatePassword($id, $new_password) {
-        $this->db->query('UPDATE users SET password = :password WHERE id = :id');
-        $this->db->bind(':password', $new_password);
-        $this->db->bind(':id', $id);
-        return $this->db->execute();
-    }
+
 
     public function updatePasswordByEmail($email, $new_password) {
         $this->db->query('UPDATE users SET password = :password WHERE email = :email');
