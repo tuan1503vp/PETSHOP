@@ -512,3 +512,7 @@ class PetController extends Controller {
         exit();
     }
 }
+/ /  
+ f o r c e  
+ s y n c  
+ 
