@@ -18,7 +18,6 @@
     width: 100%;
     height: 100%;
     transform-origin: bottom center;
-    transition: transform 0.1s ease-out;
 }
 .pet-paw {
     box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
@@ -48,17 +47,17 @@
         <!-- Thú cưng tương tác trên khung -->
         <div class="absolute top-0 left-0 w-full h-0 pointer-events-none z-20">
             <!-- Bé Cún bên trái -->
-            <div class="absolute -top-[60px] left-[15%] w-16 h-16" id="dog-container">
-                <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dog%20Face.png" alt="Dog" class="pet-head" id="dog-head">
-                <div class="pet-paw left-paw absolute -bottom-[6px] left-[6px] w-[18px] h-[22px] bg-[#d39f72] rounded-t-full border-[3px] border-white z-10"></div>
-                <div class="pet-paw right-paw absolute -bottom-[6px] right-[6px] w-[18px] h-[22px] bg-[#d39f72] rounded-t-full border-[3px] border-white z-10"></div>
+            <div class="absolute -top-[55px] left-[15%] w-16 h-16 transition-transform duration-75 ease-out" id="dog-container">
+                <img src="https://em-content.zobj.net/source/apple/391/dog-face_1f436.png" alt="Dog" class="pet-head" id="dog-head">
+                <div class="pet-paw left-paw absolute -bottom-[4px] left-[4px] w-[18px] h-[22px] bg-[#c79659] rounded-t-full border-[3px] border-white z-10"></div>
+                <div class="pet-paw right-paw absolute -bottom-[4px] right-[4px] w-[18px] h-[22px] bg-[#c79659] rounded-t-full border-[3px] border-white z-10"></div>
             </div>
             
             <!-- Bé Mèo bên phải -->
-            <div class="absolute -top-[60px] right-[15%] w-16 h-16" id="cat-container">
-                <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Cat%20Face.png" alt="Cat" class="pet-head" id="cat-head">
-                <div class="pet-paw left-paw absolute -bottom-[6px] left-[6px] w-[18px] h-[22px] bg-[#fac842] rounded-t-full border-[3px] border-white z-10"></div>
-                <div class="pet-paw right-paw absolute -bottom-[6px] right-[6px] w-[18px] h-[22px] bg-[#fac842] rounded-t-full border-[3px] border-white z-10"></div>
+            <div class="absolute -top-[55px] right-[15%] w-16 h-16 transition-transform duration-75 ease-out" id="cat-container">
+                <img src="https://em-content.zobj.net/source/apple/391/cat-face_1f431.png" alt="Cat" class="pet-head" id="cat-head">
+                <div class="pet-paw left-paw absolute -bottom-[4px] left-[4px] w-[18px] h-[22px] bg-[#eebc51] rounded-t-full border-[3px] border-white z-10"></div>
+                <div class="pet-paw right-paw absolute -bottom-[4px] right-[4px] w-[18px] h-[22px] bg-[#eebc51] rounded-t-full border-[3px] border-white z-10"></div>
             </div>
         </div>
         
@@ -322,9 +321,9 @@ document.addEventListener('DOMContentLoaded', function() {
             pet.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${rotate}deg)`;
         }
         
-        // Cập nhật cả 2 bé
-        trackMouse('dog-head');
-        trackMouse('cat-head');
+        // Cập nhật cả container thay vì chỉ cái đầu để chân và đầu di chuyển đồng bộ!
+        trackMouse('dog-container');
+        trackMouse('cat-container');
     });
 });
 </script>
