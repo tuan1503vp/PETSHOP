@@ -262,9 +262,9 @@
                         <ul class="mt-3 space-y-2">
                             <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-400"></span> <strong class="text-slate-500">Thành viên</strong> — Mặc định khi đăng ký tài khoản (0đ)</li>
                             <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-600"></span> <strong class="text-yellow-700">Đồng</strong> — Tích lũy từ 500.000đ</li>
-                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-500"></span> <strong class="text-slate-600">Bạc</strong> — Tích lũy từ 2.000.000đ</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-300"></span> <strong class="text-slate-600">Bạc</strong> — Tích lũy từ 2.000.000đ</li>
                             <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-400"></span> <strong class="text-yellow-600">Vàng</strong> — Tích lũy từ 5.000.000đ</li>
-                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-300"></span>  <strong class="text-slate-500">Bạch Kim</strong> — Tích lũy từ 10.000.000đ</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-cyan-400"></span>  <strong class="text-cyan-600">Bạch Kim</strong> — Tích lũy từ 10.000.000đ</li>
                         </ul>
                     </div>
                 </div>
@@ -294,8 +294,9 @@
                         Mỗi hạng hội viên nhận ưu đãi khác nhau:
                         <ul class="mt-3 space-y-2">
                             <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-600"></span> <strong class="text-yellow-700">Đồng:</strong> Giảm 3% tổng đơn hàng, freeship nội thành</li>
-                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-500"></span> <strong class="text-slate-600">Bạc:</strong> Giảm 5% + ưu tiên đặt lịch dịch vụ</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-slate-300"></span> <strong class="text-slate-600">Bạc:</strong> Giảm 5% + ưu tiên đặt lịch dịch vụ</li>
                             <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-400"></span> <strong class="text-yellow-600">Vàng:</strong> Giảm 10% + quà sinh nhật thú cưng + tư vấn bác sĩ miễn phí</li>
+                            <li class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-cyan-400"></span> <strong class="text-cyan-600">Bạch Kim:</strong> Giảm 15% + tất cả đặc quyền Vàng + đưa rước thú cưng tận nhà miễn phí</li>
                         </ul>
                         <p class="mt-3 text-sm text-primary font-medium">✨ Đăng nhập và xem hạng hội viên của bạn trong trang <a href="<?php echo URLROOT; ?>/profile" class="underline">Tài khoản</a>.</p>
                     </div>
