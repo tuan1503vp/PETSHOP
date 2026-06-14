@@ -32,25 +32,38 @@
                     <input id="phone" name="phone" type="text" pattern="^(0|\+84)(3|5|7|8|9)[0-9]{8}$" title="Gồm 10 số, bắt đầu bằng 0 hoặc +84" value="<?php echo isset($data['phone']) ? $data['phone'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['phone_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Số điện thoại">
                     <span id="phone-error" class="text-red-500 text-xs italic"><?php echo $data['phone_err']; ?></span>
                 </div>
-                <div>
+                <div class="relative">
                     <label for="password" class="sr-only">Mật khẩu</label>
-                    <input id="password" name="password" type="password" autocomplete="new-password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}" title="Ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt" value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Mật khẩu">
-                    <p class="mt-1 text-xs text-gray-500">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p>
-                    <span id="password-error" class="text-red-500 text-xs italic"><?php echo $data['password_err']; ?></span>
+                    <input id="password" name="password" type="password" autocomplete="new-password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}" title="Ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt" value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm pr-10" placeholder="Mật khẩu">
+                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20 top-0 bottom-0 mb-[45px]">
+                        <i class="fa-regular fa-eye text-gray-400 hover:text-primary transition-colors cursor-pointer" id="eyeIcon"></i>
+                    </button>
+                    <!-- Password Strength Meter -->
+                    <div class="mt-2 flex gap-1 h-1 w-full rounded-full overflow-hidden bg-gray-200">
+                        <div id="str-1" class="h-full flex-1 transition-all duration-300"></div>
+                        <div id="str-2" class="h-full flex-1 transition-all duration-300"></div>
+                        <div id="str-3" class="h-full flex-1 transition-all duration-300"></div>
+                        <div id="str-4" class="h-full flex-1 transition-all duration-300"></div>
+                    </div>
+                    <p id="password-strength-text" class="mt-1 text-xs text-gray-500">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký đặc biệt.</p>
+                    <span id="password-error" class="text-red-500 text-xs italic block mt-1"><?php echo $data['password_err']; ?></span>
                 </div>
-                <div>
+                <div class="relative">
                     <label for="confirm_password" class="sr-only">Xác nhận mật khẩu</label>
-                    <input id="confirm_password" name="confirm_password" type="password" value="<?php echo isset($data['confirm_password']) ? $data['confirm_password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['confirm_password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Xác nhận mật khẩu">
-                    <span id="confirm-password-error" class="text-red-500 text-xs italic"><?php echo $data['confirm_password_err']; ?></span>
+                    <input id="confirm_password" name="confirm_password" type="password" value="<?php echo isset($data['confirm_password']) ? $data['confirm_password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['confirm_password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm pr-10" placeholder="Xác nhận mật khẩu">
+                    <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
+                        <i class="fa-regular fa-eye text-gray-400 hover:text-primary transition-colors cursor-pointer" id="eyeIconConfirm"></i>
+                    </button>
+                    <span id="confirm-password-error" class="text-red-500 text-xs italic block mt-1"><?php echo $data['confirm_password_err']; ?></span>
                 </div>
             </div>
 
             <div>
-                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300">
+                <button id="btn-register" type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 disabled:opacity-75 disabled:cursor-not-allowed">
                     <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <i class="fa-solid fa-check text-indigo-500 group-hover:text-indigo-400"></i>
+                        <i id="btn-icon" class="fa-solid fa-check text-indigo-500 group-hover:text-indigo-400"></i>
                     </span>
-                    Đăng ký
+                    <span id="btn-text">Đăng ký</span>
                 </button>
             </div>
         </form>
@@ -112,8 +125,76 @@ document.addEventListener('DOMContentLoaded', function() {
 
     validateField(email, emailRegex, 'Định dạng email không hợp lệ', 'email-error');
     validateField(phone, phoneRegex, 'Số điện thoại không hợp lệ (Gồm 10 số, bắt đầu bằng 0 hoặc +84)', 'phone-error');
-    validateField(password, passwordRegex, 'Mật khẩu chưa đủ mạnh', 'password-error');
+    validateField(password, passwordRegex, '', 'password-error');
     confirm_password.addEventListener('input', validateConfirmPassword);
+    
+    // JS Logic: Show/Hide Password
+    function setupTogglePassword(toggleBtnId, inputId, iconId) {
+        document.getElementById(toggleBtnId).addEventListener('click', function() {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+    setupTogglePassword('togglePassword', 'password', 'eyeIcon');
+    setupTogglePassword('toggleConfirmPassword', 'confirm_password', 'eyeIconConfirm');
+    
+    // JS Logic: Password Strength Meter
+    const strBars = [document.getElementById('str-1'), document.getElementById('str-2'), document.getElementById('str-3'), document.getElementById('str-4')];
+    const strText = document.getElementById('password-strength-text');
+    
+    password.addEventListener('input', function() {
+        const val = this.value;
+        let score = 0;
+        if(val.length >= 8) score++;
+        if(/[A-Z]/.test(val)) score++;
+        if(/[a-z]/.test(val) && /[0-9]/.test(val)) score++;
+        if(/[\W_]/.test(val)) score++;
+
+        strBars.forEach(bar => bar.className = 'h-full flex-1 transition-all duration-300');
+        
+        if (val.length === 0) {
+            strText.innerText = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.';
+            strText.className = 'mt-1 text-xs text-gray-500';
+        } else if (score <= 1) {
+            strBars[0].classList.add('bg-red-500');
+            strText.innerText = 'Yếu: Hãy thêm số và ký tự đặc biệt';
+            strText.className = 'mt-1 text-xs text-red-500 font-semibold';
+        } else if (score === 2 || score === 3) {
+            strBars[0].classList.add('bg-yellow-500');
+            strBars[1].classList.add('bg-yellow-500');
+            if(score===3) strBars[2].classList.add('bg-yellow-500');
+            strText.innerText = 'Khá: Gần đủ mạnh rồi!';
+            strText.className = 'mt-1 text-xs text-yellow-600 font-semibold';
+        } else if (score === 4) {
+            strBars.forEach(bar => bar.classList.add('bg-green-500'));
+            strText.innerText = 'Mạnh: Mật khẩu tuyệt vời!';
+            strText.className = 'mt-1 text-xs text-green-600 font-semibold';
+        }
+    });
+
+    // JS Logic: Loading Spinner on Submit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function() {
+        const btn = document.getElementById('btn-register');
+        const icon = document.getElementById('btn-icon');
+        const text = document.getElementById('btn-text');
+        
+        // Prevent double click
+        if (btn.disabled) return false;
+        
+        btn.disabled = true;
+        icon.className = 'fa-solid fa-spinner fa-spin text-indigo-200';
+        text.innerText = 'Đang xử lý...';
+    });
 });
 </script>
 
