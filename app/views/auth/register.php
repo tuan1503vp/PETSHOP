@@ -56,4 +56,57 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const email = document.getElementById('email-address');
+    const phone = document.getElementById('phone');
+    const password = document.getElementById('password');
+    const confirm_password = document.getElementById('confirm_password');
+
+    function validateField(input, regex) {
+        input.addEventListener('input', function() {
+            if (this.value.trim() === '') {
+                this.classList.remove('border-red-500', 'border-green-500', 'border-2');
+                this.classList.add('border-gray-300');
+                return;
+            }
+            if (regex.test(this.value)) {
+                this.classList.remove('border-red-500', 'border-gray-300');
+                this.classList.add('border-green-500', 'border-2');
+            } else {
+                this.classList.remove('border-green-500', 'border-gray-300');
+                this.classList.add('border-red-500', 'border-2');
+            }
+            
+            if (input.id === 'password') validateConfirmPassword();
+        });
+    }
+
+    function validateConfirmPassword() {
+        if (confirm_password.value.trim() === '') {
+            confirm_password.classList.remove('border-red-500', 'border-green-500', 'border-2');
+            confirm_password.classList.add('border-gray-300');
+            return;
+        }
+        if (confirm_password.value === password.value) {
+            confirm_password.classList.remove('border-red-500', 'border-gray-300');
+            confirm_password.classList.add('border-green-500', 'border-2');
+        } else {
+            confirm_password.classList.remove('border-green-500', 'border-gray-300');
+            confirm_password.classList.add('border-red-500', 'border-2');
+        }
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/;
+
+    validateField(email, emailRegex);
+    validateField(phone, phoneRegex);
+    validateField(password, passwordRegex);
+    confirm_password.addEventListener('input', validateConfirmPassword);
+});
+</script>
+
 <?php require APPROOT . '/views/inc/footer.php'; ?>
