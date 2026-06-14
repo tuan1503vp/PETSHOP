@@ -29,12 +29,13 @@
                 </div>
                 <div>
                     <label for="phone" class="sr-only">Số điện thoại</label>
-                    <input id="phone" name="phone" type="text" value="<?php echo isset($data['phone']) ? $data['phone'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['phone_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Số điện thoại">
+                    <input id="phone" name="phone" type="text" pattern="^(0|\+84)(3|5|7|8|9)[0-9]{8}$" title="Gồm 10 số, bắt đầu bằng 0 hoặc +84" value="<?php echo isset($data['phone']) ? $data['phone'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['phone_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Số điện thoại">
                     <span class="text-red-500 text-xs italic"><?php echo $data['phone_err']; ?></span>
                 </div>
                 <div>
                     <label for="password" class="sr-only">Mật khẩu</label>
-                    <input id="password" name="password" type="password" autocomplete="new-password" value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Mật khẩu">
+                    <input id="password" name="password" type="password" autocomplete="new-password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}" title="Ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt" value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Mật khẩu">
+                    <p class="mt-1 text-xs text-gray-500">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p>
                     <span class="text-red-500 text-xs italic"><?php echo $data['password_err']; ?></span>
                 </div>
                 <div>

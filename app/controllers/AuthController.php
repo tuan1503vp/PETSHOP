@@ -40,6 +40,8 @@ class AuthController extends Controller {
             // Validate Email
             if (empty($data['email'])) {
                 $data['email_err'] = 'Vui lòng nhập email';
+            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $data['email_err'] = 'Định dạng email không hợp lệ (VD: ten@gmail.com)';
             } else {
                 if ($this->userModel->findUserByEmail($data['email'])) {
                     $data['email_err'] = 'Email này đã được sử dụng';
@@ -54,13 +56,23 @@ class AuthController extends Controller {
             // Validate Phone
             if (empty($data['phone'])) {
                 $data['phone_err'] = 'Vui lòng nhập số điện thoại';
+            } elseif (!preg_match('/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/', $data['phone'])) {
+                $data['phone_err'] = 'Số điện thoại không hợp lệ (Gồm 10 số, bắt đầu bằng 0 hoặc +84)';
             }
 
             // Validate Password
             if (empty($data['password'])) {
                 $data['password_err'] = 'Vui lòng nhập mật khẩu';
-            } elseif (strlen($data['password']) < 6) {
-                $data['password_err'] = 'Mật khẩu phải có ít nhất 6 ký tự';
+            } elseif (strlen($data['password']) < 8) {
+                $data['password_err'] = 'Mật khẩu phải có ít nhất 8 ký tự';
+            } elseif (!preg_match('/[A-Z]/', $data['password'])) {
+                $data['password_err'] = 'Mật khẩu phải chứa ít nhất 1 chữ hoa';
+            } elseif (!preg_match('/[a-z]/', $data['password'])) {
+                $data['password_err'] = 'Mật khẩu phải chứa ít nhất 1 chữ thường';
+            } elseif (!preg_match('/[0-9]/', $data['password'])) {
+                $data['password_err'] = 'Mật khẩu phải chứa ít nhất 1 số';
+            } elseif (!preg_match('/[\W_]/', $data['password'])) {
+                $data['password_err'] = 'Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt (@$!%*?&...)';
             }
 
             // Validate Confirm Password
