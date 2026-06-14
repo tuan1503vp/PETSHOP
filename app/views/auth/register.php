@@ -10,26 +10,6 @@
 .paw-bg.paw-6 { top: 50%; right: 5%; animation-delay: 3s; transform: rotate(-45deg); font-size: 1.8rem; }
 @keyframes floatPaw {
     0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.5; }
-    50% { transform: translateY(-20px) scale(1.1) rotate(10deg); opacity: 1; }
-}
-
-/* Hiệu ứng bé chó mèo ngó đầu */
-.pet-head {
-    width: 100%;
-    height: 100%;
-    transform-origin: bottom center;
-}
-.pet-paw {
-    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-origin: bottom center;
-}
-/* Hiệu ứng che mắt */
-.covering-eyes .left-paw {
-    transform: translateY(-35px) translateX(10px) rotate(35deg) scale(1.15);
-}
-.covering-eyes .right-paw {
-    transform: translateY(-35px) translateX(-10px) rotate(-35deg) scale(1.15);
 }
 </style>
 
@@ -43,23 +23,6 @@
     <i class="fa-solid fa-paw paw-bg paw-6"></i>
 
     <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-indigo-100 relative z-10 mt-16">
-        
-        <!-- Thú cưng tương tác trên khung -->
-        <div class="absolute top-0 left-0 w-full h-0 pointer-events-none z-20">
-            <!-- Bé Cún bên trái -->
-            <div class="absolute -top-[55px] left-[15%] w-16 h-16 transition-transform duration-75 ease-out" id="dog-container">
-                <img src="https://em-content.zobj.net/source/apple/391/dog-face_1f436.png" alt="Dog" class="pet-head" id="dog-head">
-                <div class="pet-paw left-paw absolute -bottom-[4px] left-[4px] w-[18px] h-[22px] bg-[#c79659] rounded-t-full border-[3px] border-white z-10"></div>
-                <div class="pet-paw right-paw absolute -bottom-[4px] right-[4px] w-[18px] h-[22px] bg-[#c79659] rounded-t-full border-[3px] border-white z-10"></div>
-            </div>
-            
-            <!-- Bé Mèo bên phải -->
-            <div class="absolute -top-[55px] right-[15%] w-16 h-16 transition-transform duration-75 ease-out" id="cat-container">
-                <img src="https://em-content.zobj.net/source/apple/391/cat-face_1f431.png" alt="Cat" class="pet-head" id="cat-head">
-                <div class="pet-paw left-paw absolute -bottom-[4px] left-[4px] w-[18px] h-[22px] bg-[#eebc51] rounded-t-full border-[3px] border-white z-10"></div>
-                <div class="pet-paw right-paw absolute -bottom-[4px] right-[4px] w-[18px] h-[22px] bg-[#eebc51] rounded-t-full border-[3px] border-white z-10"></div>
-            </div>
-        </div>
         
         <div>
             <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100 text-primary">
@@ -188,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
     validateField(password, passwordRegex, '', 'password-error');
     confirm_password.addEventListener('input', validateConfirmPassword);
     
-    // JS Logic: Show/Hide Password and Update Cover Eyes logic
+    // JS Logic: Show/Hide Password
     function setupTogglePassword(toggleBtnId, inputId, iconId) {
         document.getElementById(toggleBtnId).addEventListener('click', function() {
             const input = document.getElementById(inputId);
@@ -197,44 +160,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.type = 'text';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
-                uncoverEyes(); // Bỏ tay che mắt khi đang xem mật khẩu
             } else {
                 input.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
-                // Nếu đang focus thì che mắt lại
-                if (document.activeElement === input) {
-                    coverEyes();
-                }
             }
         });
     }
     setupTogglePassword('togglePassword', 'password', 'eyeIcon');
     setupTogglePassword('toggleConfirmPassword', 'confirm_password', 'eyeIconConfirm');
-    
-    // JS Logic: Cover Eyes when focusing password
-    const dogContainer = document.getElementById('dog-container');
-    const catContainer = document.getElementById('cat-container');
-    
-    function coverEyes() {
-        dogContainer.classList.add('covering-eyes');
-        catContainer.classList.add('covering-eyes');
-    }
-    
-    function uncoverEyes() {
-        dogContainer.classList.remove('covering-eyes');
-        catContainer.classList.remove('covering-eyes');
-    }
-    
-    password.addEventListener('focus', function() {
-        if(this.type === 'password') coverEyes();
-    });
-    password.addEventListener('blur', uncoverEyes);
-    
-    confirm_password.addEventListener('focus', function() {
-        if(this.type === 'password') coverEyes();
-    });
-    confirm_password.addEventListener('blur', uncoverEyes);
     
     // JS Logic: Password Strength Meter
     const strBars = [document.getElementById('str-1'), document.getElementById('str-2'), document.getElementById('str-3'), document.getElementById('str-4')];
@@ -283,47 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.disabled = true;
         icon.className = 'fa-solid fa-spinner fa-spin text-indigo-200';
         text.innerText = 'Đang xử lý...';
-    });
-    
-    // JS Logic: Thú cưng tương tác theo chuột
-    document.addEventListener('mousemove', function(e) {
-        const mouseX = e.clientX;
-        const mouseY = e.clientY;
-        
-        function trackMouse(petId) {
-            const pet = document.getElementById(petId);
-            if (!pet) return;
-            
-            const rect = pet.getBoundingClientRect();
-            const petX = rect.left + rect.width / 2;
-            const petY = rect.top + rect.height / 2;
-            
-            const dx = mouseX - petX;
-            const dy = mouseY - petY;
-            
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            
-            // Tính toán mức độ di chuyển và xoay
-            const maxMoveX = 15; // Di chuyển tối đa sang 2 bên rộng hơn
-            const maxMoveY = 12; // Nhìn xuống sâu hơn
-            const maxRotate = 35; 
-            
-            const moveX = (dx / windowWidth) * maxMoveX * 2.5;
-            let moveY = (dy / windowHeight) * maxMoveY * 2.5;
-            
-            // Giới hạn để đầu lún sâu vừa phải (thể hiện việc đang nhìn chằm chằm xuống tay người dùng)
-            if (moveY > 12) moveY = 12; 
-            if (moveY < -5) moveY = -5; // Không cho ngước nhìn lên quá cao
-            
-            const rotate = (dx / windowWidth) * maxRotate * 2;
-            
-            pet.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${rotate}deg)`;
-        }
-        
-        // Cập nhật cả container thay vì chỉ cái đầu để chân và đầu di chuyển đồng bộ!
-        trackMouse('dog-container');
-        trackMouse('cat-container');
     });
 });
 </script>
