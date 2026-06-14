@@ -166,6 +166,42 @@ class User {
         return $this->db->resultSet();
     }
 
+    public function updateProfile($user_id, $fullname, $phone, $address, $avatar = null) {
+        // Update user core info
+        if ($avatar) {
+            $this->db->query('UPDATE users SET fullname = :fullname, avatar = :avatar WHERE id = :id');
+            $this->db->bind(':avatar', $avatar);
+        } else {
+            $this->db->query('UPDATE users SET fullname = :fullname WHERE id = :id');
+        }
+        $this->db->bind(':fullname', $fullname);
+        $this->db->bind(':id', $user_id);
+        $user_updated = $this->db->execute();
+
+        // Check if member record exists
+        $this->db->query('SELECT id FROM members WHERE user_id = :user_id');
+        $this->db->bind(':user_id', $user_id);
+        if ($this->db->single()) {
+            $this->db->query('UPDATE members SET phone = :phone, address = :address WHERE user_id = :user_id');
+        } else {
+            $this->db->query('INSERT INTO members (user_id, phone, address) VALUES (:user_id, :phone, :address)');
+        }
+        $this->db->bind(':phone', $phone);
+        $this->db->bind(':address', $address);
+        $this->db->bind(':user_id', $user_id);
+        $member_updated = $this->db->execute();
+
+        return $user_updated && $member_updated;
+    }
+
+    public function updatePassword($user_id, $new_password) {
+        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+        $this->db->query('UPDATE users SET password = :password WHERE id = :id');
+        $this->db->bind(':password', $hashed_password);
+        $this->db->bind(':id', $user_id);
+        return $this->db->execute();
+    }
+
     // Xóa user
     public function deleteUser($id) {
         $this->db->query('DELETE FROM users WHERE id = :id');

@@ -27,5 +27,125 @@ class ProfileController extends Controller {
             flash('error', 'Có lỗi xảy ra khi tải hồ sơ', 'error');
             header('Location: ' . URLROOT);
         }
+    public function update() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            check_csrf();
+            $user_id = $_SESSION['user_id'];
+            
+            // Validate inputs
+            $fullname = trim($_POST['fullname'] ?? '');
+            $phone = trim($_POST['phone'] ?? '');
+            $address = trim($_POST['address'] ?? '');
+            
+            if (empty($fullname)) {
+                flash('profile_err', 'Họ tên không được để trống.', 'error');
+                header('Location: ' . URLROOT . '/profile');
+                exit;
+            }
+
+            // Handle Avatar Upload
+            $avatar = null;
+            if (!empty($_FILES['avatar']['name'])) {
+                if (is_valid_image($_FILES['avatar'])) {
+                    $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+                    $avatarName = 'avatar_' . $user_id . '_' . time() . '.' . $ext;
+                    $uploadPath = $_SERVER['DOCUMENT_ROOT'] . '/public/uploads/avatars/';
+                    
+                    if (!is_dir($uploadPath)) {
+                        mkdir($uploadPath, 0777, true);
+                    }
+                    
+                    if (move_uploaded_file($_FILES['avatar']['tmp_name'], $uploadPath . $avatarName)) {
+                        $avatar = $avatarName;
+                        // Delete old avatar if exists
+                        $userInfo = $this->userModel->getUserById($user_id);
+                        if (!empty($userInfo->avatar) && file_exists($uploadPath . $userInfo->avatar)) {
+                            unlink($uploadPath . $userInfo->avatar);
+                        }
+                    } else {
+                        flash('profile_err', 'Lỗi khi tải ảnh lên.', 'error');
+                        header('Location: ' . URLROOT . '/profile');
+                        exit;
+                    }
+                } else {
+                    flash('profile_err', 'Định dạng ảnh không hợp lệ.', 'error');
+                    header('Location: ' . URLROOT . '/profile');
+                    exit;
+                }
+            }
+
+            // Cập nhật Database
+            if ($this->userModel->updateProfile($user_id, $fullname, $phone, $address, $avatar)) {
+                // Update session
+                $_SESSION['user_name'] = $fullname;
+                if ($avatar) {
+                    $_SESSION['user_avatar'] = URLROOT . '/public/uploads/avatars/' . $avatar;
+                }
+                flash('profile_success', 'Cập nhật hồ sơ thành công!', 'success');
+            } else {
+                flash('profile_err', 'Đã có lỗi xảy ra. Vui lòng thử lại sau.', 'error');
+            }
+            header('Location: ' . URLROOT . '/profile');
+        } else {
+            header('Location: ' . URLROOT . '/profile');
+        }
+    }
+
+    public function send_password_otp() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            check_csrf();
+            $user_id = $_SESSION['user_id'];
+            $userInfo = $this->userModel->getUserById($user_id);
+            
+            $otp = sprintf("%06d", mt_rand(1, 999999));
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+
+            if ($this->userModel->updateOTP($userInfo->email, $otp, $expiresAt)) {
+                $mailer = new Mailer();
+                if ($mailer->sendOTP($userInfo->email, $otp, $userInfo->fullname)) {
+                    echo json_encode(['status' => 'success', 'message' => 'Mã OTP đã được gửi đến email của bạn!']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Lỗi gửi email. Vui lòng thử lại!']);
+                }
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Lỗi máy chủ. Vui lòng thử lại sau!']);
+            }
+            exit;
+        }
+    }
+
+    public function verify_password_change() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            check_csrf();
+            $user_id = $_SESSION['user_id'];
+            $userInfo = $this->userModel->getUserById($user_id);
+            
+            $otp = trim($_POST['otp'] ?? '');
+            $new_password = $_POST['new_password'] ?? '';
+
+            if (empty($otp) || empty($new_password)) {
+                flash('profile_err', 'Vui lòng nhập đầy đủ OTP và mật khẩu mới.', 'error');
+                header('Location: ' . URLROOT . '/profile');
+                exit;
+            }
+
+            if (strlen($new_password) < 6) {
+                flash('profile_err', 'Mật khẩu phải từ 6 ký tự trở lên.', 'error');
+                header('Location: ' . URLROOT . '/profile');
+                exit;
+            }
+
+            if ($this->userModel->verifyOTP($userInfo->email, $otp)) {
+                if ($this->userModel->updatePassword($user_id, $new_password)) {
+                    flash('profile_success', 'Đổi mật khẩu thành công!', 'success');
+                } else {
+                    flash('profile_err', 'Lỗi khi cập nhật mật khẩu.', 'error');
+                }
+            } else {
+                flash('profile_err', 'Mã OTP không hợp lệ hoặc đã hết hạn.', 'error');
+            }
+            header('Location: ' . URLROOT . '/profile');
+            exit;
+        }
     }
 }
