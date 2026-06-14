@@ -27,6 +27,8 @@ class ProfileController extends Controller {
             flash('error', 'Có lỗi xảy ra khi tải hồ sơ', 'error');
             header('Location: ' . URLROOT);
         }
+    }
+
     public function update() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             check_csrf();
