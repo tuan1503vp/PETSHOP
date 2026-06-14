@@ -13,19 +13,15 @@
     50% { transform: translateY(-20px) scale(1.1) rotate(10deg); opacity: 1; }
 }
 
-/* Hiệu ứng bé mèo ngó đầu */
-.peeking-pet {
-    position: absolute;
-    top: -55px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 85px;
-    z-index: -1;
-    animation: peekaboo 5s infinite ease-in-out;
+/* Hiệu ứng bé chó mèo ngó đầu */
+.pet-head {
+    width: 100%;
+    height: 100%;
+    transform-origin: bottom center;
+    transition: transform 0.1s ease-out;
 }
-@keyframes peekaboo {
-    0%, 10%, 100% { top: -20px; opacity: 0; }
-    20%, 80% { top: -65px; opacity: 1; }
+.pet-paw {
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
 }
 </style>
 
@@ -38,9 +34,24 @@
     <i class="fa-solid fa-paw paw-bg paw-5"></i>
     <i class="fa-solid fa-paw paw-bg paw-6"></i>
 
-    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-indigo-100 relative z-10 mt-12">
-        <!-- Bé mèo ngó đầu -->
-        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Cat%20Face.png" alt="Cute Cat" class="peeking-pet">
+    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-indigo-100 relative z-10 mt-16">
+        
+        <!-- Thú cưng tương tác trên khung -->
+        <div class="absolute top-0 left-0 w-full h-0 pointer-events-none z-20">
+            <!-- Bé Cún bên trái -->
+            <div class="absolute -top-[60px] left-[15%] w-16 h-16">
+                <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dog%20Face.png" alt="Dog" class="pet-head" id="dog-head">
+                <div class="pet-paw absolute -bottom-[6px] left-[6px] w-[18px] h-[22px] bg-[#d39f72] rounded-t-full border-[3px] border-white z-10"></div>
+                <div class="pet-paw absolute -bottom-[6px] right-[6px] w-[18px] h-[22px] bg-[#d39f72] rounded-t-full border-[3px] border-white z-10"></div>
+            </div>
+            
+            <!-- Bé Mèo bên phải -->
+            <div class="absolute -top-[60px] right-[15%] w-16 h-16">
+                <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Cat%20Face.png" alt="Cat" class="pet-head" id="cat-head">
+                <div class="pet-paw absolute -bottom-[6px] left-[6px] w-[18px] h-[22px] bg-[#fac842] rounded-t-full border-[3px] border-white z-10"></div>
+                <div class="pet-paw absolute -bottom-[6px] right-[6px] w-[18px] h-[22px] bg-[#fac842] rounded-t-full border-[3px] border-white z-10"></div>
+            </div>
+        </div>
         
         <div>
             <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100 text-primary">
@@ -235,6 +246,46 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.disabled = true;
         icon.className = 'fa-solid fa-spinner fa-spin text-indigo-200';
         text.innerText = 'Đang xử lý...';
+    });
+    
+    // JS Logic: Thú cưng tương tác theo chuột
+    document.addEventListener('mousemove', function(e) {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        
+        function trackMouse(petId) {
+            const pet = document.getElementById(petId);
+            if (!pet) return;
+            
+            const rect = pet.getBoundingClientRect();
+            const petX = rect.left + rect.width / 2;
+            const petY = rect.top + rect.height / 2;
+            
+            const dx = mouseX - petX;
+            const dy = mouseY - petY;
+            
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // Tính toán mức độ di chuyển và xoay
+            const maxMoveX = 12; // Di chuyển tối đa sang 2 bên
+            const maxMoveY = 8;  // Di chuyển tối đa lên xuống
+            const maxRotate = 30; // Góc xoay tối đa
+            
+            const moveX = (dx / windowWidth) * maxMoveX * 2;
+            let moveY = (dy / windowHeight) * maxMoveY * 2;
+            
+            // Giới hạn để đầu không lún quá sâu vào viền (bị đè)
+            if (moveY > 3) moveY = 3; 
+            
+            const rotate = (dx / windowWidth) * maxRotate * 2;
+            
+            pet.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${rotate}deg)`;
+        }
+        
+        // Cập nhật cả 2 bé
+        trackMouse('dog-head');
+        trackMouse('cat-head');
     });
 });
 </script>
