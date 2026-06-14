@@ -33,7 +33,6 @@ session_set_cookie_params([
 
 // Import cấu hình và các file core
 require_once '../app/config/config.php';
-require_once '../app/helpers/url_helper.php';
 require_once '../app/helpers/session_helper.php';
 require_once '../app/helpers/csrf_helper.php';
 require_once '../app/helpers/xss_helper.php';
