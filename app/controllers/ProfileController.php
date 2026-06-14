@@ -31,7 +31,7 @@ class ProfileController extends Controller {
 
     public function update() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            check_csrf();
+            verify_csrf_token();
             $user_id = $_SESSION['user_id'];
             
             // Validate inputs (Fullname is locked, get from session or db)
@@ -97,7 +97,7 @@ class ProfileController extends Controller {
 
     public function change_password() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            check_csrf();
+            verify_csrf_token();
             $user_id = $_SESSION['user_id'];
             $userInfo = $this->userModel->getUserById($user_id);
             
@@ -143,7 +143,7 @@ class ProfileController extends Controller {
 
     public function send_delete_otp() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            check_csrf();
+            verify_csrf_token();
             $user_id = $_SESSION['user_id'];
             $userInfo = $this->userModel->getUserById($user_id);
             
@@ -166,7 +166,7 @@ class ProfileController extends Controller {
 
     public function verify_delete_account() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            check_csrf();
+            verify_csrf_token();
             $user_id = $_SESSION['user_id'];
             $userInfo = $this->userModel->getUserById($user_id);
             
