@@ -53,7 +53,7 @@ class ProfileController extends Controller {
                 if (is_valid_image($_FILES['avatar'])) {
                     $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
                     $avatarName = 'avatar_' . $user_id . '_' . time() . '.' . $ext;
-                    $uploadPath = $_SERVER['DOCUMENT_ROOT'] . '/public/uploads/avatars/';
+                    $uploadPath = dirname(APPROOT) . '/public/uploads/avatars/';
                     
                     if (!is_dir($uploadPath)) {
                         mkdir($uploadPath, 0777, true);
