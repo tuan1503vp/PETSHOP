@@ -98,12 +98,7 @@ class AuthController extends Controller {
                     $this->userModel->updateOTP($data['email'], $otp, $expiresAt);
                     
                     $mailer = new Mailer();
-                    $subject = "Mã xác thực tài khoản PetShop";
-                    $body = "<h2>Xin chào {$data['fullname']}</h2>
-                             <p>Cảm ơn bạn đã đăng ký tài khoản. Mã xác thực OTP của bạn là:</p>
-                             <h1 style='color:#4F46E5; letter-spacing: 5px;'>{$otp}</h1>
-                             <p>Mã này sẽ hết hạn sau 10 phút.</p>";
-                    $mailer->sendEmail($data['email'], $subject, $body);
+                    $mailer->sendOTP($data['email'], $data['fullname'], $otp);
 
                     $_SESSION['verify_email'] = $data['email'];
                     header('Location: ' . URLROOT . '/auth/verify');
@@ -184,12 +179,7 @@ class AuthController extends Controller {
                         $this->userModel->updateOTP($loggedInUser->email, $otp, $expiresAt);
                         
                         $mailer = new Mailer();
-                        $subject = "Mã xác thực tài khoản PetShop";
-                        $body = "<h2>Xin chào {$loggedInUser->fullname}</h2>
-                                 <p>Bạn đang cố đăng nhập nhưng tài khoản chưa được xác thực. Mã xác thực OTP của bạn là:</p>
-                                 <h1 style='color:#4F46E5; letter-spacing: 5px;'>{$otp}</h1>
-                                 <p>Mã này sẽ hết hạn sau 10 phút.</p>";
-                        $mailer->sendEmail($loggedInUser->email, $subject, $body);
+                        $mailer->sendOTP($loggedInUser->email, $loggedInUser->fullname, $otp);
 
                         flash('verify_msg', 'Vui lòng xác thực email trước khi đăng nhập. Một mã OTP mới đã được gửi.', 'bg-yellow-100 text-yellow-700 p-3 rounded-md mb-4 text-sm');
                         header('Location: ' . URLROOT . '/auth/verify');
@@ -260,12 +250,7 @@ class AuthController extends Controller {
                 $this->userModel->updateOTP($email, $otp, $expiresAt);
                 
                 $mailer = new Mailer();
-                $subject = "Mã xác thực tài khoản PetShop (Gửi lại)";
-                $body = "<h2>Xin chào {$user->fullname}</h2>
-                         <p>Mã xác thực OTP mới của bạn là:</p>
-                         <h1 style='color:#4F46E5; letter-spacing: 5px;'>{$otp}</h1>
-                         <p>Mã này sẽ hết hạn sau 10 phút.</p>";
-                $mailer->sendEmail($email, $subject, $body);
+                $mailer->sendOTP($email, $user->fullname, $otp);
                 
                 flash('verify_msg', 'Đã gửi lại mã OTP mới đến email của bạn', 'bg-green-100 text-green-700 p-3 rounded-md mb-4 text-sm');
             }

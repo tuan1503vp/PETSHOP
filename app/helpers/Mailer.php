@@ -123,6 +123,19 @@ class Mailer {
         return $this->sendSMTP($toEmail, $subject, $htmlBody, $replyToEmail);
     }
 
+    public function sendOTP($email, $fullname, $otp) {
+        $subject = "Mã xác thực tài khoản PETSHOP";
+        $body = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px; text-align: center;'>
+            <h1 style='color: #4f46e5; margin: 0;'>PETSHOP</h1>
+            <h2 style='color: #0f172a;'>Xin chào $fullname,</h2>
+            <p style='color: #334155; line-height: 1.6;'>Mã xác thực (OTP) của bạn là:</p>
+            <h1 style='color: #e11d48; letter-spacing: 5px; font-size: 36px; background: #f8fafc; padding: 15px; border-radius: 8px; display: inline-block; margin: 10px 0;'>$otp</h1>
+            <p style='color: #64748b; font-size: 14px;'>Mã này sẽ hết hạn sau 10 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
+        </div>";
+        return $this->send($email, $subject, $body);
+    }
+
     // -----------------------------------------------------------------------
     // Xác nhận đơn hàng
     // -----------------------------------------------------------------------
