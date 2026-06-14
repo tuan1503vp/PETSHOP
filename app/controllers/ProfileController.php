@@ -95,7 +95,53 @@ class ProfileController extends Controller {
         }
     }
 
-    public function send_password_otp() {
+    public function change_password() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            check_csrf();
+            $user_id = $_SESSION['user_id'];
+            $userInfo = $this->userModel->getUserById($user_id);
+            
+            $old_password = $_POST['old_password'] ?? '';
+            $new_password = $_POST['new_password'] ?? '';
+            $confirm_password = $_POST['confirm_password'] ?? '';
+
+            if (empty($old_password) || empty($new_password) || empty($confirm_password)) {
+                flash('profile_err', 'Vui lòng nhập đầy đủ thông tin mật khẩu.', 'error');
+                header('Location: ' . URLROOT . '/profile');
+                exit;
+            }
+
+            if ($new_password !== $confirm_password) {
+                flash('profile_err', 'Mật khẩu mới không khớp.', 'error');
+                header('Location: ' . URLROOT . '/profile');
+                exit;
+            }
+
+            if (strlen($new_password) < 6) {
+                flash('profile_err', 'Mật khẩu phải từ 6 ký tự trở lên.', 'error');
+                header('Location: ' . URLROOT . '/profile');
+                exit;
+            }
+
+            // Verify old password
+            if (!password_verify($old_password, $userInfo->password)) {
+                flash('profile_err', 'Mật khẩu cũ không chính xác.', 'error');
+                header('Location: ' . URLROOT . '/profile');
+                exit;
+            }
+
+            if ($this->userModel->updatePassword($user_id, $new_password)) {
+                flash('profile_success', 'Đổi mật khẩu thành công!', 'success');
+            } else {
+                flash('profile_err', 'Lỗi khi cập nhật mật khẩu.', 'error');
+            }
+            
+            header('Location: ' . URLROOT . '/profile');
+            exit;
+        }
+    }
+
+    public function send_delete_otp() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             check_csrf();
             $user_id = $_SESSION['user_id'];
@@ -107,7 +153,7 @@ class ProfileController extends Controller {
             if ($this->userModel->updateOTP($userInfo->email, $otp, $expiresAt)) {
                 $mailer = new Mailer();
                 if ($mailer->sendOTP($userInfo->email, $otp, $userInfo->fullname)) {
-                    echo json_encode(['status' => 'success', 'message' => 'Mã OTP đã được gửi đến email của bạn!']);
+                    echo json_encode(['status' => 'success', 'message' => 'Mã OTP xác nhận xóa đã được gửi đến email của bạn!']);
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Lỗi gửi email. Vui lòng thử lại!']);
                 }
@@ -118,62 +164,41 @@ class ProfileController extends Controller {
         }
     }
 
-    public function verify_password_change() {
+    public function verify_delete_account() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             check_csrf();
             $user_id = $_SESSION['user_id'];
             $userInfo = $this->userModel->getUserById($user_id);
             
             $otp = trim($_POST['otp'] ?? '');
-            $new_password = $_POST['new_password'] ?? '';
 
-            if (empty($otp) || empty($new_password)) {
-                flash('profile_err', 'Vui lòng nhập đầy đủ OTP và mật khẩu mới.', 'error');
-                header('Location: ' . URLROOT . '/profile');
-                exit;
-            }
-
-            if (strlen($new_password) < 6) {
-                flash('profile_err', 'Mật khẩu phải từ 6 ký tự trở lên.', 'error');
+            if (empty($otp)) {
+                flash('profile_err', 'Vui lòng nhập mã OTP.', 'error');
                 header('Location: ' . URLROOT . '/profile');
                 exit;
             }
 
             if ($this->userModel->verifyOTP($userInfo->email, $otp)) {
-                if ($this->userModel->updatePassword($user_id, $new_password)) {
-                    flash('profile_success', 'Đổi mật khẩu thành công!', 'success');
+                // Tắt session cũ
+                unset($_SESSION['user_id']);
+                unset($_SESSION['user_email']);
+                unset($_SESSION['user_name']);
+                unset($_SESSION['user_role']);
+                session_destroy();
+                
+                // Xóa user khỏi db
+                if ($this->userModel->deleteUser($user_id)) {
+                    session_start();
+                    flash('login_success', 'Tài khoản của bạn đã được xóa vĩnh viễn.', 'success');
+                    header('Location: ' . URLROOT . '/');
                 } else {
-                    flash('profile_err', 'Lỗi khi cập nhật mật khẩu.', 'error');
+                    session_start();
+                    flash('error', 'Có lỗi xảy ra khi xóa tài khoản. Vui lòng thử lại sau.', 'error');
+                    header('Location: ' . URLROOT . '/');
                 }
             } else {
                 flash('profile_err', 'Mã OTP không hợp lệ hoặc đã hết hạn.', 'error');
-            }
-            header('Location: ' . URLROOT . '/profile');
-            exit;
-        }
-    }
-
-    public function delete_account() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            check_csrf();
-            $user_id = $_SESSION['user_id'];
-            
-            // Tắt session cũ
-            unset($_SESSION['user_id']);
-            unset($_SESSION['user_email']);
-            unset($_SESSION['user_name']);
-            unset($_SESSION['user_role']);
-            session_destroy();
-            
-            // Xóa user khỏi db (ON DELETE CASCADE sẽ xóa luôn members và reviews)
-            if ($this->userModel->deleteUser($user_id)) {
-                session_start();
-                flash('login_success', 'Tài khoản của bạn đã được xóa vĩnh viễn. Cảm ơn bạn đã đồng hành cùng PETSHOP.', 'success');
-                header('Location: ' . URLROOT . '/');
-            } else {
-                session_start();
-                flash('error', 'Có lỗi xảy ra khi xóa tài khoản. Vui lòng thử lại sau.', 'error');
-                header('Location: ' . URLROOT . '/');
+                header('Location: ' . URLROOT . '/profile');
             }
             exit;
         } else {

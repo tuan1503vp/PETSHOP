@@ -97,48 +97,49 @@
                     </div>
                 </div>
 
-                <!-- Contact Info Form -->
-                <div class="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+                <!-- Contact Info Display -->
+                <div class="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 relative">
+                    <button @click="$dispatch('open-edit-contact-modal')" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-50 text-gray-500 hover:bg-primary hover:text-white flex items-center justify-center transition-colors shadow-sm">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
                     <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
                         <i class="fa-solid fa-address-card mr-3 text-primary"></i> Thông tin liên hệ
                     </h3>
                     
-                    <form action="<?php echo URLROOT; ?>/profile/update" method="POST">
-                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
-                        <div class="space-y-4">
-                            <!-- Email (Disabled) -->
-                            <div>
-                                <label class="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Email</label>
-                                <div class="relative">
-                                    <input type="email" value="<?php echo $user->email; ?>" disabled class="w-full bg-slate-50 border border-slate-200 text-gray-500 rounded-xl px-4 py-3 focus:outline-none cursor-not-allowed">
-                                    <i class="fa-solid fa-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                </div>
+                    <div class="space-y-4">
+                        <!-- Email -->
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-gray-500 mr-4 shrink-0">
+                                <i class="fa-solid fa-envelope"></i>
                             </div>
-                            
-                            <!-- Họ Tên (Disabled) -->
                             <div>
-                                <label class="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Họ tên</label>
-                                <div class="relative">
-                                    <input type="text" name="fullname" value="<?php echo $user->fullname; ?>" readonly class="w-full bg-slate-50 border border-slate-200 text-gray-500 rounded-xl px-4 py-3 focus:outline-none cursor-not-allowed">
-                                    <i class="fa-solid fa-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                </div>
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Email</p>
+                                <p class="text-sm font-medium text-gray-800 break-all"><?php echo $user->email; ?></p>
                             </div>
-
-                            <!-- Số điện thoại -->
-                            <div>
-                                <label class="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Số điện thoại</label>
-                                <input type="text" name="phone" value="<?php echo $user->phone ?? ''; ?>" placeholder="Nhập số điện thoại" class="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition">
-                            </div>
-
-                            <!-- Địa chỉ -->
-                            <div>
-                                <label class="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Địa chỉ</label>
-                                <textarea name="address" rows="2" placeholder="Nhập địa chỉ" class="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition"><?php echo $user->address ?? ''; ?></textarea>
-                            </div>
-                            
-                            <button type="submit" class="w-full mt-2 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl px-4 py-3 hover:shadow-lg hover:-translate-y-0.5 transition-all">Lưu Thông Tin</button>
                         </div>
-                    </form>
+                        
+                        <!-- Số điện thoại -->
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-gray-500 mr-4 shrink-0">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Số điện thoại</p>
+                                <p class="text-sm font-medium text-gray-800"><?php echo !empty($user->phone) ? $user->phone : '<span class="text-gray-400 italic">Chưa cập nhật</span>'; ?></p>
+                            </div>
+                        </div>
+                        
+                        <!-- Địa chỉ -->
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-gray-500 mr-4 shrink-0">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Địa chỉ</p>
+                                <p class="text-sm font-medium text-gray-800"><?php echo !empty($user->address) ? $user->address : '<span class="text-gray-400 italic">Chưa cập nhật</span>'; ?></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Security / Change Password -->
@@ -182,41 +183,33 @@
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                             
-                            <h2 class="text-2xl font-black text-gray-900 mb-2">Đổi Mật Khẩu</h2>
-                            <p class="text-sm text-gray-500 mb-6">Mã OTP sẽ được gửi đến email <strong class="text-gray-800"><?php echo $user->email; ?></strong></p>
+                            <h2 class="text-2xl font-black text-gray-900 mb-6">Đổi Mật Khẩu</h2>
                             
-                            <!-- Step 1: Send OTP -->
-                            <div x-show="step === 1">
-                                <form @submit.prevent="requestOTP">
-                                    <div class="mb-4">
-                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu mới</label>
-                                        <input type="password" x-model="newPassword" required minlength="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition" placeholder="Nhập mật khẩu mới">
+                            <form action="<?php echo URLROOT; ?>/profile/change_password" method="POST">
+                                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+                                
+                                <div class="mb-4">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu cũ</label>
+                                    <input type="password" name="old_password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition" placeholder="Nhập mật khẩu hiện tại">
+                                    <div class="mt-2 text-right">
+                                        <a href="<?php echo URLROOT; ?>/auth/forgot_password" class="text-xs font-bold text-primary hover:text-secondary transition">Quên mật khẩu?</a>
                                     </div>
-                                    <button type="submit" :disabled="isLoading" class="w-full bg-slate-900 text-white font-bold rounded-xl px-4 py-3 hover:bg-primary transition disabled:opacity-70">
-                                        <span x-show="!isLoading">Gửi mã OTP Xác Nhận</span>
-                                        <span x-show="isLoading"><i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...</span>
-                                    </button>
-                                </form>
-                            </div>
-
-                            <!-- Step 2: Verify OTP -->
-                            <div x-show="step === 2">
-                                <form action="<?php echo URLROOT; ?>/profile/verify_password_change" method="POST">
-                                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
-                                    <input type="hidden" name="new_password" :value="newPassword">
-                                    <div class="mb-4 text-center">
-                                        <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                                            <i class="fa-regular fa-envelope-open"></i>
-                                        </div>
-                                        <p class="text-emerald-600 font-bold mb-4" x-text="message"></p>
-                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2 text-left">Nhập mã OTP 6 số</label>
-                                        <input type="text" name="otp" required maxlength="6" pattern="\d{6}" class="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 text-center text-2xl tracking-widest font-black rounded-xl px-4 py-3 outline-none transition" placeholder="------">
-                                    </div>
-                                    <button type="submit" class="w-full bg-emerald-500 text-white font-bold rounded-xl px-4 py-3 hover:bg-emerald-600 transition">
-                                        Xác Nhận Đổi Mật Khẩu
-                                    </button>
-                                </form>
-                            </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật khẩu mới</label>
+                                    <input type="password" name="new_password" required minlength="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition" placeholder="Ít nhất 6 ký tự">
+                                </div>
+                                
+                                <div class="mb-6">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nhập lại mật khẩu mới</label>
+                                    <input type="password" name="confirm_password" required minlength="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition" placeholder="Xác nhận mật khẩu mới">
+                                </div>
+                                
+                                <button type="submit" class="w-full bg-slate-900 text-white font-bold rounded-xl px-4 py-3 hover:bg-primary transition">
+                                    Cập Nhật Mật Khẩu
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -341,11 +334,43 @@
     </div>
 </div>
 
-<!-- Account Deletion Modal (Outside main flow for Alpine x-data scope if needed) -->
-<div x-data="{ isOpen: false, confirmText: '' }" @open-delete-modal.window="isOpen = true; confirmText = ''">
+<!-- Edit Contact Modal -->
+<div x-data="{ isOpen: false }" @open-edit-contact-modal.window="isOpen = true">
     <div x-show="isOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-transition>
         <div @click.away="isOpen = false" class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl relative">
             <button @click="isOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <h2 class="text-2xl font-black text-gray-900 mb-6">Sửa thông tin liên hệ</h2>
+            
+            <form action="<?php echo URLROOT; ?>/profile/update" method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+                <div class="space-y-4">
+                    <!-- Số điện thoại -->
+                    <div>
+                        <label class="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Số điện thoại</label>
+                        <input type="text" name="phone" value="<?php echo $user->phone ?? ''; ?>" placeholder="Nhập số điện thoại" class="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition">
+                    </div>
+
+                    <!-- Địa chỉ -->
+                    <div>
+                        <label class="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Địa chỉ</label>
+                        <textarea name="address" rows="2" placeholder="Nhập địa chỉ" class="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition"><?php echo $user->address ?? ''; ?></textarea>
+                    </div>
+                    
+                    <button type="submit" class="w-full mt-4 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl px-4 py-3 hover:shadow-lg hover:-translate-y-0.5 transition-all">Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Account Deletion Modal -->
+<div x-data="deleteAccountModal()" @open-delete-modal.window="openModal()">
+    <div x-show="isOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-transition>
+        <div @click.away="closeModal()" class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl relative">
+            <button @click="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center transition">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
@@ -354,22 +379,40 @@
             </div>
 
             <h2 class="text-2xl font-black text-gray-900 mb-2 text-center">Xóa Tài Khoản</h2>
-            <p class="text-sm text-gray-500 mb-6 text-center">Hành động này sẽ xóa vĩnh viễn tài khoản của bạn, lịch sử mua sắm và tất cả dữ liệu liên quan. <strong>Không thể hoàn tác.</strong></p>
             
-            <form action="<?php echo URLROOT; ?>/profile/delete_account" method="POST">
-                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
-                <div class="mb-6">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2 text-center">Nhập <span class="text-red-500 select-all">XOA TAI KHOAN</span> để xác nhận</label>
-                    <input type="text" x-model="confirmText" required class="w-full bg-slate-50 border-2 border-slate-200 focus:border-red-500 text-center text-lg tracking-wider font-bold rounded-xl px-4 py-3 outline-none transition" placeholder="XOA TAI KHOAN">
-                </div>
-                
-                <div class="flex gap-4">
-                    <button type="button" @click="isOpen = false" class="w-1/2 bg-gray-100 text-gray-700 font-bold rounded-xl px-4 py-3 hover:bg-gray-200 transition">Hủy</button>
-                    <button type="submit" :disabled="confirmText !== 'XOA TAI KHOAN'" class="w-1/2 bg-red-500 text-white font-bold rounded-xl px-4 py-3 hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                        Xác Nhận Xóa
+            <!-- Step 1: Type Confirmation -->
+            <div x-show="step === 1">
+                <p class="text-sm text-gray-500 mb-6 text-center">Hành động này sẽ xóa vĩnh viễn tài khoản của bạn, lịch sử mua sắm và tất cả dữ liệu liên quan. <strong>Không thể hoàn tác.</strong></p>
+                <form @submit.prevent="requestDeleteOTP">
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2 text-center">Nhập <span class="text-red-500 select-all">XOA TAI KHOAN</span> để xác nhận</label>
+                        <input type="text" x-model="confirmText" required class="w-full bg-slate-50 border-2 border-slate-200 focus:border-red-500 text-center text-lg tracking-wider font-bold rounded-xl px-4 py-3 outline-none transition" placeholder="XOA TAI KHOAN">
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <button type="button" @click="closeModal()" class="w-1/2 bg-gray-100 text-gray-700 font-bold rounded-xl px-4 py-3 hover:bg-gray-200 transition">Hủy</button>
+                        <button type="submit" :disabled="confirmText !== 'XOA TAI KHOAN' || isLoading" class="w-1/2 bg-red-500 text-white font-bold rounded-xl px-4 py-3 hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span x-show="!isLoading">Xác Nhận Xóa</span>
+                            <span x-show="isLoading"><i class="fa-solid fa-spinner fa-spin"></i> Chờ...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2: OTP Verification -->
+            <div x-show="step === 2">
+                <p class="text-sm text-gray-500 mb-6 text-center">Nhập mã OTP 6 số vừa được gửi đến email <strong><?php echo $user->email; ?></strong> để hoàn tất xóa tài khoản.</p>
+                <form action="<?php echo URLROOT; ?>/profile/verify_delete_account" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2 text-center">Mã OTP</label>
+                        <input type="text" name="otp" required maxlength="6" pattern="\d{6}" class="w-full bg-white border-2 border-slate-200 focus:border-red-500 text-center text-2xl tracking-widest font-black rounded-xl px-4 py-3 outline-none transition" placeholder="------">
+                    </div>
+                    <button type="submit" class="w-full bg-red-600 text-white font-bold rounded-xl px-4 py-3 hover:bg-red-700 transition">
+                        Xóa Vĩnh Viễn Tài Khoản
                     </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -377,39 +420,45 @@
 <?php require APPROOT . '/views/inc/footer.php'; ?>
 
 <script>
+    // Giữ nguyên function passwordModal để không bị lỗi x-data
     function passwordModal() {
         return {
             isOpen: false,
+            openModal() { this.isOpen = true; },
+            closeModal() { this.isOpen = false; }
+        }
+    }
+
+    function deleteAccountModal() {
+        return {
+            isOpen: false,
             step: 1,
+            confirmText: '',
             isLoading: false,
-            newPassword: '',
-            message: '',
             openModal() {
                 this.isOpen = true;
                 this.step = 1;
-                this.newPassword = '';
+                this.confirmText = '';
             },
             closeModal() {
                 this.isOpen = false;
             },
-            async requestOTP() {
-                if(this.newPassword.length < 6) {
-                    alert('Mật khẩu phải từ 6 ký tự trở lên!');
-                    return;
-                }
+            async requestDeleteOTP() {
+                if(this.confirmText !== 'XOA TAI KHOAN') return;
+                
                 this.isLoading = true;
                 try {
                     const formData = new FormData();
                     formData.append('csrf_token', '<?php echo $_SESSION['csrf_token'] ?? ''; ?>');
                     
-                    const res = await fetch('<?php echo URLROOT; ?>/profile/send_password_otp', {
+                    const res = await fetch('<?php echo URLROOT; ?>/profile/send_delete_otp', {
                         method: 'POST',
                         body: formData
                     });
                     const data = await res.json();
                     if(data.status === 'success') {
                         this.step = 2;
-                        this.message = data.message;
+                        alert(data.message);
                     } else {
                         alert(data.message);
                     }
