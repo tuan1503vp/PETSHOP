@@ -8,6 +8,20 @@ try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    // 1. Thêm các cột còn thiếu vào bảng products trước (nếu chưa có)
+    $alterQueries = [
+        "ALTER TABLE products ADD COLUMN expiry_date DATE NULL",
+        "ALTER TABLE products ADD COLUMN batch_number VARCHAR(50) NULL"
+    ];
+    foreach ($alterQueries as $q) {
+        try {
+            $pdo->exec($q);
+            echo "Thành công: Đã thêm cột mới vào bảng products.\n";
+        } catch (PDOException $e) {
+            // Cột đã tồn tại, bỏ qua
+        }
+    }
+
     // Read the dump file
     $sqlFile = __DIR__ . '/dump_products.sql';
     if (!file_exists($sqlFile)) {
