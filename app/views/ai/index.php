@@ -1,6 +1,6 @@
 <?php require APPROOT . '/views/inc/header.php'; ?>
 
-<div class="min-h-[calc(100vh-64px)] bg-slate-950 text-slate-100 py-16 relative overflow-hidden" x-data="{ symptoms: '<?php echo isset($data['symptoms']) ? addslashes(htmlspecialchars($data['symptoms'])) : ''; ?>' }">
+<div class="min-h-[calc(100vh-64px)] bg-slate-950 text-slate-100 py-16 relative overflow-hidden" x-data="{ symptoms: '<?php echo isset($data['symptoms']) ? addslashes(htmlspecialchars($data['symptoms'])) : ''; ?>', isAnalyzing: false }">
     
     <!-- Futuristic Background Glows -->
     <div class="absolute top-1/4 left-1/10 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-indigo-500/10 rounded-full blur-[100px] md:blur-[150px] pointer-events-none"></div>
@@ -25,7 +25,7 @@
         <!-- Main Form Box -->
         <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl shadow-2xl overflow-hidden mb-12">
             <div class="p-8 md:p-10">
-                <form action="<?php echo URLROOT; ?>/ai" method="POST">
+                <form action="<?php echo URLROOT; ?>/ai" method="POST" @submit="isAnalyzing = true">
                     <div class="mb-6">
                         <label for="symptoms" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
                             <i class="fa-solid fa-file-waveform mr-1 text-indigo-400"></i> Mô tả chi tiết triệu chứng của bé
@@ -69,9 +69,11 @@
 
                     <div class="flex justify-end pt-4 border-t border-slate-800/50">
                         <button type="submit" 
-                                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-base font-black rounded-2xl shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300">
-                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
-                            Bắt Đầu Phân Tích
+                                :disabled="isAnalyzing"
+                                :class="isAnalyzing ? 'opacity-75 cursor-not-allowed' : 'hover:shadow-indigo-500/40 hover:scale-[1.03] active:scale-[0.98]'"
+                                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-base font-black rounded-2xl shadow-xl shadow-indigo-500/20 transition-all duration-300">
+                            <span x-show="!isAnalyzing"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Bắt Đầu Phân Tích</span>
+                            <span x-show="isAnalyzing"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang Phân Tích...</span>
                         </button>
                     </div>
                 </form>
