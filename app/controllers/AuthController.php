@@ -412,12 +412,170 @@ class AuthController extends Controller {
     }
 
     public function google() {
-        flash('login_err', 'Tính năng đăng nhập bằng Google đang được cấu hình API. Vui lòng thử lại sau!', 'warning');
-        header('Location: ' . URLROOT . '/auth/login');
+        if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+            flash('login_err', 'Tính năng đăng nhập bằng Google đang được cấu hình API. Vui lòng thử lại sau!', 'warning');
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+
+        $url = 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
+            'client_id' => GOOGLE_CLIENT_ID,
+            'redirect_uri' => GOOGLE_REDIRECT_URL,
+            'response_type' => 'code',
+            'scope' => 'email profile',
+            'prompt' => 'select_account'
+        ]);
+        header('Location: ' . $url);
+        exit;
+    }
+
+    public function google_callback() {
+        if (!isset($_GET['code'])) {
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+
+        // 1. Get Access Token
+        $token_url = 'https://oauth2.googleapis.com/token';
+        $post_data = [
+            'client_id' => GOOGLE_CLIENT_ID,
+            'client_secret' => GOOGLE_CLIENT_SECRET,
+            'redirect_uri' => GOOGLE_REDIRECT_URL,
+            'grant_type' => 'authorization_code',
+            'code' => $_GET['code']
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $token_url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $token_data = json_decode($response, true);
+        if (isset($token_data['error']) || !isset($token_data['access_token'])) {
+            flash('login_err', 'Lỗi xác thực Google. Vui lòng thử lại.', 'error');
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+
+        // 2. Get User Info
+        $info_url = 'https://www.googleapis.com/oauth2/v2/userinfo';
+        $ch2 = curl_init();
+        curl_setopt($ch2, CURLOPT_URL, $info_url);
+        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch2, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $token_data['access_token']]);
+        $info_response = curl_exec($ch2);
+        curl_close($ch2);
+
+        $user_info = json_decode($info_response, true);
+        if (!isset($user_info['id'])) {
+            flash('login_err', 'Không thể lấy thông tin từ Google.', 'error');
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+
+        $this->processOAuthLogin('google', $user_info['id'], $user_info['email'] ?? '', $user_info['name'] ?? 'Google User');
     }
 
     public function facebook() {
-        flash('login_err', 'Tính năng đăng nhập bằng Facebook đang được cấu hình API. Vui lòng thử lại sau!', 'warning');
-        header('Location: ' . URLROOT . '/auth/login');
+        if (FACEBOOK_APP_ID === 'YOUR_FACEBOOK_APP_ID') {
+            flash('login_err', 'Tính năng đăng nhập bằng Facebook đang được cấu hình API. Vui lòng thử lại sau!', 'warning');
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+
+        $url = 'https://www.facebook.com/v12.0/dialog/oauth?' . http_build_query([
+            'client_id' => FACEBOOK_APP_ID,
+            'redirect_uri' => FACEBOOK_REDIRECT_URL,
+            'scope' => 'email,public_profile'
+        ]);
+        header('Location: ' . $url);
+        exit;
+    }
+
+    public function facebook_callback() {
+        if (!isset($_GET['code'])) {
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+
+        // 1. Get Access Token
+        $token_url = 'https://graph.facebook.com/v12.0/oauth/access_token?' . http_build_query([
+            'client_id' => FACEBOOK_APP_ID,
+            'client_secret' => FACEBOOK_APP_SECRET,
+            'redirect_uri' => FACEBOOK_REDIRECT_URL,
+            'code' => $_GET['code']
+        ]);
+
+        $response = file_get_contents($token_url);
+        $token_data = json_decode($response, true);
+
+        if (isset($token_data['error']) || !isset($token_data['access_token'])) {
+            flash('login_err', 'Lỗi xác thực Facebook. Vui lòng thử lại.', 'error');
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+
+        // 2. Get User Info
+        $info_url = 'https://graph.facebook.com/me?' . http_build_query([
+            'fields' => 'id,name,email',
+            'access_token' => $token_data['access_token']
+        ]);
+
+        $info_response = file_get_contents($info_url);
+        $user_info = json_decode($info_response, true);
+
+        if (!isset($user_info['id'])) {
+            flash('login_err', 'Không thể lấy thông tin từ Facebook.', 'error');
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+
+        $this->processOAuthLogin('facebook', $user_info['id'], $user_info['email'] ?? '', $user_info['name'] ?? 'Facebook User');
+    }
+
+    private function processOAuthLogin($provider, $provider_id, $email, $fullname) {
+        $user = null;
+
+        if ($provider === 'google') {
+            $user = $this->userModel->findUserByGoogleId($provider_id);
+        } else {
+            $user = $this->userModel->findUserByFacebookId($provider_id);
+        }
+
+        if ($user) {
+            // Already linked, login
+            $this->createUserSession($user);
+            return;
+        }
+
+        // Not linked by ID, check by email
+        if (!empty($email)) {
+            $userByEmail = $this->userModel->getUserByEmail($email);
+            if ($userByEmail) {
+                // Link account and login
+                $this->userModel->updateOAuthId($userByEmail->id, $provider, $provider_id);
+                $this->createUserSession($userByEmail);
+                return;
+            }
+        }
+
+        // New user, register and login
+        $data = [
+            'fullname' => $fullname,
+            'email' => empty($email) ? ($provider_id . '@' . $provider . '.local') : $email,
+            'google_id' => $provider === 'google' ? $provider_id : null,
+            'facebook_id' => $provider === 'facebook' ? $provider_id : null
+        ];
+
+        $newUser = $this->userModel->registerOAuthUser($data);
+        if ($newUser) {
+            $this->createUserSession($newUser);
+        } else {
+            flash('login_err', 'Có lỗi xảy ra khi tạo tài khoản.', 'error');
+            header('Location: ' . URLROOT . '/auth/login');
+        }
     }
 }

@@ -88,6 +88,45 @@ class User {
         return $this->db->single();
     }
 
+    public function findUserByGoogleId($id) {
+        $this->db->query('SELECT * FROM users WHERE google_id = :id');
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    public function findUserByFacebookId($id) {
+        $this->db->query('SELECT * FROM users WHERE facebook_id = :id');
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    public function registerOAuthUser($data) {
+        $this->db->query('INSERT INTO users (fullname, email, password, google_id, facebook_id, is_verified, role) VALUES(:fullname, :email, :password, :google_id, :facebook_id, 1, "customer")');
+        
+        $this->db->bind(':fullname', $data['fullname']);
+        $this->db->bind(':email', $data['email']);
+        $this->db->bind(':password', password_hash(bin2hex(random_bytes(10)), PASSWORD_DEFAULT)); // Random pass
+        $this->db->bind(':google_id', $data['google_id'] ?? null);
+        $this->db->bind(':facebook_id', $data['facebook_id'] ?? null);
+
+        if ($this->db->execute()) {
+            $user_id = $this->db->lastInsertId();
+            $this->db->query('INSERT INTO members (user_id) VALUES(:user_id)');
+            $this->db->bind(':user_id', $user_id);
+            $this->db->execute();
+            
+            return $this->getUserById($user_id);
+        }
+        return false;
+    }
+
+    public function updateOAuthId($user_id, $provider, $provider_id) {
+        $this->db->query("UPDATE users SET {$provider}_id = :provider_id WHERE id = :user_id");
+        $this->db->bind(':provider_id', $provider_id);
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->execute();
+    }
+
     // Đăng nhập user
     public function login($email, $password) {
         $this->db->query('SELECT * FROM users WHERE email = :email');
