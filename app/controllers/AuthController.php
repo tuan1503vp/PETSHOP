@@ -382,6 +382,9 @@ class AuthController extends Controller {
         $_SESSION['user_name'] = $user->fullname;
         $_SESSION['user_username'] = $user->fullname;
         $_SESSION['user_role'] = $user->role;
+        if (!empty($user->avatar)) {
+            $_SESSION['user_avatar'] = URLROOT . '/public/uploads/avatars/' . $user->avatar;
+        }
         
         // Ghi nhật ký hành vi đăng nhập
         $this->activityLogModel->log($user->id, $user->fullname, $user->role, 'Đăng nhập', 'Đăng nhập vào hệ thống thành công');

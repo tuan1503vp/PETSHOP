@@ -304,9 +304,13 @@
         <div class="p-4 border-t border-white/5">
             <div class="flex items-center justify-between group cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-all duration-300">
                 <div class="flex items-center">
-                    <div class="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex justify-center items-center font-black text-white shadow-md">
-                        <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
-                    </div>
+                    <?php if (!empty($_SESSION['user_avatar'])): ?>
+                        <img src="<?php echo $_SESSION['user_avatar']; ?>" alt="Avatar" class="w-10 h-10 rounded-full object-cover shadow-md border-2 border-white/10">
+                    <?php else: ?>
+                        <div class="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex justify-center items-center font-black text-white shadow-md border-2 border-white/10">
+                            <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
+                        </div>
+                    <?php endif; ?>
                     <div class="ml-3">
                         <p class="text-sm font-bold text-white group-hover:text-primary transition"><?php echo $_SESSION['user_name']; ?></p>
                         <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest"><?php echo $_SESSION['user_role']; ?></p>

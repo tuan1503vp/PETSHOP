@@ -280,9 +280,13 @@
                                 <?php foreach($data['reviews'] as $review): ?>
                                     <div class="py-12">
                                         <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-gradient-to-tr from-primary to-blue-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                                <?php echo strtoupper(substr($review->user_name, 0, 1)); ?>
-                                            </div>
+                                            <?php if (!empty($review->user_avatar)): ?>
+                                                <img src="<?php echo URLROOT; ?>/public/uploads/avatars/<?php echo $review->user_avatar; ?>" alt="Avatar" class="w-10 h-10 rounded-full object-cover">
+                                            <?php else: ?>
+                                                <div class="w-10 h-10 bg-gradient-to-tr from-primary to-blue-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                                    <?php echo strtoupper(substr($review->user_name, 0, 1)); ?>
+                                                </div>
+                                            <?php endif; ?>
                                             <div class="ml-4">
                                                 <h4 class="text-sm font-bold text-gray-900"><?php echo $review->user_name; ?></h4>
                                                 <div class="mt-1 flex items-center">

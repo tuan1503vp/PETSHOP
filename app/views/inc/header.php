@@ -459,9 +459,13 @@
                                  class="absolute top-full right-0 mt-4 w-80 bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 overflow-hidden z-[100]">
                                 
                                 <div class="p-6 text-center bg-gradient-to-br from-slate-900 to-dark text-white relative">
-                                    <div class="w-16 h-16 bg-gradient-to-tr <?php echo $level == 'VIP' ? 'from-purple-500 to-pink-500' : 'from-primary to-blue-400'; ?> rounded-2xl mx-auto flex items-center justify-center text-2xl font-black mb-3 shadow-lg border-2 border-white/10">
-                                        <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
-                                    </div>
+                                    <?php if (!empty($_SESSION['user_avatar'])): ?>
+                                        <img src="<?php echo $_SESSION['user_avatar']; ?>" alt="Avatar" class="w-16 h-16 rounded-2xl mx-auto object-cover mb-3 shadow-lg border-2 border-white/10">
+                                    <?php else: ?>
+                                        <div class="w-16 h-16 bg-gradient-to-tr <?php echo $level == 'VIP' ? 'from-purple-500 to-pink-500' : 'from-primary to-blue-400'; ?> rounded-2xl mx-auto flex items-center justify-center text-2xl font-black mb-3 shadow-lg border-2 border-white/10">
+                                            <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
+                                        </div>
+                                    <?php endif; ?>
                                     <h3 class="text-lg font-black leading-tight"><?php echo $_SESSION['user_name']; ?></h3>
                                     <p class="text-[10px] text-primary-light font-bold uppercase tracking-[0.2em] mt-1">Hạng <?php echo $level; ?></p>
                                 </div>
@@ -596,9 +600,13 @@
             <div class="pt-4 mt-4 border-t border-gray-100 dark:border-slate-800">
                 <?php if(isLoggedIn()) : ?>
                     <div class="flex items-center px-3 mb-4">
-                        <div class="w-10 h-10 bg-gradient-to-tr from-primary to-blue-400 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md">
-                            <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
-                        </div>
+                        <?php if (!empty($_SESSION['user_avatar'])): ?>
+                            <img src="<?php echo $_SESSION['user_avatar']; ?>" alt="Avatar" class="w-10 h-10 rounded-xl object-cover shadow-md">
+                        <?php else: ?>
+                            <div class="w-10 h-10 bg-gradient-to-tr from-primary to-blue-400 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md">
+                                <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
+                            </div>
+                        <?php endif; ?>
                         <div class="ml-3">
                             <p class="text-sm font-black text-gray-800 dark:text-white"><?php echo $_SESSION['user_name']; ?></p>
                             <p class="text-[10px] text-gray-500 font-bold uppercase">Hội viên <?php echo $level ?? 'Đồng'; ?></p>
