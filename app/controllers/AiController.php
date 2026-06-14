@@ -53,7 +53,12 @@ class AiController extends Controller {
         $url = 'https://openrouter.ai/api/v1/chat/completions';
 
         $payload = [
-            "model" => "meta-llama/llama-3.2-3b-instruct:free", // Tự động chọn mô hình AI miễn phí hoạt động ổn định nhất
+            "models" => [
+                "google/gemini-2.0-flash-lite-preview-02-05:free",
+                "meta-llama/llama-3.2-3b-instruct:free",
+                "qwen/qwen-2-7b-instruct:free",
+                "huggingfaceh4/zephyr-7b-beta:free"
+            ], // Tự động dự phòng nếu 1 model bị sập
             "messages" => [
                 [
                     "role" => "system",
@@ -384,7 +389,12 @@ class AiController extends Controller {
 
         $url = 'https://openrouter.ai/api/v1/chat/completions';
         $payload = [
-            "model" => "meta-llama/llama-3.2-3b-instruct:free",
+            "models" => [
+                "google/gemini-2.0-flash-lite-preview-02-05:free",
+                "meta-llama/llama-3.2-3b-instruct:free",
+                "qwen/qwen-2-7b-instruct:free",
+                "huggingfaceh4/zephyr-7b-beta:free"
+            ],
             "messages" => [
                 [
                     "role" => "system",
