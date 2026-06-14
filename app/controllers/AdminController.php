@@ -499,8 +499,12 @@ class AdminController extends Controller {
             
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-                $image = time() . '_' . $_FILES['image']['name'];
-                move_uploaded_file($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image);
+                if (is_valid_image($_FILES['image'])) {
+                    $image = time() . '_' . $_FILES['image']['name'];
+                    move_uploaded_file($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image);
+                } else {
+                    die("Lỗi: File ảnh không hợp lệ hoặc không đúng định dạng.");
+                }
             }
 
             $data = [

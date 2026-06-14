@@ -48,3 +48,26 @@ function redirectManagement() {
         }
     }
 }
+
+
+// Kiểm tra bảo mật phiên đăng nhập chống Hijacking
+function checkSessionSecurity() {
+    if (isset($_SESSION['user_id'])) {
+        $currentUserAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $currentIp = $_SERVER['REMOTE_ADDR'] ?? '';
+        
+        if (!isset($_SESSION['user_agent']) || !isset($_SESSION['ip_address'])) {
+            $_SESSION['user_agent'] = $currentUserAgent;
+            $_SESSION['ip_address'] = $currentIp;
+        } else {
+            // Cảnh báo: Nếu đổi IP mạng di động thì có thể bị văng, 
+            // có thể chỉ check user_agent nếu gặp vấn đề
+            if ($_SESSION['user_agent'] !== $currentUserAgent || $_SESSION['ip_address'] !== $currentIp) {
+                session_unset();
+                session_destroy();
+                header('Location: ' . URLROOT . '/auth/login');
+                exit;
+            }
+        }
+    }
+}
