@@ -115,10 +115,13 @@
                                 </div>
                             </div>
                             
-                            <!-- Họ Tên -->
+                            <!-- Họ Tên (Disabled) -->
                             <div>
                                 <label class="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Họ tên</label>
-                                <input type="text" name="fullname" value="<?php echo $user->fullname; ?>" required class="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition">
+                                <div class="relative">
+                                    <input type="text" name="fullname" value="<?php echo $user->fullname; ?>" readonly class="w-full bg-slate-50 border border-slate-200 text-gray-500 rounded-xl px-4 py-3 focus:outline-none cursor-not-allowed">
+                                    <i class="fa-solid fa-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                </div>
                             </div>
 
                             <!-- Số điện thoại -->
@@ -143,18 +146,34 @@
                     <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
                         <i class="fa-solid fa-shield-halved mr-3 text-emerald-500"></i> Bảo mật
                     </h3>
-                    <button @click="openModal()" type="button" class="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors group">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                                <i class="fa-solid fa-key"></i>
+                    
+                    <div class="space-y-4">
+                        <button @click="openModal()" type="button" class="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors group">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                    <i class="fa-solid fa-key"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-sm font-bold text-gray-900 group-hover:text-indigo-700">Đổi mật khẩu</p>
+                                    <p class="text-xs text-gray-500">Xác thực qua OTP Email</p>
+                                </div>
                             </div>
-                            <div class="text-left">
-                                <p class="text-sm font-bold text-gray-900 group-hover:text-indigo-700">Đổi mật khẩu</p>
-                                <p class="text-xs text-gray-500">Xác thực qua OTP Email</p>
+                            <i class="fa-solid fa-chevron-right text-gray-400 group-hover:text-indigo-500"></i>
+                        </button>
+                        
+                        <button @click="$dispatch('open-delete-modal')" type="button" class="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-red-500 hover:bg-red-50 transition-colors group">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                                    <i class="fa-solid fa-user-xmark"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-sm font-bold text-gray-900 group-hover:text-red-700">Xóa tài khoản</p>
+                                    <p class="text-xs text-gray-500">Xóa vĩnh viễn dữ liệu của bạn</p>
+                                </div>
                             </div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-gray-400 group-hover:text-indigo-500"></i>
-                    </button>
+                            <i class="fa-solid fa-chevron-right text-gray-400 group-hover:text-red-500"></i>
+                        </button>
+                    </div>
                     
                     <!-- Password Modal -->
                     <div x-show="isOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-transition>
@@ -318,6 +337,39 @@
                 </div>
 
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Account Deletion Modal (Outside main flow for Alpine x-data scope if needed) -->
+<div x-data="{ isOpen: false, confirmText: '' }" @open-delete-modal.window="isOpen = true; confirmText = ''">
+    <div x-show="isOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-transition>
+        <div @click.away="isOpen = false" class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl relative">
+            <button @click="isOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <h2 class="text-2xl font-black text-gray-900 mb-2 text-center">Xóa Tài Khoản</h2>
+            <p class="text-sm text-gray-500 mb-6 text-center">Hành động này sẽ xóa vĩnh viễn tài khoản của bạn, lịch sử mua sắm và tất cả dữ liệu liên quan. <strong>Không thể hoàn tác.</strong></p>
+            
+            <form action="<?php echo URLROOT; ?>/profile/delete_account" method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2 text-center">Nhập <span class="text-red-500 select-all">XOA TAI KHOAN</span> để xác nhận</label>
+                    <input type="text" x-model="confirmText" required class="w-full bg-slate-50 border-2 border-slate-200 focus:border-red-500 text-center text-lg tracking-wider font-bold rounded-xl px-4 py-3 outline-none transition" placeholder="XOA TAI KHOAN">
+                </div>
+                
+                <div class="flex gap-4">
+                    <button type="button" @click="isOpen = false" class="w-1/2 bg-gray-100 text-gray-700 font-bold rounded-xl px-4 py-3 hover:bg-gray-200 transition">Hủy</button>
+                    <button type="submit" :disabled="confirmText !== 'XOA TAI KHOAN'" class="w-1/2 bg-red-500 text-white font-bold rounded-xl px-4 py-3 hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Xác Nhận Xóa
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

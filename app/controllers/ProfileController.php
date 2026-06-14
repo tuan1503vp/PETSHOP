@@ -34,8 +34,10 @@ class ProfileController extends Controller {
             check_csrf();
             $user_id = $_SESSION['user_id'];
             
-            // Validate inputs
-            $fullname = trim($_POST['fullname'] ?? '');
+            // Validate inputs (Fullname is locked, get from session or db)
+            $userInfo = $this->userModel->getUserById($user_id);
+            $fullname = $userInfo->fullname;
+            
             $phone = trim($_POST['phone'] ?? '');
             $address = trim($_POST['address'] ?? '');
             
@@ -148,6 +150,34 @@ class ProfileController extends Controller {
             }
             header('Location: ' . URLROOT . '/profile');
             exit;
+        }
+    }
+
+    public function delete_account() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            check_csrf();
+            $user_id = $_SESSION['user_id'];
+            
+            // Tắt session cũ
+            unset($_SESSION['user_id']);
+            unset($_SESSION['user_email']);
+            unset($_SESSION['user_name']);
+            unset($_SESSION['user_role']);
+            session_destroy();
+            
+            // Xóa user khỏi db (ON DELETE CASCADE sẽ xóa luôn members và reviews)
+            if ($this->userModel->deleteUser($user_id)) {
+                session_start();
+                flash('login_success', 'Tài khoản của bạn đã được xóa vĩnh viễn. Cảm ơn bạn đã đồng hành cùng PETSHOP.', 'success');
+                header('Location: ' . URLROOT . '/');
+            } else {
+                session_start();
+                flash('error', 'Có lỗi xảy ra khi xóa tài khoản. Vui lòng thử lại sau.', 'error');
+                header('Location: ' . URLROOT . '/');
+            }
+            exit;
+        } else {
+            header('Location: ' . URLROOT . '/profile');
         }
     }
 }
