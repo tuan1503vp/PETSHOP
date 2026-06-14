@@ -67,7 +67,7 @@
                 </div>
 
                 <div class="text-sm">
-                    <a href="#" class="font-medium text-secondary hover:text-pink-500">
+                    <a href="<?php echo URLROOT; ?>/auth/forgot_password" class="font-medium text-secondary hover:text-pink-500 transition">
                         Quên mật khẩu?
                     </a>
                 </div>

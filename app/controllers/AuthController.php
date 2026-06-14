@@ -260,6 +260,87 @@ class AuthController extends Controller {
         }
     }
 
+    public function forgot_password() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $email = trim($_POST['email']);
+            if (empty($email)) {
+                $data = ['email_err' => 'Vui lòng nhập email'];
+                $this->view('auth/forgot_password', $data);
+            } else {
+                $user = $this->userModel->getUserByEmail($email);
+                if ($user) {
+                    require_once APPROOT . '/helpers/Mailer.php';
+                    $otp = sprintf("%06d", mt_rand(1, 999999));
+                    $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+                    $this->userModel->updateOTP($email, $otp, $expiresAt);
+                    
+                    $mailer = new Mailer();
+                    // Chúng ta sử dụng hàm sendOTP tương tự, hoặc có thể tạo thêm template sendPasswordResetOTP nếu cần
+                    $mailer->sendOTP($email, $user->fullname, $otp);
+                    
+                    $_SESSION['reset_email'] = $email;
+                    header('Location: ' . URLROOT . '/auth/reset_password');
+                } else {
+                    $data = ['email_err' => 'Email không tồn tại trong hệ thống'];
+                    $this->view('auth/forgot_password', $data);
+                }
+            }
+        } else {
+            $this->view('auth/forgot_password', ['email_err' => '']);
+        }
+    }
+
+    public function reset_password() {
+        if (!isset($_SESSION['reset_email'])) {
+            header('Location: ' . URLROOT . '/auth/forgot_password');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $otp = trim($_POST['otp']);
+            $password = trim($_POST['password']);
+            $confirm_password = trim($_POST['confirm_password']);
+            $email = $_SESSION['reset_email'];
+
+            $data = [
+                'otp_err' => '',
+                'password_err' => '',
+                'confirm_password_err' => ''
+            ];
+
+            if (empty($otp)) $data['otp_err'] = 'Vui lòng nhập mã OTP';
+            if (empty($password)) $data['password_err'] = 'Vui lòng nhập mật khẩu mới';
+            elseif (strlen($password) < 8) $data['password_err'] = 'Mật khẩu phải có ít nhất 8 ký tự';
+            if (empty($confirm_password)) $data['confirm_password_err'] = 'Vui lòng xác nhận mật khẩu';
+            elseif ($password != $confirm_password) $data['confirm_password_err'] = 'Mật khẩu xác nhận không khớp';
+
+            if (empty($data['otp_err']) && empty($data['password_err']) && empty($data['confirm_password_err'])) {
+                if ($this->userModel->checkOTP($email, $otp)) {
+                    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                    if ($this->userModel->updatePasswordByEmail($email, $password_hash)) {
+                        $this->userModel->clearOTP($email);
+                        unset($_SESSION['reset_email']);
+                        flash('register_success', 'Đổi mật khẩu thành công! Vui lòng đăng nhập.');
+                        header('Location: ' . URLROOT . '/auth/login');
+                    } else {
+                        die('Có lỗi xảy ra.');
+                    }
+                } else {
+                    $data['otp_err'] = 'Mã OTP không chính xác hoặc đã hết hạn';
+                    $this->view('auth/reset_password', $data);
+                }
+            } else {
+                $this->view('auth/reset_password', $data);
+            }
+        } else {
+            $this->view('auth/reset_password', [
+                'otp_err' => '',
+                'password_err' => '',
+                'confirm_password_err' => ''
+            ]);
+        }
+    }
+
     public function createUserSession($user) {
         // Tắt session_regenerate_id(true) trên host dùng chung để tránh mất session khi chuyển hướng
         // session_regenerate_id(true);

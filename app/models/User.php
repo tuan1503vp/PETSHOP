@@ -54,6 +54,20 @@ class User {
         return false;
     }
 
+    public function checkOTP($email, $otp) {
+        $this->db->query('SELECT * FROM users WHERE email = :email AND otp_code = :otp_code AND otp_expires_at > NOW()');
+        $this->db->bind(':email', $email);
+        $this->db->bind(':otp_code', $otp);
+        $row = $this->db->single();
+        return $row ? true : false;
+    }
+
+    public function clearOTP($email) {
+        $this->db->query('UPDATE users SET otp_code = NULL, otp_expires_at = NULL WHERE email = :email');
+        $this->db->bind(':email', $email);
+        return $this->db->execute();
+    }
+
     // Kiểm tra email đã tồn tại chưa
     public function findUserByEmail($email) {
         $this->db->query('SELECT * FROM users WHERE email = :email');
@@ -124,6 +138,13 @@ class User {
         $this->db->query('UPDATE users SET password = :password WHERE id = :id');
         $this->db->bind(':password', $new_password);
         $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function updatePasswordByEmail($email, $new_password) {
+        $this->db->query('UPDATE users SET password = :password WHERE email = :email');
+        $this->db->bind(':password', $new_password);
+        $this->db->bind(':email', $email);
         return $this->db->execute();
     }
 
