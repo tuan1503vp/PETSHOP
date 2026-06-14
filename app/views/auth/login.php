@@ -1,6 +1,29 @@
 <?php require APPROOT . '/views/inc/header.php'; ?>
-<div class="flex items-center justify-center min-h-[calc(100vh-64px)] py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
+<style>
+/* Hiệu ứng Paws nổi lơ lửng */
+.paw-bg { position: absolute; font-size: 2rem; color: rgba(236, 72, 153, 0.15); z-index: 0; animation: floatPaw 8s infinite ease-in-out; }
+.paw-bg.paw-1 { top: 10%; left: 10%; animation-delay: 0s; transform: rotate(-20deg); }
+.paw-bg.paw-2 { top: 70%; left: 15%; animation-delay: 2s; transform: rotate(15deg); font-size: 3rem; }
+.paw-bg.paw-3 { top: 20%; right: 15%; animation-delay: 4s; transform: rotate(25deg); }
+.paw-bg.paw-4 { top: 80%; right: 10%; animation-delay: 1s; transform: rotate(-15deg); font-size: 2.5rem; }
+.paw-bg.paw-5 { top: 40%; left: 5%; animation-delay: 5s; transform: rotate(45deg); font-size: 1.5rem; }
+.paw-bg.paw-6 { top: 50%; right: 5%; animation-delay: 3s; transform: rotate(-45deg); font-size: 1.8rem; }
+@keyframes floatPaw {
+    0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.5; }
+    50% { transform: translateY(-20px) scale(1.1) rotate(10deg); opacity: 1; }
+}
+</style>
+
+<div class="flex items-center justify-center min-h-[calc(100vh-64px)] py-12 px-4 sm:px-6 lg:px-8 bg-pink-50 relative overflow-hidden">
+    <!-- Những dấu chân lơ lửng -->
+    <i class="fa-solid fa-paw paw-bg paw-1"></i>
+    <i class="fa-solid fa-paw paw-bg paw-2"></i>
+    <i class="fa-solid fa-paw paw-bg paw-3"></i>
+    <i class="fa-solid fa-paw paw-bg paw-4"></i>
+    <i class="fa-solid fa-paw paw-bg paw-5"></i>
+    <i class="fa-solid fa-paw paw-bg paw-6"></i>
+
+    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-pink-100 relative z-10">
         <div>
             <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-pink-100 text-secondary">
                 <i class="fa-solid fa-lock text-2xl"></i>
@@ -25,10 +48,13 @@
                     <input id="email-address" name="email" type="email" autocomplete="email" value="<?php echo isset($data['email']) ? $data['email'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['email_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-secondary focus:border-secondary focus:z-10 sm:text-sm" placeholder="Địa chỉ Email">
                     <span class="text-red-500 text-xs italic"><?php echo $data['email_err']; ?></span>
                 </div>
-                <div>
+                <div class="relative">
                     <label for="password" class="sr-only">Mật khẩu</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-secondary focus:border-secondary focus:z-10 sm:text-sm" placeholder="Mật khẩu">
-                    <span class="text-red-500 text-xs italic"><?php echo $data['password_err']; ?></span>
+                    <input id="password" name="password" type="password" autocomplete="current-password" value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-secondary focus:border-secondary focus:z-10 sm:text-sm pr-10" placeholder="Mật khẩu">
+                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20 h-full">
+                        <i class="fa-regular fa-eye text-gray-400 hover:text-secondary transition-colors cursor-pointer" id="eyeIcon"></i>
+                    </button>
+                    <span class="text-red-500 text-xs italic block mt-1"><?php echo $data['password_err']; ?></span>
                 </div>
             </div>
 
@@ -58,4 +84,27 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // JS Logic: Show/Hide Password
+    const toggleBtn = document.getElementById('togglePassword');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+});
+</script>
+
 <?php require APPROOT . '/views/inc/footer.php'; ?>
