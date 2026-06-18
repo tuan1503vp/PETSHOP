@@ -233,7 +233,7 @@ class Appointment {
     }
 
     public function getAppointmentsForDoctor($doctor_id) {
-        $this->db->query('SELECT a.*, s.name as service_name, s.price as service_price, cat.name as category_name, 
+        $this->db->query('SELECT a.*, s.name as service_name, s.price as service_price, s.duration_minutes, cat.name as category_name, 
                           COALESCE(c.fullname, a.customer_name) as customer_name, 
                           c.email as customer_email, 
                           COALESCE(m.phone, a.customer_phone) as customer_phone,
@@ -253,7 +253,7 @@ class Appointment {
     }
 
     public function getCompletedByDoctor($doctor_id) {
-        $this->db->query('SELECT a.*, s.name as service_name, s.price as service_price, 
+        $this->db->query('SELECT a.*, s.name as service_name, s.price as service_price, s.duration_minutes, 
                           COALESCE(c.fullname, a.customer_name) as customer_name, 
                           c.email as customer_email, 
                           COALESCE(m.phone, a.customer_phone) as customer_phone,

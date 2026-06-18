@@ -780,56 +780,64 @@ document.addEventListener('alpine:init', () => {
                 }, 100);
             }
 
-            // 2. Thiết lập kết nối Server-Sent Events (SSE) thời gian thực cho lịch hẹn và lịch nhân sự
-            const sseSource = new EventSource('<?php echo URLROOT; ?>/admin/pos_sse');
-            sseSource.onmessage = (event) => {
+            // 2. Định kỳ lấy dữ liệu lịch hẹn và lịch nhân sự (AJAX Polling thay thế cho SSE để tránh quá tải host/InfinityFree)
+            const fetchPosData = async () => {
                 try {
-                    const data = JSON.parse(event.data);
+                    // Lấy appointments chờ thanh toán
+                    const apptRes = await fetch('<?php echo URLROOT; ?>/admin/pos_waiting_appointments');
+                    const appointments = await apptRes.json();
                     
-                    // Cập nhật appointments
-                    if (data.appointments) {
-                        const newAppointments = data.appointments.map(a => {
-                            const isShortBoarding = a.category_name.toLowerCase().includes('trông giữ') && a.service_name.toLowerCase().includes('ngắn hạn');
-                            const isLongBoarding = a.category_name.toLowerCase().includes('trông giữ') && a.service_name.toLowerCase().includes('dài hạn');
-                            let basePrice = parseFloat(a.final_price) || parseFloat(a.service_price) || 0;
-                            if (isShortBoarding) basePrice = 20000;
-                            if (isLongBoarding) basePrice = 50000;
-                            let finalDuration = parseInt(a.duration_value) || 1;
-                            if (a.duration_unit === 'month' && isLongBoarding) finalDuration = finalDuration * 29;
+                    const newAppointments = appointments.map(a => {
+                        const isShortBoarding = a.category_name.toLowerCase().includes('trông giữ') && a.service_name.toLowerCase().includes('ngắn hạn');
+                        const isLongBoarding = a.category_name.toLowerCase().includes('trông giữ') && a.service_name.toLowerCase().includes('dài hạn');
+                        let basePrice = parseFloat(a.final_price) || parseFloat(a.service_price) || 0;
+                        if (isShortBoarding) basePrice = 20000;
+                        if (isLongBoarding) basePrice = 50000;
+                        let finalDuration = parseInt(a.duration_value) || 1;
+                        if (a.duration_unit === 'month' && isLongBoarding) finalDuration = finalDuration * 29;
 
-                            return {
-                                id: 'app_' + a.id,
-                                real_id: a.id,
-                                name: `Dịch vụ: ${a.service_name} (KH: ${a.customer_name})`,
-                                price: basePrice,
-                                image: null,
-                                category: a.category_name,
-                                stock: 999,
-                                duration_value: finalDuration,
-                                duration_unit: a.duration_unit,
-                                customer_id: a.customer_id,
-                                customer_name: a.customer_name,
-                                customer_phone: a.customer_phone,
-                                is_appointment: true,
-                                prescriptions: a.prescriptions || []
-                            };
-                        });
-                        
-                        this.appointments = newAppointments;
-                    }
+                        return {
+                            id: 'app_' + a.id,
+                            real_id: a.id,
+                            name: `Dịch vụ: ${a.service_name} (KH: ${a.customer_name})`,
+                            price: basePrice,
+                            image: null,
+                            category: a.category_name,
+                            stock: 999,
+                            duration_value: finalDuration,
+                            duration_unit: a.duration_unit,
+                            customer_id: a.customer_id,
+                            customer_name: a.customer_name,
+                            customer_phone: a.customer_phone,
+                            is_appointment: true,
+                            prescriptions: a.prescriptions || []
+                        };
+                    });
                     
-                    // Cập nhật staff schedules
-                    if (data.staff_schedules) {
-                        this.staffSchedules = data.staff_schedules;
-                    }
+                    this.appointments = newAppointments;
                 } catch (err) {
-                    console.error('SSE Error parsing data:', err);
+                    console.error('Error fetching POS appointments:', err);
+                }
+
+                try {
+                    // Lấy lịch làm việc của nhân viên
+                    const scheduleRes = await fetch('<?php echo URLROOT; ?>/admin/pos_staff_schedules');
+                    const staffSchedules = await scheduleRes.json();
+                    this.staffSchedules = staffSchedules;
+                } catch (err) {
+                    console.error('Error fetching staff schedules:', err);
                 }
             };
-            
-            // Xử lý đóng kết nối khi unload trang để tránh rò rỉ tài nguyên trên server
+
+            // Gọi ngay khi tải trang
+            fetchPosData();
+
+            // Polling mỗi 20 giây (tối ưu hóa tài nguyên cơ sở dữ liệu)
+            const posPollInterval = setInterval(fetchPosData, 20000);
+
+            // Dọn dẹp polling khi unload trang
             window.addEventListener('beforeunload', () => {
-                sseSource.close();
+                clearInterval(posPollInterval);
             });
         },
 

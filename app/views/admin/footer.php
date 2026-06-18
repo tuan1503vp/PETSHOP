@@ -98,8 +98,8 @@
         // Gọi ngay lần đầu
         checkUpdates();
         
-        // Polling mỗi 5 giây
-        setInterval(checkUpdates, 5000);
+        // Polling mỗi 30 giây (tối ưu hóa tài nguyên tránh vượt quá giới hạn truy vấn của host)
+        setInterval(checkUpdates, 30000);
     });
     </script>
 </body>

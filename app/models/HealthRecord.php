@@ -79,6 +79,23 @@ class HealthRecord {
         return $this->db->resultSet();
     }
 
+    // Lấy đơn thuốc theo danh sách mã lịch hẹn (tối ưu hóa hiệu năng, tránh N+1 query)
+    public function getPrescriptionsByAppointmentIds($appointment_ids) {
+        if (empty($appointment_ids)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($appointment_ids), '?'));
+        $this->db->query("SELECT hrp.*, hr.appointment_id, p.name as product_name, p.price as product_price, p.stock_quantity
+                          FROM health_record_prescriptions hrp
+                          JOIN health_records hr ON hrp.health_record_id = hr.id
+                          JOIN products p ON hrp.product_id = p.id
+                          WHERE hr.appointment_id IN ($placeholders)");
+        foreach ($appointment_ids as $index => $id) {
+            $this->db->bind($index + 1, $id);
+        }
+        return $this->db->resultSet();
+    }
+
     // Lấy đơn thuốc theo hồ sơ bệnh án
     public function getPrescriptionsByRecord($health_record_id) {
         $this->db->query('SELECT hrp.*, p.name as product_name

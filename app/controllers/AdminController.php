@@ -214,8 +214,16 @@ class AdminController extends Controller {
         $appointments = $appointmentModel->getAllAppointments(['status' => 'confirmed']);
         
         $healthRecordModel = $this->model('HealthRecord');
-        foreach ($appointments as $app) {
-            $app->prescriptions = $healthRecordModel->getPrescriptionsByAppointment($app->id);
+        if (!empty($appointments)) {
+            $appointment_ids = array_map(function($app) { return $app->id; }, $appointments);
+            $allPrescriptions = $healthRecordModel->getPrescriptionsByAppointmentIds($appointment_ids);
+            $prescriptionsByAppt = [];
+            foreach ($allPrescriptions as $pres) {
+                $prescriptionsByAppt[$pres->appointment_id][] = $pres;
+            }
+            foreach ($appointments as $app) {
+                $app->prescriptions = $prescriptionsByAppt[$app->id] ?? [];
+            }
         }
         
         $waiting_appointments = array_filter($appointments, function($app) {
@@ -302,8 +310,16 @@ class AdminController extends Controller {
         $appointments = $appointmentModel->getAllAppointments(['status' => 'confirmed']);
         
         $healthRecordModel = $this->model('HealthRecord');
-        foreach ($appointments as $app) {
-            $app->prescriptions = $healthRecordModel->getPrescriptionsByAppointment($app->id);
+        if (!empty($appointments)) {
+            $appointment_ids = array_map(function($app) { return $app->id; }, $appointments);
+            $allPrescriptions = $healthRecordModel->getPrescriptionsByAppointmentIds($appointment_ids);
+            $prescriptionsByAppt = [];
+            foreach ($allPrescriptions as $pres) {
+                $prescriptionsByAppt[$pres->appointment_id][] = $pres;
+            }
+            foreach ($appointments as $app) {
+                $app->prescriptions = $prescriptionsByAppt[$app->id] ?? [];
+            }
         }
         
         $waiting_appointments = array_filter($appointments, function($app) {
@@ -348,8 +364,16 @@ class AdminController extends Controller {
         $healthRecordModel = $this->model('HealthRecord');
         while (true) {
             $appointments = $appointmentModel->getAllAppointments(['status' => 'confirmed']);
-            foreach ($appointments as $app) {
-                $app->prescriptions = $healthRecordModel->getPrescriptionsByAppointment($app->id);
+            if (!empty($appointments)) {
+                $appointment_ids = array_map(function($app) { return $app->id; }, $appointments);
+                $allPrescriptions = $healthRecordModel->getPrescriptionsByAppointmentIds($appointment_ids);
+                $prescriptionsByAppt = [];
+                foreach ($allPrescriptions as $pres) {
+                    $prescriptionsByAppt[$pres->appointment_id][] = $pres;
+                }
+                foreach ($appointments as $app) {
+                    $app->prescriptions = $prescriptionsByAppt[$app->id] ?? [];
+                }
             }
             $waiting_appointments = array_filter($appointments, function($app) {
                 $is_boarding = strpos(mb_strtolower($app->category_name), 'trông giữ') !== false;
@@ -937,27 +961,18 @@ class AdminController extends Controller {
             $totalWorkingMinutesToday = 0;
             $todayStr = date('Y-m-d');
             
-            // Hàm lấy duration_minutes từ service_id
-            $db = new Database;
-
             foreach ($appointments as $app) {
                 if (!empty($app->doctor_id) && $app->doctor_id == $doctor_user_id) {
                     $busySlots[] = $app->appointment_date . '_' . $app->appointment_time;
                     if ($app->appointment_date == $todayStr) {
-                        $db->query('SELECT duration_minutes FROM services WHERE id = :id');
-                        $db->bind(':id', $app->service_id);
-                        $svc = $db->single();
-                        $totalWorkingMinutesToday += ($svc && $svc->duration_minutes) ? $svc->duration_minutes : 30;
+                        $totalWorkingMinutesToday += ($app->duration_minutes) ? $app->duration_minutes : 30;
                     }
                 }
             }
             foreach ($completedAppts as $app) {
                 $busySlots[] = $app->appointment_date . '_' . $app->appointment_time;
                 if ($app->appointment_date == $todayStr) {
-                    $db->query('SELECT duration_minutes FROM services WHERE id = :id');
-                    $db->bind(':id', $app->service_id);
-                    $svc = $db->single();
-                    $totalWorkingMinutesToday += ($svc && $svc->duration_minutes) ? $svc->duration_minutes : 30;
+                    $totalWorkingMinutesToday += ($app->duration_minutes) ? $app->duration_minutes : 30;
                 }
             }
 
