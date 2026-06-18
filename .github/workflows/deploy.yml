@@ -26,5 +26,4 @@ jobs:
           **/.git*/**
           .github/**
           database.sql
-          dummy_data.sql
-          advanced_features.sql
+          README.md

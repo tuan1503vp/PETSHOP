@@ -89,14 +89,14 @@ class AiController extends Controller {
         curl_close($ch);
 
         if ($err || !$response) {
-            file_put_contents(APPROOT . '/../ai_debug.log', "CURL Error (OpenRouter): " . $err . "\nResponse: " . $response, FILE_APPEND);
+            error_log("CURL Error (OpenRouter): " . $err);
             return false;
         } else {
             $responseData = json_decode($response, true);
             if (isset($responseData['choices'][0]['message']['content'])) {
                 return $responseData['choices'][0]['message']['content'];
             }
-            file_put_contents(APPROOT . '/../ai_debug.log', "OpenRouter Error: " . json_encode($responseData), FILE_APPEND);
+            error_log("OpenRouter Error: " . json_encode($responseData));
             return false;
         }
     }
