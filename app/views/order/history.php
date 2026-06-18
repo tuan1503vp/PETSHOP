@@ -21,10 +21,21 @@
     openRefundModal(id) {
         this.refundOrderId = id;
         this.showRefundModal = true;
+    },
+
+    showReviewModal: false,
+    reviewApptId: null,
+    rating: 5,
+    comment: '',
+    openReviewModal(id) {
+        this.reviewApptId = id;
+        this.rating = 5;
+        this.comment = '';
+        this.showReviewModal = true;
     }
 }">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+        <?php flash('history_msg'); ?>
         <div class="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
                 <h1 class="text-3xl font-black text-gray-900 tracking-tight">Lịch Sử Hoạt Động</h1>
@@ -233,6 +244,32 @@
 
                         <template x-if="detailData && detailData.type === 'appointment'">
                             <div class="space-y-6">
+                                <!-- Đánh giá lịch hẹn -->
+                                <template x-if="detailData.review">
+                                    <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                                        <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                            <i class="fa-solid fa-star"></i> Đánh giá của bạn
+                                        </p>
+                                        <div class="flex items-center gap-1 mb-2">
+                                            <template x-for="i in 5">
+                                                <i class="fa-solid fa-star text-sm" :class="i <= detailData.review.rating ? 'text-amber-400' : 'text-gray-200'"></i>
+                                            </template>
+                                        </div>
+                                        <p class="text-sm text-amber-900 font-medium italic" x-text="detailData.review.comment || 'Không có bình luận'"></p>
+                                    </div>
+                                </template>
+
+                                <!-- Nút viết đánh giá nếu chưa có -->
+                                <template x-if="detailData.data.status === 'completed' && !detailData.review">
+                                    <div class="bg-amber-50/50 p-4 rounded-2xl border border-dashed border-amber-200 text-center">
+                                        <p class="text-sm text-amber-800 font-bold mb-2">Bạn hài lòng với dịch vụ và bác sĩ chứ?</p>
+                                        <button type="button" @click="openReviewModal(detailData.data.id); showDetails = false"
+                                                class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/10 transition uppercase tracking-wider">
+                                            <i class="fa-solid fa-star mr-1"></i> Viết đánh giá ngay
+                                        </button>
+                                    </div>
+                                </template>
+
                                 <div class="bg-pink-50 p-4 rounded-2xl border border-pink-100">
                                     <p class="text-[10px] font-black text-pink-400 uppercase tracking-widest mb-1">Ghi chú dịch vụ</p>
                                     <p class="text-sm text-pink-900 font-medium leading-relaxed" x-text="detailData.data.notes || 'Không có ghi chú'"></p>
@@ -307,6 +344,48 @@
                         <div class="flex gap-3">
                             <button type="button" @click="showRefundModal = false" class="flex-1 px-6 py-4 rounded-2xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Hủy</button>
                             <button type="submit" class="flex-1 px-6 py-4 rounded-2xl text-sm font-black text-white bg-primary hover:bg-indigo-600 shadow-lg shadow-primary/20 transition-all">Gửi Yêu Cầu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div x-show="showReviewModal" x-cloak class="fixed inset-0 z-[300] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+            <div x-show="showReviewModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showReviewModal = false"></div>
+
+            <div x-show="showReviewModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-middle bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-md w-full animate-fade-in">
+                <div class="bg-white px-8 pt-8 pb-6">
+                    <div class="h-16 w-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-gray-800 text-center mb-2">Đánh Giá Dịch Vụ</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6 px-2">Trải nghiệm của bạn giúp chúng tôi cải thiện chất lượng dịch vụ tốt hơn.</p>
+
+                    <form action="<?php echo URLROOT; ?>/order/review_appointment" method="POST">
+                        <input type="hidden" name="appointment_id" :value="reviewApptId">
+                        
+                        <!-- Star Rating -->
+                        <div class="mb-6 flex justify-center gap-2">
+                            <template x-for="i in 5">
+                                <button type="button" @click="rating = i" class="text-4xl outline-none transition-transform active:scale-90">
+                                    <i class="fa-solid fa-star" :class="i <= rating ? 'text-amber-400' : 'text-gray-200'"></i>
+                                </button>
+                            </template>
+                            <input type="hidden" name="rating" :value="rating">
+                        </div>
+
+                        <!-- Comment -->
+                        <div class="mb-6">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Nhận xét của bạn</label>
+                            <textarea name="comment" x-model="comment" rows="4" placeholder="Nhập cảm nhận của bạn về bác sĩ và dịch vụ..." class="w-full px-5 py-3 rounded-xl border border-gray-100 bg-gray-50 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 resize-none"></textarea>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="button" @click="showReviewModal = false" class="flex-1 px-6 py-4 rounded-2xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Hủy</button>
+                            <button type="submit" class="flex-1 px-6 py-4 rounded-2xl text-sm font-black text-white bg-primary hover:bg-indigo-600 shadow-lg shadow-primary/20 transition-all">Gửi Đánh Giá</button>
                         </div>
                     </form>
                 </div>

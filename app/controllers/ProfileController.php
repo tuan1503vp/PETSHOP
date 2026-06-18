@@ -73,7 +73,7 @@ class ProfileController extends Controller {
                         mkdir($uploadPath, 0777, true);
                     }
                     
-                    if (move_uploaded_file($_FILES['avatar']['tmp_name'], $uploadPath . $avatarName)) {
+                    if (compressImage($_FILES['avatar']['tmp_name'], $uploadPath . $avatarName, 300)) {
                         $avatar = $avatarName;
                         // Delete old avatar if exists
                         $userInfo = $this->userModel->getUserById($user_id);

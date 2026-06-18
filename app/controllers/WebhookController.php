@@ -64,7 +64,6 @@ class WebhookController extends Controller {
                     'type' => 'order'
                 ]);
 
-                // Update inventory and membership like in AdminController
                 // Hoàn thành đơn thì trừ kho
                 $items = $orderModel->getOrderItems($order_id);
                 $productModel = $this->model('Product');
@@ -72,8 +71,8 @@ class WebhookController extends Controller {
                     $productModel->decreaseStock($item->product_id, $item->quantity);
                 }
 
-                // Cập nhật membership không cần ở trạng thái shipping, mà đợi lúc Admin chuyển sang completed.
-                // Ở đây mình chỉ đẩy sang shipping. Admin sau đó sẽ xác nhận giao xong -> completed, thì mới lên hạng.
+                // Cập nhật membership không cần ở trạng thái shipping mà đợi lúc Admin chuyển sang completed
+                // Admin xác nhận giao xong -> completed, lên hạng.
 
                 echo json_encode(['success' => true, 'message' => 'Order approved automatically', 'order_id' => $order_id]);
                 return;

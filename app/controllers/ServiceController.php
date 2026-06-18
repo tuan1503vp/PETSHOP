@@ -101,6 +101,10 @@ class ServiceController extends Controller {
                 $data['services'] = $this->serviceModel->getServices();
                 $data['my_pets'] = $petModel->getPetsByCustomer($_SESSION['user_id']);
                 $data['selected_service'] = $data['service_id'];
+                
+                $reviewModel = $this->model('AppointmentReview');
+                $data['reviews'] = $reviewModel->getReviewsByServiceId($data['service_id']);
+                
                 $this->view('service/book', $data);
             }
         } else {
@@ -114,6 +118,12 @@ class ServiceController extends Controller {
                 $notes = "Triệu chứng từ nhật ký sức khỏe: " . $symptoms;
             }
 
+            $reviews = [];
+            if (!empty($service_id)) {
+                $reviewModel = $this->model('AppointmentReview');
+                $reviews = $reviewModel->getReviewsByServiceId($service_id);
+            }
+
             $data = [
                 'services' => $services,
                 'my_pets' => $my_pets,
@@ -125,10 +135,19 @@ class ServiceController extends Controller {
                 'notes' => $notes,
                 'selected_test' => '',
                 'date_err' => '',
-                'time_err' => ''
+                'time_err' => '',
+                'reviews' => $reviews
             ];
 
             $this->view('service/book', $data);
         }
+    }
+
+    public function get_reviews($service_id) {
+        header('Content-Type: application/json');
+        $reviewModel = $this->model('AppointmentReview');
+        $reviews = $reviewModel->getReviewsByServiceId($service_id);
+        echo json_encode($reviews);
+        exit;
     }
 }

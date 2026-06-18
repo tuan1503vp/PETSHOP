@@ -48,6 +48,7 @@ class AuthController extends Controller {
                     $data['email_err'] = 'Email này đã được sử dụng';
                 }
             }
+            
 
             // Validate Name
             if (empty($data['fullname'])) {

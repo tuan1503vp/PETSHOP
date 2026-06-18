@@ -211,6 +211,33 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
     echo "✅ Checked/Created 'email_logs' table.<br>";
 
+    // 12. product_images table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `product_images` (
+      `id` INT AUTO_INCREMENT PRIMARY KEY,
+      `product_id` INT NOT NULL,
+      `image` VARCHAR(255) NOT NULL,
+      `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+    echo "✅ Checked/Created 'product_images' table.<br>";
+
+    // 13. appointment_reviews table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `appointment_reviews` (
+      `id` INT AUTO_INCREMENT PRIMARY KEY,
+      `appointment_id` INT NOT NULL UNIQUE,
+      `user_id` INT NOT NULL,
+      `service_id` INT NOT NULL,
+      `doctor_id` INT DEFAULT NULL,
+      `rating` INT NOT NULL DEFAULT 5,
+      `comment` TEXT NULL,
+      `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (`appointment_id`) REFERENCES `appointments`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`doctor_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+    echo "✅ Checked/Created 'appointment_reviews' table.<br>";
+
     echo "<br><b style='color:green;'>🎉 Database upgrade completed successfully!</b>";
 } catch (PDOException $e) {
     echo "<br><b style='color:red;'>❌ Database Error:</b> " . $e->getMessage() . "<br>";

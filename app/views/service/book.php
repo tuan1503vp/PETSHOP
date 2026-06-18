@@ -309,6 +309,48 @@
                 </div>
             </div>
         </div>
+
+        <!-- Service Reviews Section -->
+        <div id="reviews-section" class="<?php echo empty($data['reviews']) ? 'hidden' : ''; ?> mt-12 bg-white rounded-3xl p-8 shadow-xl border border-gray-100 reveal">
+            <h3 id="reviews-count-text" class="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-star text-amber-400"></i>
+                Đánh giá từ khách hàng (<?php echo !empty($data['reviews']) ? count($data['reviews']) : 0; ?>)
+            </h3>
+            
+            <div id="reviews-container" class="space-y-6 divide-y divide-gray-100">
+                <?php if(!empty($data['reviews'])): ?>
+                    <?php foreach($data['reviews'] as $review): ?>
+                        <div class="pt-6 first:pt-0">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <img class="w-10 h-10 rounded-full object-cover border border-gray-100" 
+                                         src="<?php echo !empty($review->user_avatar) ? URLROOT . '/public/uploads/avatars/' . $review->user_avatar : 'https://placehold.co/100x100?text=' . urlencode(mb_substr($review->user_name, 0, 1)); ?>" 
+                                         alt="<?php echo htmlspecialchars($review->user_name); ?>">
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-800"><?php echo htmlspecialchars($review->user_name); ?></h4>
+                                        <p class="text-[10px] text-gray-400"><?php echo date('d/m/Y H:i', strtotime($review->created_at)); ?></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <?php for($i = 1; $i <= 5; $i++): ?>
+                                        <i class="fa-solid fa-star text-xs <?php echo $i <= $review->rating ? 'text-amber-400' : 'text-gray-200'; ?>"></i>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
+                            <p class="mt-3 text-sm text-gray-600 font-medium leading-relaxed pl-13">
+                                <?php echo htmlspecialchars($review->comment); ?>
+                            </p>
+                            <?php if(!empty($review->doctor_name)): ?>
+                                <p class="mt-2 text-xs text-indigo-600 font-bold pl-13 flex items-center gap-1">
+                                    <i class="fa-solid fa-user-doctor"></i> Bác sĩ đảm nhận: <?php echo htmlspecialchars($review->doctor_name); ?>
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -319,6 +361,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const timeError = document.getElementById('time_error_msg');
     const timeHint = document.getElementById('time_hint');
     const form = dateInput.closest('form');
+    const serviceSelect = document.getElementById('service_id');
+    const reviewsSection = document.getElementById('reviews-section');
+    const reviewsContainer = document.getElementById('reviews-container');
+    const reviewsCountText = document.getElementById('reviews-count-text');
 
     function getTodayString() {
         const today = new Date();
@@ -407,7 +453,97 @@ document.addEventListener('DOMContentLoaded', function() {
             timeInput.focus();
         }
     });
-    });
+
+    // Xử lý tải động Đánh giá dịch vụ khi chọn dịch vụ khác nhau
+    function fetchAndRenderReviews(serviceId) {
+        if (!serviceId) {
+            reviewsSection.classList.add('hidden');
+            return;
+        }
+        fetch('<?php echo URLROOT; ?>/service/get_reviews/' + serviceId)
+            .then(res => res.json())
+            .then(reviews => {
+                if (reviews && reviews.length > 0) {
+                    reviewsCountText.innerHTML = `<i class="fa-solid fa-star text-amber-400"></i> Đánh giá từ khách hàng (${reviews.length})`;
+                    reviewsContainer.innerHTML = '';
+                    
+                    reviews.forEach(review => {
+                        let starsHtml = '';
+                        for (let i = 1; i <= 5; i++) {
+                            starsHtml += `<i class="fa-solid fa-star text-xs ${i <= review.rating ? 'text-amber-400' : 'text-gray-200'}"></i>`;
+                        }
+                        
+                        let doctorHtml = '';
+                        if (review.doctor_name) {
+                            doctorHtml = `
+                                <p class="mt-2 text-xs text-indigo-600 font-bold pl-13 flex items-center gap-1">
+                                    <i class="fa-solid fa-user-doctor"></i> Bác sĩ đảm nhận: ${escapeHtml(review.doctor_name)}
+                                </p>
+                            `;
+                        }
+                        
+                        const avatarUrl = review.user_avatar 
+                            ? '<?php echo URLROOT; ?>/public/uploads/avatars/' + review.user_avatar
+                            : 'https://placehold.co/100x100?text=' + encodeURIComponent(review.user_name.substring(0, 1));
+                        
+                        const reviewItem = document.createElement('div');
+                        reviewItem.className = 'pt-6 first:pt-0';
+                        reviewItem.innerHTML = `
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <img class="w-10 h-10 rounded-full object-cover border border-gray-100" src="${avatarUrl}" alt="${escapeHtml(review.user_name)}">
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-800">${escapeHtml(review.user_name)}</h4>
+                                        <p class="text-[10px] text-gray-400">${formatDate(review.created_at)}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-0.5">
+                                    ${starsHtml}
+                                </div>
+                            </div>
+                            <p class="mt-3 text-sm text-gray-600 font-medium leading-relaxed pl-13">
+                                ${escapeHtml(review.comment)}
+                            </p>
+                            ${doctorHtml}
+                        `;
+                        reviewsContainer.appendChild(reviewItem);
+                    });
+                    
+                    reviewsSection.classList.remove('hidden');
+                } else {
+                    reviewsSection.classList.add('hidden');
+                }
+            })
+            .catch(err => console.error('Error fetching service reviews:', err));
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
+
+    if (serviceSelect) {
+        serviceSelect.addEventListener('change', function() {
+            fetchAndRenderReviews(this.value);
+        });
+        
+        // Chạy lần đầu nếu đã chọn sẵn một dịch vụ
+        if (serviceSelect.value) {
+            fetchAndRenderReviews(serviceSelect.value);
+        }
+    }
+});
 </script>
 
 <?php require APPROOT . '/views/inc/footer.php'; ?>

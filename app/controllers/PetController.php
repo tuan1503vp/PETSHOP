@@ -78,7 +78,7 @@ class PetController extends Controller {
                 $filename = time() . '_' . $_FILES['image']['name'];
                 $destination = $uploadDir . $filename;
                 
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
+                if (compressImage($_FILES['image']['tmp_name'], $destination, 800)) {
                     $data['image'] = 'pets/' . $filename;
                 }
             }
@@ -170,7 +170,7 @@ class PetController extends Controller {
                 $filename = time() . '_' . $_FILES['image']['name'];
                 $destination = $uploadDir . $filename;
                 
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
+                if (compressImage($_FILES['image']['tmp_name'], $destination, 800)) {
                     // Xóa ảnh cũ
                     if (!empty($pet->image)) {
                         $oldFile = APPROOT . '/../public/images/' . $pet->image;
@@ -459,7 +459,7 @@ class PetController extends Controller {
                 }
                 $filename = time() . '_' . $_FILES['image']['name'];
                 $destination = $uploadDir . $filename;
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
+                if (compressImage($_FILES['image']['tmp_name'], $destination, 800)) {
                     $data['image'] = 'pets/' . $filename;
                 }
             }

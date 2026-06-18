@@ -501,7 +501,7 @@ class AdminController extends Controller {
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 if (is_valid_image($_FILES['image'])) {
                     $image = time() . '_' . $_FILES['image']['name'];
-                    move_uploaded_file($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image);
+                    compressImage($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image, 1000);
                 } else {
                     die("Lỗi: File ảnh không hợp lệ hoặc không đúng định dạng.");
                 }
@@ -526,7 +526,7 @@ class AdminController extends Controller {
                     for ($i = 0; $i < $count; $i++) {
                         if ($files['error'][$i] == 0) {
                             $filename = time() . '_add_' . $i . '_' . $files['name'][$i];
-                            if (move_uploaded_file($files['tmp_name'][$i], APPROOT . '/../public/images/' . $filename)) {
+                            if (compressImage($files['tmp_name'][$i], APPROOT . '/../public/images/' . $filename, 1000)) {
                                 $this->productModel->addProductImage($insertedId, $filename);
                             }
                         }
@@ -558,7 +558,7 @@ class AdminController extends Controller {
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $image = time() . '_' . $_FILES['image']['name'];
-                move_uploaded_file($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image);
+                compressImage($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image, 1000);
             }
 
             $data = [
@@ -594,7 +594,7 @@ class AdminController extends Controller {
                     for ($i = 0; $i < $count; $i++) {
                         if ($files['error'][$i] == 0) {
                             $filename = time() . '_add_' . $i . '_' . $files['name'][$i];
-                            if (move_uploaded_file($files['tmp_name'][$i], APPROOT . '/../public/images/' . $filename)) {
+                            if (compressImage($files['tmp_name'][$i], APPROOT . '/../public/images/' . $filename, 1000)) {
                                 $this->productModel->addProductImage($id, $filename);
                             }
                         }
@@ -1036,7 +1036,7 @@ class AdminController extends Controller {
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $image = time() . '_' . $_FILES['image']['name'];
-                move_uploaded_file($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image);
+                compressImage($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image, 1000);
             }
 
             $data = [
@@ -1075,7 +1075,7 @@ class AdminController extends Controller {
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $image = time() . '_' . $_FILES['image']['name'];
-                move_uploaded_file($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image);
+                compressImage($_FILES['image']['tmp_name'], APPROOT . '/../public/images/' . $image, 1000);
             }
 
             $data = [
@@ -1175,7 +1175,7 @@ class AdminController extends Controller {
             $image = '';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $image = time() . '_' . $_FILES['image']['name'];
-                move_uploaded_file($_FILES['image']['tmp_name'], APPROOT . '/../public/images/employees/' . $image);
+                compressImage($_FILES['image']['tmp_name'], APPROOT . '/../public/images/employees/' . $image, 400);
             }
 
             // 3. Tạo tài khoản User

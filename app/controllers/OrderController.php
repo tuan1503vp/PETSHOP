@@ -233,7 +233,7 @@ class OrderController extends Controller {
             $fileName = 'receipt_' . $order_id . '_' . time() . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
             $destination = $uploadDir . $fileName;
 
-            if (move_uploaded_file($file['tmp_name'], $destination)) {
+            if (compressImage($file['tmp_name'], $destination, 1200)) {
                 // Update database
                 $db = new Database();
                 $db->query("UPDATE orders SET receipt_image = :image WHERE id = :id");
@@ -488,7 +488,12 @@ class OrderController extends Controller {
         if ($type == 'appointment') {
             $appointmentModel = $this->model('Appointment');
             $detail = $appointmentModel->getAppointmentById($id);
-            echo json_encode(['success' => true, 'type' => 'appointment', 'data' => $detail]);
+            
+            // Load review if exists
+            $reviewModel = $this->model('AppointmentReview');
+            $review = $reviewModel->getReviewByAppointmentId($id);
+            
+            echo json_encode(['success' => true, 'type' => 'appointment', 'data' => $detail, 'review' => $review]);
         } else {
             $order = $this->orderModel->getOrderById($id);
             $items = $this->orderModel->getOrderItems($id);
@@ -520,5 +525,52 @@ class OrderController extends Controller {
         }
 
         $this->view('order/invoice', $data);
+    }
+
+    public function review_appointment() {
+        if (!isLoggedIn()) {
+            header('Location: ' . URLROOT . '/auth/login');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $appointment_id = intval($_POST['appointment_id']);
+            $rating = intval($_POST['rating'] ?? 5);
+            $comment = trim($_POST['comment'] ?? '');
+
+            // Load appointment details to get service_id and doctor_id
+            $appointmentModel = $this->model('Appointment');
+            $appointment = $appointmentModel->getAppointmentById($appointment_id);
+
+            if ($appointment && $appointment->customer_id == $_SESSION['user_id'] && $appointment->status == 'completed') {
+                $reviewModel = $this->model('AppointmentReview');
+                
+                // Double check if already reviewed
+                $existing = $reviewModel->getReviewByAppointmentId($appointment_id);
+                if ($existing) {
+                    flash('history_msg', 'Lịch hẹn này đã được đánh giá trước đó.', 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4');
+                } else {
+                    $data = [
+                        'appointment_id' => $appointment_id,
+                        'user_id' => $_SESSION['user_id'],
+                        'service_id' => $appointment->service_id,
+                        'doctor_id' => $appointment->doctor_id,
+                        'rating' => $rating,
+                        'comment' => $comment
+                    ];
+                    
+                    if ($reviewModel->addReview($data)) {
+                        flash('history_msg', 'Cảm ơn bạn đã gửi đánh giá dịch vụ!');
+                    } else {
+                        flash('history_msg', 'Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại.', 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4');
+                    }
+                }
+            } else {
+                flash('history_msg', 'Không tìm thấy lịch hẹn hoặc lịch hẹn chưa hoàn thành.', 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4');
+            }
+        }
+        
+        header('Location: ' . URLROOT . '/order/history');
+        exit;
     }
 }
