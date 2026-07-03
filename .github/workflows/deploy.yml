@@ -1,4 +1,4 @@
-name: Deploy to InfinityFree FTP
+name: Deploy to Mat Bao FTP
 
 on:
   push:
@@ -20,10 +20,15 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: /htdocs/
+        server-dir: /public_html/
         exclude: |
           **/.git*
           **/.git*/**
           .github/**
+          app/config/secrets.php
           database.sql
+          petshop_db.sql
           README.md
+          software_documentation.md
+          huong_dan_xuat_word.md
+
