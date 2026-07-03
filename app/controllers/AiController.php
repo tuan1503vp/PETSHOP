@@ -335,16 +335,25 @@ class AiController extends Controller {
     private function callOpenRouterApiForPetChat($pet, $logs, $message) {
         $apiKey = trim(OPENROUTER_API_KEY);
         
-        // Fetch store products and services
+        // Tối ưu hóa Context: Chỉ lấy sản phẩm phù hợp với loài của bé thú cưng để giảm số lượng tokens gửi lên AI
+        $petSpecies = mb_strtolower($pet->species, 'UTF-8');
+        $productFilter = "";
+        if (strpos($petSpecies, 'chó') !== false || strpos($petSpecies, 'dog') !== false) {
+            $productFilter = " WHERE c.name LIKE '%chó%' OR p.name LIKE '%chó%' ";
+        } else if (strpos($petSpecies, 'mèo') !== false || strpos($petSpecies, 'cat') !== false) {
+            $productFilter = " WHERE c.name LIKE '%mèo%' OR p.name LIKE '%mèo%' ";
+        }
+        
         $db = new Database();
-        $db->query("SELECT p.id, p.name, p.price, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id = c.id");
+        $db->query("SELECT p.id, p.name, p.price, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id = c.id" . $productFilter . " LIMIT 12");
         $products = $db->resultSet();
         $productsList = "";
         foreach ($products as $p) {
             $productsList .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ (Danh mục: " . $p->cat_name . ")\n";
         }
 
-        $db->query("SELECT s.id, s.name, s.price, c.name as cat_name FROM services s LEFT JOIN categories c ON s.category_id = c.id");
+        // Chỉ lấy tối đa 8 dịch vụ để giảm kích thước prompt
+        $db->query("SELECT s.id, s.name, s.price, c.name as cat_name FROM services s LEFT JOIN categories c ON s.category_id = c.id LIMIT 8");
         $services = $db->resultSet();
         $servicesList = "";
         foreach ($services as $s) {
