@@ -33,11 +33,11 @@ if ($host === 'localhost' || strpos($host, '127.0.0.1') !== false) {
     define('DB_PASS', '');
     define('DB_NAME', 'petshop_db');
 } else {
-    // Môi trường Live (InfinityFree Hosting)
-    define('DB_HOST', 'sql302.infinityfree.com');
-    define('DB_USER', 'if0_41982653');
-    define('DB_PASS', 'pF5bZygy7oK');
-    define('DB_NAME', 'if0_41982653_petshop_db');
+    // Môi trường Live (Mắt Bão Hosting)
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'pet11790_petshop');
+    define('DB_PASS', 'YefxppTeAcpMACqCet2a');
+    define('DB_NAME', 'pet11790_petshop');
 }
 
 // Cấu hình AI (OpenRouter API)
