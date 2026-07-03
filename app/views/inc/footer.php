@@ -290,7 +290,10 @@
                         const response = await fetch('<?php echo URLROOT; ?>/ai/chat', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ message: userMsg })
+                            body: JSON.stringify({ 
+                                message: userMsg,
+                                history: this.messages 
+                            })
                         });
                         const data = await response.json();
                         if (data.success && data.reply) {

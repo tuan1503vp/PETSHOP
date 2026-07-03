@@ -122,7 +122,8 @@ class AiController extends Controller {
         }
         
         $message = trim($input['message']);
-        $reply = $this->callOpenRouterApiForChat($message);
+        $history = $input['history'] ?? [];
+        $reply = $this->callOpenRouterApiForChat($message, $history);
         
         if ($reply) {
             echo json_encode(['success' => true, 'reply' => $reply]);
@@ -131,7 +132,7 @@ class AiController extends Controller {
         }
     }
 
-    private function callOpenRouterApiForChat($message) {
+    private function callOpenRouterApiForChat($message, $history = []) {
         $msg_lower = mb_strtolower(trim($message), 'UTF-8');
         
         $db = new Database();
@@ -264,9 +265,111 @@ class AiController extends Controller {
                 return $reply;
             }
         }
+        // Fallback gọi OpenRouter để trả lời mọi câu hỏi tự do
+        $apiKey = trim(OPENROUTER_API_KEY);
+        if (empty($apiKey) || strpos($apiKey, 'sk-or') !== 0) {
+            return "Dạ Pawsy xin lỗi, hình như em chưa hiểu rõ ý của Quý khách lắm ạ. Quý khách có thể vui lòng diễn đạt lại câu hỏi cụ thể hơn giúp em được không ạ?\n\n💬 **Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n🌐 Hoặc xem thêm thông tin tại [Trang Liên Hệ](" . URLROOT . "/contact) ạ!";
+        }
+
+        // Lấy danh sách sản phẩm mẫu làm ngữ cảnh
+        $db->query("SELECT p.id, p.name, p.price, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id = c.id LIMIT 10");
+        $products = $db->resultSet();
+        $productsList = "";
+        foreach ($products as $p) {
+            $productsList .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ (Danh mục: " . $p->cat_name . ")\n";
+        }
+
+        // Lấy danh sách dịch vụ mẫu
+        $db->query("SELECT s.id, s.name, s.price, c.name as cat_name FROM services s LEFT JOIN categories c ON s.category_id = c.id LIMIT 8");
+        $services = $db->resultSet();
+        $servicesList = "";
+        foreach ($services as $s) {
+            $servicesList .= "- [" . $s->name . "](" . URLROOT . "/service/book/" . $s->id . ") - Giá: " . number_format($s->price, 0, ',', '.') . "đ (Danh mục: " . $s->cat_name . ")\n";
+        }
+
+        $systemPrompt = "Bạn là Pawsy - Trợ lý ảo AI chính thức và thông minh của PetShop.\n"
+                      . "Nhiệm vụ của bạn là giải đáp các thắc mắc của khách hàng về cửa hàng PetShop, hỗ trợ họ tìm kiếm thông tin sản phẩm, dịch vụ và giải quyết các câu hỏi chung.\n\n"
+                      . "THÔNG TIN CỬA HÀNG PETSHOP:\n"
+                      . "- Địa chỉ: Số 3, Vũ Công Đán, P.Tứ Minh, Hải Phòng.\n"
+                      . "- Hotline: 0947647052.\n"
+                      . "- Email: nmtvp11223311@gmail.com.\n"
+                      . "- Giờ mở cửa: 8:00 - 21:00 hàng ngày.\n\n"
+                      . "DANH SÁCH SẢN PHẨM NỔI BẬT:\n" . $productsList . "\n"
+                      . "DANH SÁCH DỊCH VỤ NỔI BẬT:\n" . $servicesList . "\n\n"
+                      . "QUY TẮC PHẢN HỒI:\n"
+                      . "- Trả lời ngắn gọn, lịch sự, thân thiện. Luôn xưng hô là 'Dạ Pawsy nghe', gọi khách hàng là 'Quý khách' hoặc 'Anh/Chị'.\n"
+                      . "- Đối với các câu hỏi về giá cả, hãy đề xuất đúng sản phẩm/dịch vụ của cửa hàng kèm link Markdown chính xác (không tự bịa link).\n"
+                      . "- Đối với các câu hỏi về bệnh tật của thú cưng, hãy lịch sự khuyên họ mang bé đến cửa hàng để Bác sĩ Thú y kiểm tra trực tiếp hoặc đặt lịch tại [Dịch vụ Khám & Chữa bệnh](" . URLROOT . "/service/book/5).\n"
+                      . "- Hỗ trợ trả lời bằng tiếng Việt, xuống dòng rõ ràng, dễ đọc bằng Markdown.";
+
+        $url = 'https://openrouter.ai/api/v1/chat/completions';
         
-        // Fallback cuối cùng
-        return "Dạ Pawsy xin lỗi, hình như em chưa hiểu rõ ý của Quý khách lắm ạ. Quý khách có thể vui lòng diễn đạt lại câu hỏi cụ thể hơn giúp em được không ạ?\n\n👉 Hoặc để được giải đáp chi tiết và nhanh chóng nhất, Quý khách vui lòng liên hệ trực tiếp với nhân viên cửa hàng qua các kênh sau nhé:\n💬 **Zalo/Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n🌐 Hoặc xem thêm thông tin tại **[Trang Liên Hệ](" . URLROOT . "/contact)**.\n\nCác bạn tư vấn viên sẽ phản hồi Quý khách ngay lập tức ạ!";
+        $models = [
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "google/gemma-4-31b-it:free",
+            "openrouter/free"
+        ];
+
+        // Xây dựng messages payload động
+        $messagesPayload = [
+            [
+                "role" => "system",
+                "content" => $systemPrompt
+            ]
+        ];
+
+        // Thêm lịch sử hội thoại gần nhất
+        $recentHistory = array_slice($history, -10);
+        foreach ($recentHistory as $msg) {
+            if (!empty($msg['sender']) && !empty($msg['text'])) {
+                $role = ($msg['sender'] === 'user') ? 'user' : 'assistant';
+                $messagesPayload[] = [
+                    "role" => $role,
+                    "content" => $msg['text']
+                ];
+            }
+        }
+
+        // Thêm tin nhắn hiện tại
+        $messagesPayload[] = [
+            "role" => "user",
+            "content" => $message
+        ];
+
+        foreach ($models as $model) {
+            $payload = [
+                "model" => $model,
+                "messages" => $messagesPayload,
+                "temperature" => 0.7
+            ];
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 22);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+                'HTTP-Referer: https://petshop.id.vn',
+                'X-Title: PetShop Global Assistant'
+            ]);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $response = curl_exec($ch);
+            $err = curl_error($ch);
+            curl_close($ch);
+
+            if (!$err && $response) {
+                $responseData = json_decode($response, true);
+                if (!empty($responseData['choices'][0]['message']['content'])) {
+                    return $responseData['choices'][0]['message']['content'];
+                }
+            }
+        }
+
+        return "Dạ Pawsy xin lỗi, hình như em chưa hiểu rõ ý của Quý khách lắm ạ. Quý khách có thể vui lòng diễn đạt lại câu hỏi cụ thể hơn giúp em được không ạ?\n\n💬 **Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n🌐 Hoặc xem thêm thông tại [Trang Liên Hệ](" . URLROOT . "/contact) ạ!";
     }
 
     // Hàm phụ trợ: Bỏ dấu tiếng Việt
