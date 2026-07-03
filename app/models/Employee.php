@@ -65,7 +65,20 @@ class Employee {
 
     // Tự động sinh mã nhân viên dựa theo chức vụ
     public function generateEmployeeCode($role) {
-        $prefix = ($role === 'manager') ? 'QL' : 'NV';
+        switch ($role) {
+            case 'manager':
+                $prefix = 'QL';
+                break;
+            case 'doctor':
+                $prefix = 'BS';
+                break;
+            case 'cashier':
+                $prefix = 'TN';
+                break;
+            default:
+                $prefix = 'NV';
+                break;
+        }
         
         $this->db->query("SELECT employee_code FROM employees WHERE employee_code LIKE :prefix ORDER BY employee_code DESC LIMIT 1");
         $this->db->bind(':prefix', $prefix . '%');
