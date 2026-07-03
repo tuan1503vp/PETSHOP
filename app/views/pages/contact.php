@@ -65,13 +65,19 @@
                         <div>
                             <label for="name" class="block text-sm font-medium text-gray-700">Họ và tên</label>
                             <div class="mt-1">
-                                <input type="text" name="name" id="name" value="<?php echo isset($_SESSION['user_name']) ? $_SESSION['user_name'] : ''; ?>" required class="py-3 px-4 block w-full shadow-sm focus:ring-primary focus:border-primary border-gray-300 rounded-md">
+                                <input type="text" name="name" id="name" 
+                                       value="<?php echo isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name']) : ''; ?>" 
+                                       <?php echo isset($_SESSION['user_id']) ? 'readonly class="py-3 px-4 block w-full shadow-sm focus:ring-primary focus:border-primary border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"' : 'class="py-3 px-4 block w-full shadow-sm focus:ring-primary focus:border-primary border-gray-300 rounded-md"'; ?> 
+                                       required>
                             </div>
                         </div>
                         <div>
                             <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
                             <div class="mt-1">
-                                <input type="email" name="email" id="email" value="<?php echo isset($_SESSION['user_email']) ? $_SESSION['user_email'] : ''; ?>" required class="py-3 px-4 block w-full shadow-sm focus:ring-primary focus:border-primary border-gray-300 rounded-md">
+                                <input type="email" name="email" id="email" 
+                                       value="<?php echo isset($_SESSION['user_email']) ? htmlspecialchars($_SESSION['user_email']) : ''; ?>" 
+                                       <?php echo isset($_SESSION['user_id']) ? 'readonly class="py-3 px-4 block w-full shadow-sm focus:ring-primary focus:border-primary border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"' : 'class="py-3 px-4 block w-full shadow-sm focus:ring-primary focus:border-primary border-gray-300 rounded-md"'; ?> 
+                                       required>
                             </div>
                         </div>
                     </div>
