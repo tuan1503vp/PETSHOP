@@ -78,7 +78,8 @@ class AiController extends Controller {
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Thử tối đa 10 giây cho mỗi model để tránh quá hạn execution time của host
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); // Ngắt kết nối nhanh trong 4 giây nếu server lỗi hoặc không phản hồi
+            curl_setopt($ch, CURLOPT_TIMEOUT, 22); // Cho phép tối đa 22 giây để model phản hồi dữ liệu (tránh bị max_execution_time của host ngắt)
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $apiKey,
@@ -421,7 +422,8 @@ class AiController extends Controller {
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Thử tối đa 10 giây cho mỗi model để tránh quá hạn execution time của host
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); // Ngắt kết nối nhanh trong 4 giây nếu server lỗi hoặc không phản hồi
+            curl_setopt($ch, CURLOPT_TIMEOUT, 22); // Cho phép tối đa 22 giây để model phản hồi dữ liệu (tránh bị max_execution_time của host ngắt)
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $apiKey,
