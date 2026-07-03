@@ -55,8 +55,8 @@ class AiController extends Controller {
         // Danh sách các model dự phòng chạy bằng vòng lặp PHP (Chắc chắn hoạt động kể cả tài khoản free)
         $models = [
             "meta-llama/llama-3.3-70b-instruct:free",
-            "deepseek/deepseek-r1:free",
-            "qwen/qwen-2.5-72b-instruct:free"
+            "google/gemma-4-31b-it:free",
+            "openrouter/free" // Tự động định tuyến tới model free bất kỳ đang hoạt động ổn định nhất
         ];
 
         foreach ($models as $model) {
@@ -398,8 +398,8 @@ class AiController extends Controller {
         
         $models = [
             "meta-llama/llama-3.3-70b-instruct:free",
-            "deepseek/deepseek-r1:free",
-            "qwen/qwen-2.5-72b-instruct:free"
+            "google/gemma-4-31b-it:free",
+            "openrouter/free" // Tự động định tuyến tới model free bất kỳ đang hoạt động ổn định nhất
         ];
 
         foreach ($models as $model) {
