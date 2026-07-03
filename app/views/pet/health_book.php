@@ -27,7 +27,6 @@
 <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8" x-data="{ 
     activeTab: '<?php echo isset($_GET['tab']) ? $_GET['tab'] : 'clinic_records'; ?>', 
     showAddVaccineModal: false, 
-    showAddMilestoneModal: false, 
     petWeight: <?php echo !empty($pet->weight) ? floatval($pet->weight) : 0; ?>, 
     lifeStage: 'adult_neutered', 
     rer: 0, 
@@ -242,11 +241,6 @@
                     :class="activeTab === 'nutrition_ai' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
                 <i class="fa-solid fa-bowl-food mr-2"></i> Dinh dưỡng & Trợ lý AI
-            </button>
-            <button @click="activeTab = 'milestones'; window.history.replaceState(null, null, '?tab=milestones')" 
-                    :class="activeTab === 'milestones' ? 'border-primary text-primary border-b-2 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-4 px-1 text-sm font-semibold border-b-2 transition duration-300 focus:outline-none">
-                <i class="fa-solid fa-timeline mr-2"></i> Cột mốc & Kỷ niệm
             </button>
         </nav>
     </div>
@@ -617,135 +611,8 @@
         </div>
     </div>
 
-    <!-- TAB 5: Milestone Timeline -->
-    <div x-show="activeTab === 'milestones'" x-transition class="space-y-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <h3 class="text-lg font-bold text-gray-900">Kỷ niệm & Cột mốc phát triển</h3>
-                <p class="text-xs text-gray-500 mt-0.5">Lưu giữ những khoảnh khắc đáng nhớ và cột mốc trưởng thành của bé cưng.</p>
-            </div>
-            <button @click="showAddMilestoneModal = true" 
-                    class="inline-flex items-center px-4 py-2 text-xs font-bold text-white bg-primary rounded-xl hover:bg-indigo-700 transition shadow-sm hover:shadow-primary/20">
-                <i class="fa-solid fa-camera mr-1.5"></i> Thêm kỷ niệm
-            </button>
-        </div>
-
-        <?php flash('milestone_message'); ?>
-
-        <?php if (empty($data['milestones'])): ?>
-            <div class="bg-white rounded-[2rem] border border-gray-100 p-12 text-center text-gray-500 shadow-sm">
-                <i class="fa-regular fa-images text-gray-300 text-4xl mb-4 block"></i>
-                <p class="text-sm font-medium">Bé chưa có cột mốc kỷ niệm nào được đăng tải.</p>
-                <button @click="showAddMilestoneModal = true" class="text-xs font-bold text-primary hover:underline mt-2">Đăng ảnh kỷ niệm đầu tiên</button>
-            </div>
-        <?php else: ?>
-            <div class="relative border-l-2 border-slate-100 ml-4 md:ml-8 pl-6 md:pl-10 space-y-10 py-4">
-                <?php foreach ($data['milestones'] as $milestone): ?>
-                    <div class="relative">
-                        <!-- Bullet icon -->
-                        <span class="absolute -left-[35px] md:-left-[51px] top-1.5 bg-white border-4 border-primary/25 w-6 h-6 rounded-full flex items-center justify-center">
-                            <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
-                        </span>
-
-                        <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm hover:shadow-md transition flex flex-col md:flex-row gap-6">
-                            
-                            <?php if (!empty($milestone->image)): ?>
-                                <div class="w-full md:w-48 h-48 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 shrink-0">
-                                    <img src="<?php echo URLROOT . '/public/images/' . $milestone->image; ?>" 
-                                         alt="<?php echo htmlspecialchars($milestone->title); ?>" 
-                                         class="w-full h-full object-cover">
-                                </div>
-                            <?php endif; ?>
-
-                            <div class="flex-1 flex flex-col justify-between">
-                                <div class="space-y-2">
-                                    <div class="flex justify-between items-start">
-                                        <h4 class="text-lg font-black text-gray-900 leading-tight"><?php echo htmlspecialchars($milestone->title); ?></h4>
-                                        <a href="<?php echo URLROOT; ?>/pet/delete_milestone/<?php echo $milestone->id; ?>" 
-                                           onclick="return confirm('Bạn muốn xóa kỷ niệm này?');"
-                                           class="text-red-400 hover:text-red-600 transition p-1">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </a>
-                                    </div>
-                                    <p class="text-xs font-bold text-indigo-600">
-                                        <i class="fa-regular fa-calendar-days mr-1"></i><?php echo date('d/m/Y', strtotime($milestone->milestone_date)); ?>
-                                    </p>
-                                    <p class="text-sm text-gray-600 leading-relaxed font-semibold">
-                                        <?php echo nl2br(htmlspecialchars($milestone->description)); ?>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-
-
-
     <!-- MODAL: Add Vaccination removed for customers -->
     </div>
-
-    <!-- MODAL: Add Milestone -->
-    <div x-show="showAddMilestoneModal" 
-         x-cloak
-         class="fixed inset-0 z-[100] overflow-y-auto flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0">
-        
-        <div class="bg-white rounded-[2rem] max-w-lg w-full overflow-hidden shadow-2xl border border-gray-100" 
-             @click.away="showAddMilestoneModal = false">
-            <div class="p-6 border-b border-gray-50 bg-slate-50/50 flex justify-between items-center">
-                <h3 class="text-lg font-black text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-camera text-primary"></i> Đăng kỷ niệm cột mốc mới
-                </h3>
-                <button @click="showAddMilestoneModal = false" class="text-gray-400 hover:text-gray-600 transition focus:outline-none">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <form action="<?php echo URLROOT; ?>/pet/add_milestone/<?php echo $pet->id; ?>" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 text-sm text-gray-700">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2 sm:col-span-1">
-                        <label for="milestone_title" class="block text-xs font-bold text-gray-600 mb-1.5">Tiêu đề sự kiện <span class="text-red-500">*</span></label>
-                        <input type="text" id="milestone_title" name="title" required placeholder="Ví dụ: Lần đầu đi spa, Sinh nhật 1 tuổi..."
-                               class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    </div>
-                    <div class="col-span-2 sm:col-span-1">
-                        <label for="milestone_date" class="block text-xs font-bold text-gray-600 mb-1.5">Ngày diễn ra <span class="text-red-500">*</span></label>
-                        <input type="date" id="milestone_date" name="milestone_date" value="<?php echo date('Y-m-d'); ?>" required
-                               class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="milestone_desc" class="block text-xs font-bold text-gray-600 mb-1.5">Nhật ký / Mô tả kỷ niệm</label>
-                    <textarea id="milestone_desc" name="description" rows="3" placeholder="Ghi lại cảm xúc hoặc câu chuyện đáng nhớ của bé..."
-                              class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Hình ảnh kỷ niệm</label>
-                    <input type="file" name="image" accept="image/*"
-                           class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                </div>
-
-                <div class="pt-4 border-t border-gray-50 flex justify-end gap-2">
-                    <button type="button" @click="showAddMilestoneModal = false" 
-                            class="px-4 py-2 border border-gray-200 text-gray-500 rounded-xl font-bold hover:bg-slate-50">Hủy</button>
-                    <button type="submit" 
-                            class="px-4 py-2 bg-primary hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-primary/20">Đăng sự kiện</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-</div>
 
 <!-- AI Vaccine Schedule Modal -->
 <div id="ai-vaccine-modal" class="fixed inset-0 z-[100] hidden">
