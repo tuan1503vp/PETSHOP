@@ -24,7 +24,128 @@
 }
 </style>
 
-<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: '<?php echo $_GET['tab'] ?? 'clinic_records'; ?>', showAddVaccineModal: false, showAddMilestoneModal: false, petWeight: <?php echo !empty($pet->weight) ? floatval($pet->weight) : 0; ?>, lifeStage: 'adult_neutered', rer: 0, der: 0, foodRecommend: 0, pateRecommend: 0, aiMessages: [{ sender: 'ai', text: 'Xin chào! Mình là Pawsy, trợ lý AI chăm sóc sức khỏe của bé <?php echo htmlspecialchars($pet->name); ?>. Bạn cần mình tư vấn điều gì về sức khỏe hay dinh dưỡng của bé không?' }], aiInput: '', aiLoading: false, calculateNutrition() { if (this.petWeight <= 0) return; this.rer = Math.round(70 * Math.pow(this.petWeight, 0.75)); let multiplier = 1.6; if (this.lifeStage === 'puppy_kitten') multiplier = 3.0; else if (this.lifeStage === 'adult_intact') multiplier = 1.8; else if (this.lifeStage === 'adult_neutered') multiplier = 1.6; else if (this.lifeStage === 'obese_weight_loss') multiplier = 1.2; this.der = Math.round(this.rer * multiplier); this.foodRecommend = Math.round(this.der * 0.7 / 3.5); this.pateRecommend = Math.round(this.der * 0.3 / 0.9); }, async sendAiMessage() { if (!this.aiInput.trim()) return; const userMsg = this.aiInput; this.aiMessages.push({ sender: 'user', text: userMsg }); this.aiInput = ''; this.aiLoading = true; try { const res = await fetch('<?php echo URLROOT; ?>/ai/pet_chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pet_id: <?php echo $pet->id; ?>, message: userMsg }) }); const data = await res.json(); if (data.success) { this.aiMessages.push({ sender: 'ai', text: data.reply }); } else { this.aiMessages.push({ sender: 'ai', text: 'Có lỗi xảy ra: ' + data.message }); } } catch (e) { this.aiMessages.push({ sender: 'ai', text: 'Không thể kết nối với Pawsy. Vui lòng kiểm tra lại kết nối mạng.' }); } finally { this.aiLoading = false; this.$nextTick(() => { const container = document.getElementById('chatMessages'); if (container) container.scrollTop = container.scrollHeight; }); } }, init() { this.calculateNutrition(); } }">
+<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8" x-data="{ 
+    activeTab: '<?php echo $_GET['tab'] ?? 'clinic_records'; ?>', 
+    showAddVaccineModal: false, 
+    showAddMilestoneModal: false, 
+    petWeight: <?php echo !empty($pet->weight) ? floatval($pet->weight) : 0; ?>, 
+    lifeStage: 'adult_neutered', 
+    rer: 0, 
+    der: 0, 
+    foodRecommend: 0, 
+    pateRecommend: 0, 
+    aiMessages: [], 
+    aiInput: '', 
+    aiLoading: false,
+    hasAnalyzed: false,
+    cacheKey: 'pet_<?php echo $pet->id; ?>_age_<?php echo $pet->age; ?>_wt_<?php echo !empty($pet->weight) ? floatval($pet->weight) : 0; ?>_logs_<?php echo count($data['health_records'] ?? []); ?>',
+
+    calculateNutrition() { 
+        if (this.petWeight <= 0) return; 
+        this.rer = Math.round(70 * Math.pow(this.petWeight, 0.75)); 
+        let multiplier = 1.6; 
+        if (this.lifeStage === 'puppy_kitten') multiplier = 3.0; 
+        else if (this.lifeStage === 'adult_intact') multiplier = 1.8; 
+        else if (this.lifeStage === 'adult_neutered') multiplier = 1.6; 
+        else if (this.lifeStage === 'obese_weight_loss') multiplier = 1.2; 
+        this.der = Math.round(this.rer * multiplier); 
+        this.foodRecommend = Math.round(this.der * 0.7 / 3.5); 
+        this.pateRecommend = Math.round(this.der * 0.3 / 0.9); 
+    },
+
+    checkNutritionCache() {
+        const savedCache = localStorage.getItem('pawsy_nutrition_cache_data');
+        const savedKey = localStorage.getItem('pawsy_nutrition_cache_key');
+        
+        if (savedCache && savedKey === this.cacheKey) {
+            // Nạp lại kết quả phân tích cũ từ cache
+            this.aiMessages = [
+                { sender: 'ai', text: 'Chào Sen! Pawsy đã tìm thấy kết quả phân tích dinh dưỡng gần nhất của bé **<?php echo htmlspecialchars($pet->name); ?>**. Do các thông số sức khỏe của bé không đổi nên Pawsy xin hiển thị lại ngay nhé!' },
+                { sender: 'ai', text: savedCache }
+            ];
+            this.hasAnalyzed = true;
+        } else {
+            // Hiển thị màn hình chào yêu cầu bấm phân tích
+            this.aiMessages = [{ 
+                sender: 'ai', 
+                text: 'Xin chào! Mình là Pawsy, trợ lý AI chăm sóc sức khỏe của bé **<?php echo htmlspecialchars($pet->name); ?>**. \n\nHãy nhấn nút **\"🚀 Bắt đầu Phân tích Dinh dưỡng\"** bên dưới để mình phân tích thể trạng và đưa ra thực đơn khuyến nghị tốt nhất cho bé trước khi chúng ta trò chuyện nhé!' 
+            }];
+            this.hasAnalyzed = false;
+        }
+    },
+
+    async startNutritionAnalysis() {
+        this.aiLoading = true;
+        this.aiMessages.push({ sender: 'ai', text: '*(Hệ thống đang thu thập thông tin cân nặng, độ tuổi và nhật ký sức khỏe để phân tích y khoa...)*' });
+        
+        try {
+            const res = await fetch('<?php echo URLROOT; ?>/ai/pet_chat', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                    pet_id: <?php echo $pet->id; ?>, 
+                    message: 'Hãy phân tích thể trạng, nhu cầu dinh dưỡng và gợi ý chế độ ăn uống tốt nhất dựa theo thông số của bé cưng.' 
+                }) 
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Xóa tin nhắn loading tạm thời
+                this.aiMessages = this.aiMessages.filter(m => !m.text.includes('Hệ thống đang thu thập'));
+                
+                // Lưu kết quả phân tích vào cache
+                localStorage.setItem('pawsy_nutrition_cache_data', data.reply);
+                localStorage.setItem('pawsy_nutrition_cache_key', this.cacheKey);
+                
+                this.aiMessages.push({ sender: 'ai', text: data.reply });
+                this.hasAnalyzed = true;
+            } else {
+                this.aiMessages.push({ sender: 'ai', text: 'Có lỗi xảy ra trong quá trình phân tích: ' + data.message });
+            }
+        } catch (e) {
+            this.aiMessages.push({ sender: 'ai', text: 'Không thể kết nối với Pawsy. Vui lòng kiểm tra lại kết nối mạng.' });
+        } finally {
+            this.aiLoading = false;
+            this.$nextTick(() => {
+                const container = document.getElementById('chatMessages');
+                if (container) container.scrollTop = container.scrollHeight;
+            });
+        }
+    },
+
+    async sendAiMessage() { 
+        if (!this.aiInput.trim()) return; 
+        const userMsg = this.aiInput; 
+        this.aiMessages.push({ sender: 'user', text: userMsg }); 
+        this.aiInput = ''; 
+        this.aiLoading = true; 
+        try { 
+            const res = await fetch('<?php echo URLROOT; ?>/ai/pet_chat', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ pet_id: <?php echo $pet->id; ?>, message: userMsg }) 
+            }); 
+            const data = await res.json(); 
+            if (data.success) { 
+                this.aiMessages.push({ sender: 'ai', text: data.reply }); 
+            } else { 
+                this.aiMessages.push({ sender: 'ai', text: 'Có lỗi xảy ra: ' + data.message }); 
+            } 
+        } catch (e) { 
+            this.aiMessages.push({ sender: 'ai', text: 'Không thể kết nối với Pawsy. Vui lòng kiểm tra lại kết nối mạng.' }); 
+        } finally { 
+            this.aiLoading = false; 
+            this.$nextTick(() => { 
+                const container = document.getElementById('chatMessages'); 
+                if (container) container.scrollTop = container.scrollHeight; 
+            }); 
+        } 
+    }, 
+    
+    init() { 
+        this.calculateNutrition(); 
+        this.checkNutritionCache();
+    } 
+}">
     <!-- Breadcrumb -->
     <nav class="flex text-sm text-gray-500 mb-8" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -468,15 +589,24 @@
                             <span class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay: 0.4s"></span>
                         </div>
                     </div>
+
+                    <!-- Nút Bắt đầu phân tích khi chưa phân tích xong -->
+                    <div x-show="!hasAnalyzed && !aiLoading" class="flex justify-center py-4">
+                        <button @click="startNutritionAnalysis()"
+                                class="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary to-secondary text-white rounded-2xl font-black text-xs hover:shadow-lg hover:shadow-primary/30 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> 🚀 Bắt đầu Phân tích Dinh dưỡng
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Input Area -->
                 <div class="p-4 border-t border-gray-100 bg-white shrink-0">
                     <form @submit.prevent="sendAiMessage()" class="flex gap-2">
-                        <input type="text" x-model="aiInput" placeholder="Ví dụ: Bé mèo 5kg bỏ ăn kèm nôn ói nhẹ nên làm gì?" 
-                               :disabled="aiLoading"
-                               class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs font-semibold">
-                        <button type="submit" :disabled="aiLoading || !aiInput.trim()"
+                        <input type="text" x-model="aiInput" 
+                               :placeholder="hasAnalyzed ? 'Nhập câu hỏi tiếp theo cho Pawsy...' : '⚠️ Vui lòng nhấn nút Phân tích dinh dưỡng phía trên trước...'" 
+                               :disabled="aiLoading || !hasAnalyzed"
+                               class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs font-semibold disabled:bg-slate-50 disabled:text-gray-400">
+                        <button type="submit" :disabled="aiLoading || !aiInput.trim() || !hasAnalyzed"
                                 class="px-4 py-3 bg-primary text-white rounded-xl font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-1.5 shadow-md shadow-primary/20 disabled:opacity-50">
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
