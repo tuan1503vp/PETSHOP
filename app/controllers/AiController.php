@@ -51,54 +51,62 @@ class AiController extends Controller {
         }
 
         $url = 'https://openrouter.ai/api/v1/chat/completions';
-
-        $payload = [
-            "models" => [
-                "meta-llama/llama-3.3-70b-instruct:free",
-                "nousresearch/hermes-3-llama-3.1-405b:free",
-                "google/gemma-4-31b-it:free"
-            ], // Tự động dự phòng tối đa 3 models
-            "messages" => [
-                [
-                    "role" => "system",
-                    "content" => "Bạn là bác sĩ thú y chuyên nghiệp tại PetShop. Hãy phân tích triệu chứng khách hàng cung cấp và đưa ra phản hồi bằng tiếng Việt. Bố cục gồm: 1. Phân tích triệu chứng, 2. Nguyên nhân có thể, 3. Mức độ khẩn cấp, 4. Lời khuyên chăm sóc tại nhà. Luôn nhắc nhở đây chỉ là tư vấn tham khảo."
-                ],
-                [
-                    "role" => "user",
-                    "content" => "Triệu chứng thú cưng của tôi: " . $symptoms
-                ]
-            ],
-            "temperature" => 0.7
+        
+        // Danh sách các model dự phòng chạy bằng vòng lặp PHP (Chắc chắn hoạt động kể cả tài khoản free)
+        $models = [
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "deepseek/deepseek-r1:free",
+            "qwen/qwen-2.5-72b-instruct:free"
         ];
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 45); // Set 45s to avoid host PHP max_execution_time timeout killing the page
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $apiKey,
-            'HTTP-Referer: http://localhost/PETSHOP', // Yêu cầu bởi OpenRouter
-            'X-Title: PetShop AI Doctor'
-        ]);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        foreach ($models as $model) {
+            $payload = [
+                "model" => $model,
+                "messages" => [
+                    [
+                        "role" => "system",
+                        "content" => "Bạn là bác sĩ thú y chuyên nghiệp tại PetShop. Hãy phân tích triệu chứng khách hàng cung cấp và đưa ra phản hồi bằng tiếng Việt. Bố cục gồm: 1. Phân tích triệu chứng, 2. Nguyên nhân có thể, 3. Mức độ khẩn cấp, 4. Lời khuyên chăm sóc tại nhà. Luôn nhắc nhở đây chỉ là tư vấn tham khảo."
+                    ],
+                    [
+                        "role" => "user",
+                        "content" => "Triệu chứng thú cưng của tôi: " . $symptoms
+                    ]
+                ],
+                "temperature" => 0.7
+            ];
 
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 35); // Tối đa 35 giây cho 1 model
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+                'HTTP-Referer: https://petshop.id.vn', 
+                'X-Title: PetShop AI Doctor'
+            ]);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-        if ($err || !$response) {
-            error_log("CURL Error (OpenRouter): " . $err);
-            return false;
-        } else {
-            $responseData = json_decode($response, true);
-            if (isset($responseData['choices'][0]['message']['content'])) {
-                return $responseData['choices'][0]['message']['content'];
+            $response = curl_exec($ch);
+            $err = curl_error($ch);
+            curl_close($ch);
+
+            if (!$err && $response) {
+                $responseData = json_decode($response, true);
+                if (isset($responseData['choices'][0]['message']['content'])) {
+                    // Thành công thì trả về kết quả ngay
+                    return $responseData['choices'][0]['message']['content'];
+                }
+                error_log("OpenRouter Model $model Error: " . json_encode($responseData));
+            } else {
+                error_log("CURL Error for model $model: " . $err);
             }
-            error_log("OpenRouter Error: " . json_encode($responseData));
-            return false;
+            // Nếu lỗi, vòng lặp tiếp tục tự động chuyển qua model kế tiếp
         }
+
+        // Nếu tất cả models đều thất bại
+        return false;
     }
 
     public function chat() {
@@ -387,53 +395,59 @@ class AiController extends Controller {
                       . "- Trình bày câu trả lời gọn gàng, đẹp mắt bằng Markdown, xuống dòng rõ ràng, dễ đọc.";
 
         $url = 'https://openrouter.ai/api/v1/chat/completions';
-        $payload = [
-            "models" => [
-                "meta-llama/llama-3.3-70b-instruct:free",
-                "nousresearch/hermes-3-llama-3.1-405b:free",
-                "google/gemma-4-31b-it:free"
-            ],
-            "messages" => [
-                [
-                    "role" => "system",
-                    "content" => $systemPrompt
-                ],
-                [
-                    "role" => "user",
-                    "content" => $message
-                ]
-            ],
-            "temperature" => 0.7
+        
+        $models = [
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "deepseek/deepseek-r1:free",
+            "qwen/qwen-2.5-72b-instruct:free"
         ];
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $apiKey,
-            'HTTP-Referer: https://petshop.id.vn',
-            'X-Title: PetShop AI Pet Care'
-        ]);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        foreach ($models as $model) {
+            $payload = [
+                "model" => $model,
+                "messages" => [
+                    [
+                        "role" => "system",
+                        "content" => $systemPrompt
+                    ],
+                    [
+                        "role" => "user",
+                        "content" => $message
+                    ]
+                ],
+                "temperature" => 0.7
+            ];
 
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Tối đa 30s cho 1 model
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+                'HTTP-Referer: https://petshop.id.vn',
+                'X-Title: PetShop AI Pet Care'
+            ]);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-        if ($err || !$response) {
-            return "Dạ Pawsy xin lỗi, hệ thống máy chủ AI bên ngoài đang không phản hồi (Lỗi mạng hoặc Hosting chặn kết nối). Xin vui lòng thử lại sau ạ!";
-        } else {
-            $responseData = json_decode($response, true);
-            if (isset($responseData['choices'][0]['message']['content'])) {
-                return $responseData['choices'][0]['message']['content'];
-            } else if (isset($responseData['error'])) {
-                return "Dạ Pawsy xin lỗi, máy chủ AI từ chối kết nối (Mã khóa API có thể đã hết hạn hoặc hết tín dụng). Thông báo từ máy chủ: " . htmlspecialchars($responseData['error']['message'] ?? 'Lỗi không xác định');
+            $response = curl_exec($ch);
+            $err = curl_error($ch);
+            curl_close($ch);
+
+            if (!$err && $response) {
+                $responseData = json_decode($response, true);
+                if (isset($responseData['choices'][0]['message']['content'])) {
+                    return $responseData['choices'][0]['message']['content'];
+                }
+                error_log("OpenRouter PetChat Model $model Error: " . json_encode($responseData));
+            } else {
+                error_log("CURL Error in PetChat for model $model: " . $err);
             }
-            return "Dạ Pawsy xin lỗi, có lỗi không xác định khi nhận dữ liệu từ AI. Xin vui lòng thử lại!";
         }
+
+        // Nếu tất cả models trong danh sách đều lỗi
+        return "Dạ Pawsy xin lỗi, hiện tại toàn bộ hệ thống máy chủ AI bên ngoài đang quá tải hoặc gặp sự cố kết nối. Xin quý khách vui lòng gửi lại câu hỏi sau ít phút ạ!";
     }
 
     public function getVaccineSchedule() {
