@@ -473,51 +473,7 @@
                                 </div>
                                 
                                 <div class="p-6">
-                                    <!-- Membership Tier Progress Bar -->
-                                    <div class="mb-6 bg-slate-50 p-4 rounded-3xl border border-slate-100 shadow-inner">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tiến Trình Thăng Hạng</span>
-                                            <?php if(!empty($next_level)): ?>
-                                                <span class="text-[10px] font-black text-primary bg-primary/10 px-2.5 py-1 rounded-xl">
-                                                    Lên <?php echo $next_level; ?>
-                                                </span>
-                                            <?php else: ?>
-                                                <span class="text-[10px] font-black text-purple-600 bg-purple-100 px-2.5 py-1 rounded-xl animate-pulse">
-                                                    Hạng Đỉnh Cao 👑
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                        
-                                        <!-- Glowing Progress Track -->
-                                        <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden relative shadow-inner mb-3">
-                                            <div class="h-full bg-gradient-to-r from-primary to-indigo-600 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)] transition-all duration-1000"
-                                                 style="width: <?php echo $progress_percent; ?>%"></div>
-                                        </div>
-
-                                        <div class="flex justify-between items-center text-[10px] font-bold text-gray-500">
-                                            <span><?php echo number_format($annual_spent, 0, ',', '.'); ?>đ</span>
-                                            <?php if(!empty($next_level)): ?>
-                                                <span class="text-right">Còn thiếu <?php echo number_format($needed_amount, 0, ',', '.'); ?>đ</span>
-                                            <?php else: ?>
-                                                <span class="text-purple-600">Chúc mừng hội viên cao cấp! 🎉</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-
-
-                                    
-                                    <div class="mb-6">
-                                        <p class="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3 flex items-center">
-                                            <i class="fa-solid fa-star-awesome mr-2 text-secondary text-xs"></i> Đặc quyền
-                                        </p>
-                                        <div class="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/30">
-                                            <p class="text-xs text-indigo-900 font-bold leading-relaxed">
-                                                <?php echo $member->benefit_text ?? 'Mua sắm tích điểm để thăng hạng.'; ?>
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-2 mt-2">
+                                    <div class="space-y-2">
                                         <a href="<?php echo URLROOT; ?>/profile" class="flex items-center justify-between w-full p-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-xl transition border border-gray-100 shadow-sm group">
                                             <div class="flex items-center">
                                                 <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
