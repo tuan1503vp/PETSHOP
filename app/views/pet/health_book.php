@@ -90,7 +90,7 @@
             const data = await res.json();
             if (data.success) {
                 // Xóa tin nhắn loading tạm thời
-                this.aiMessages = this.aiMessages.filter(m => !m.text.includes('Hệ thống đang thu thập'));
+                this.aiMessages = this.aiMessages.filter(function(m) { return !m.text.includes('Hệ thống đang thu thập'); });
                 
                 // Lưu kết quả phân tích vào cache
                 localStorage.setItem('pawsy_nutrition_cache_data', data.reply);
@@ -105,7 +105,7 @@
             this.aiMessages.push({ sender: 'ai', text: 'Không thể kết nối với Pawsy. Vui lòng kiểm tra lại kết nối mạng.' });
         } finally {
             this.aiLoading = false;
-            this.$nextTick(() => {
+            this.$nextTick(function() {
                 const container = document.getElementById('chatMessages');
                 if (container) container.scrollTop = container.scrollHeight;
             });
@@ -134,7 +134,7 @@
             this.aiMessages.push({ sender: 'ai', text: 'Không thể kết nối với Pawsy. Vui lòng kiểm tra lại kết nối mạng.' }); 
         } finally { 
             this.aiLoading = false; 
-            this.$nextTick(() => { 
+            this.$nextTick(function() { 
                 const container = document.getElementById('chatMessages'); 
                 if (container) container.scrollTop = container.scrollHeight; 
             }); 
