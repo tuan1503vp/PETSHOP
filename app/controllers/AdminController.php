@@ -1212,10 +1212,13 @@ class AdminController extends Controller {
             $userId = $userModel->register($userData);
 
             if ($userId) {
+                // Tự động sinh mã nhân viên ở phía server để bảo mật và tránh nhập trùng
+                $generatedCode = $employeeModel->generateEmployeeCode($role);
+
                 // 4. Lưu thông tin nhân viên
                 $employeeData = [
                     'user_id' => $userId,
-                    'employee_code' => trim($_POST['employee_code']),
+                    'employee_code' => $generatedCode,
                     'fullname' => trim($_POST['fullname']),
                     'cccd' => trim($_POST['cccd']),
                     'address' => trim($_POST['address']),
@@ -1240,6 +1243,16 @@ class AdminController extends Controller {
         } else {
             $this->view('admin/employee_form', []);
         }
+    }
+
+    public function get_next_employee_code() {
+        $this->checkAccess(['admin', 'manager']);
+        header('Content-Type: application/json');
+        $role = $_GET['role'] ?? 'staff';
+        $employeeModel = $this->model('Employee');
+        $code = $employeeModel->generateEmployeeCode($role);
+        echo json_encode(['success' => true, 'code' => $code]);
+        exit;
     }
 
     public function employee_delete($id) {

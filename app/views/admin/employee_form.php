@@ -47,9 +47,9 @@
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="employee_code" class="block text-xs font-bold text-gray-400 uppercase mb-2">Mã Nhân Viên <span class="text-red-500">*</span></label>
-                            <input type="text" name="employee_code" id="employee_code" required placeholder="NV001"
-                                   class="w-full px-4 py-3 rounded-xl border border-gray-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition bg-gray-50/50">
+                            <label for="employee_code" class="block text-xs font-bold text-gray-400 uppercase mb-2">Mã Nhân Viên <span class="text-xs text-gray-400 font-medium">(Tự động sinh)</span></label>
+                            <input type="text" name="employee_code" id="employee_code" readonly placeholder="Đang tạo tự động..."
+                                   class="w-full px-4 py-3 rounded-xl border border-gray-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition bg-gray-100 cursor-not-allowed font-bold text-gray-600">
                         </div>
                         <div>
                             <label for="fullname" class="block text-xs font-bold text-gray-400 uppercase mb-2">Họ Và Tên <span class="text-red-500">*</span></label>
@@ -87,5 +87,32 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    const codeInput = document.getElementById('employee_code');
+    
+    async function updateEmployeeCode() {
+        const role = roleSelect.value;
+        codeInput.value = 'Đang sinh mã...';
+        try {
+            const res = await fetch('<?php echo URLROOT; ?>/admin/get_next_employee_code?role=' + role);
+            const data = await res.json();
+            if (data.success && data.code) {
+                codeInput.value = data.code;
+            } else {
+                codeInput.value = '';
+            }
+        } catch (e) {
+            console.error('Lỗi khi lấy mã nhân viên tự động:', e);
+            codeInput.value = '';
+        }
+    }
+    
+    roleSelect.addEventListener('change', updateEmployeeCode);
+    updateEmployeeCode();
+});
+</script>
 
 <?php require APPROOT . '/views/admin/footer.php'; ?>

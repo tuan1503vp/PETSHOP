@@ -62,4 +62,24 @@ class Employee {
         $this->db->bind(':user_id', $user_id);
         return $this->db->single();
     }
+
+    // Tự động sinh mã nhân viên dựa theo chức vụ
+    public function generateEmployeeCode($role) {
+        $prefix = ($role === 'manager') ? 'QL' : 'NV';
+        
+        $this->db->query("SELECT employee_code FROM employees WHERE employee_code LIKE :prefix ORDER BY employee_code DESC LIMIT 1");
+        $this->db->bind(':prefix', $prefix . '%');
+        $row = $this->db->single();
+        
+        if ($row) {
+            $lastCode = $row->employee_code;
+            // Trích xuất phần số từ mã gần nhất
+            $numPart = preg_replace('/[^0-9]/', '', $lastCode);
+            $nextNum = intval($numPart) + 1;
+        } else {
+            $nextNum = 1;
+        }
+        
+        return $prefix . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+    }
 }
