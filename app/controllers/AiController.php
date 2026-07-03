@@ -413,7 +413,7 @@ class AiController extends Controller {
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'Authorization: Bearer ' . $apiKey,
-            'HTTP-Referer: http://localhost/PETSHOP',
+            'HTTP-Referer: https://petshop.id.vn',
             'X-Title: PetShop AI Pet Care'
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));

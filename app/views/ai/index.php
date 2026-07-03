@@ -97,7 +97,7 @@
                         <?php 
                             // Chuyển markdown basic (**, *, \n) thành HTML
                             $text = htmlspecialchars($data['ai_response']);
-                            // Bọc các tiêu đề dạng "1. ...", "2. ...", "3. ...", "4. ..." bằng kiểu khối sang trọng
+                            // Bọc các tiêu đề 
                             $text = preg_replace('/(1\.\s+Phân tích triệu chứng|2\.\s+Nguyên nhân có thể|3\.\s+Mức độ khẩn cấp|4\.\s+Lời khuyên chăm sóc tại nhà)/', '<h4 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mt-6 first:mt-0 pb-2 border-b border-slate-800/60 mb-3">$1</h4>', $text);
                             $text = preg_replace('/\*\*(.*?)\*\*/', '<strong class="text-white font-bold">$1</strong>', $text);
                             $text = preg_replace('/\*([^\*]+)\*/', '<em class="text-indigo-300">$1</em>', $text);

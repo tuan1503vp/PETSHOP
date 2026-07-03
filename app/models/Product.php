@@ -11,7 +11,7 @@ class Product {
         $sql = 'SELECT p.*, c.name as category_name 
                 FROM products p 
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE 1=1';
+                WHERE p.is_deleted = 0';
         
         // Filter by category
         if(!empty($params['category'])) {
@@ -95,7 +95,8 @@ class Product {
         $this->db->query('SELECT p.*, c.name as category_name 
                           FROM products p 
                           LEFT JOIN categories c ON p.category_id = c.id
-                          WHERE p.id = :id');
+                          WHERE p.id = :id 
+						  AND p.is_deleted = 0');
         
         $this->db->bind(':id', $id);
         return $this->db->single();
@@ -155,11 +156,16 @@ class Product {
     }
 
     // Xóa sản phẩm
-    public function deleteProduct($id) {
-        $this->db->query('DELETE FROM products WHERE id = :id');
-        $this->db->bind(':id', $id);
-        return $this->db->execute();
-    }
+    //public function deleteProduct($id) {
+     //   $this->db->query('DELETE FROM products WHERE id = :id');
+      //  $this->db->bind(':id', $id);
+      //  return $this->db->execute();
+ 	//   }
+	public function deleteProduct($id) {
+    $this->db->query('UPDATE products SET is_deleted = 1 WHERE id = :id');
+    $this->db->bind(':id', $id);
+    return $this->db->execute();
+	}
 
     // Cập nhật số lượng tồn kho (đặt số lượng cụ thể)
     public function updateStock($id, $quantity) {
