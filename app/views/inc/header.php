@@ -123,13 +123,15 @@
                     </div>
                     <?php 
                     $current_url = $_SERVER['REQUEST_URI'];
-                    $is_home = (trim($current_url, '/') == 'PETSHOP' || strpos($current_url, '/home') !== false);
+                    $path = trim(str_replace(URLROOT, '', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $current_url), '/');
+                    $is_home = ($path == '' || $path == 'home' || $path == 'home/index' || $path == 'PETSHOP');
                     $is_product = strpos($current_url, '/product') !== false;
                     $is_service = strpos($current_url, '/service') !== false;
                     $is_ai = strpos($current_url, '/ai') !== false;
                     
                     $active_nav = "border-primary text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-bold whitespace-nowrap";
                     $inactive_nav = "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition whitespace-nowrap";
+
                 ?>
                 <div class="hidden sm:ml-6 sm:flex sm:space-x-4 lg:space-x-6">
                     <a href="<?php echo URLROOT; ?>" class="<?php echo $is_home ? $active_nav : $inactive_nav; ?>">
@@ -574,13 +576,15 @@
         <div class="px-4 pt-2 pb-6 space-y-1">
             <?php 
                 $m_current = $_SERVER['REQUEST_URI'];
-                $m_is_home = (trim($m_current, '/') == 'PETSHOP' || strpos($m_current, '/home') !== false);
+                $m_path = trim(str_replace(URLROOT, '', (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $m_current), '/');
+                $m_is_home = ($m_path == '' || $m_path == 'home' || $m_path == 'home/index' || $m_path == 'PETSHOP');
                 $m_is_product = strpos($m_current, '/product') !== false;
                 $m_is_service = strpos($m_current, '/service') !== false;
                 $m_is_ai = strpos($m_current, '/ai') !== false;
                 $m_active = "bg-indigo-50 dark:bg-indigo-900/30 text-primary dark:text-indigo-400 block px-3 py-3 rounded-xl text-base font-black border-l-4 border-primary";
                 $m_inactive = "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white block px-3 py-3 rounded-xl text-base font-bold transition-colors";
             ?>
+
             <a href="<?php echo URLROOT; ?>" class="<?php echo $m_is_home ? $m_active : $m_inactive; ?>">
                 <i class="fa-solid fa-house w-6 text-center"></i> Trang chủ
             </a>
