@@ -39,6 +39,7 @@ if (!function_exists('buildProductUrl')) {
                 <input type="hidden" name="target_pet" id="filter_target_pet" value="<?php echo htmlspecialchars($data['params']['target_pet']); ?>">
                 <input type="hidden" name="price_min" id="filter_price_min" value="<?php echo htmlspecialchars($data['params']['price_min']); ?>">
                 <input type="hidden" name="price_max" id="filter_price_max" value="<?php echo htmlspecialchars($data['params']['price_max']); ?>">
+                <input type="hidden" name="pet_id" id="filter_pet_id" value="<?php echo htmlspecialchars($data['params']['pet_id'] ?? ''); ?>">
                 
                 <div class="relative flex-1 md:w-72">
                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 dark:text-slate-400 pointer-events-none">
@@ -60,6 +61,41 @@ if (!function_exists('buildProductUrl')) {
                 </button>
             </form>
         </div>
+
+        <?php if (isLoggedIn() && !empty($data['userPets'])): ?>
+            <!-- Pet Selector Bar -->
+            <div class="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm mb-8">
+                <p class="text-xs font-black text-gray-400 dark:text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <i class="fa-solid fa-paw text-primary animate-bounce"></i> Mua sắm riêng cho bé cưng của bạn
+                </p>
+                <div class="flex items-center gap-4 overflow-x-auto py-1">
+                    <?php foreach ($data['userPets'] as $pet): ?>
+                        <?php 
+                            $isSelected = !empty($data['selectedPet']) && $data['selectedPet']->id == $pet->id;
+                            $petUrl = buildProductUrl($data, ['pet_id' => $isSelected ? '' : $pet->id]); 
+                        ?>
+                        <a href="<?php echo $petUrl; ?>" 
+                           class="flex items-center gap-3 px-4 py-2 border rounded-2xl transition duration-300 select-pet-btn hover:shadow-md cursor-pointer shrink-0 <?php echo $isSelected ? 'bg-primary text-white border-primary shadow-lg shadow-primary/25' : 'bg-white text-gray-700 border-gray-100 hover:border-primary'; ?>">
+                            <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-100 shrink-0 bg-slate-50">
+                                <?php if (!empty($pet->image)): ?>
+                                    <img src="<?php echo URLROOT . '/public/images/' . $pet->image; ?>" alt="<?php echo htmlspecialchars($pet->name); ?>" class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                        <i class="fa-solid fa-paw"></i>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-xs font-black"><?php echo htmlspecialchars($pet->name); ?></p>
+                                <p class="text-[9px] font-bold opacity-80 uppercase tracking-wider">
+                                    <?php echo htmlspecialchars($pet->species); ?>
+                                </p>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <script>
             // Advanced Seamless Catalog Filtering (AJAX / Fetch API)
@@ -105,8 +141,9 @@ if (!function_exists('buildProductUrl')) {
                 const target_pet = document.getElementById('filter_target_pet').value;
                 const price_min = document.getElementById('filter_price_min').value;
                 const price_max = document.getElementById('filter_price_max').value;
+                const pet_id = document.getElementById('filter_pet_id') ? document.getElementById('filter_pet_id').value : '';
                 
-                const url = `<?php echo URLROOT; ?>/product?category=${category}&sort=${sort}&search=${search}&target_pet=${target_pet}&price_min=${price_min}&price_max=${price_max}`;
+                const url = `<?php echo URLROOT; ?>/product?category=${category}&sort=${sort}&search=${search}&target_pet=${target_pet}&price_min=${price_min}&price_max=${price_max}&pet_id=${pet_id}`;
                 fetchCatalog(url);
             }
 
@@ -135,6 +172,7 @@ if (!function_exists('buildProductUrl')) {
             // Lắng nghe click danh mục, đối tượng, khoảng giá và nút xóa tìm kiếm
             document.addEventListener('click', (e) => {
                 const catLink = e.target.closest('aside a');
+                const petLink = e.target.closest('.select-pet-btn');
                 const clearBtn = e.target.closest('.clear-search');
                 if(catLink) {
                     e.preventDefault();
@@ -148,8 +186,31 @@ if (!function_exists('buildProductUrl')) {
                         document.getElementById('filter_target_pet').value = urlParams.get('target_pet') || '';
                         document.getElementById('filter_price_min').value = urlParams.get('price_min') || '';
                         document.getElementById('filter_price_max').value = urlParams.get('price_max') || '';
+                        if(document.getElementById('filter_pet_id')) {
+                            document.getElementById('filter_pet_id').value = urlParams.get('pet_id') || '';
+                        }
                     } catch(err) {
                         console.error('Error syncing filter parameters:', err);
+                    }
+                } else if(petLink) {
+                    e.preventDefault();
+                    fetchCatalog(petLink.href);
+                    try {
+                        const urlParams = new URLSearchParams(petLink.href.split('?')[1]);
+                        if(document.getElementById('filter_pet_id')) {
+                            document.getElementById('filter_pet_id').value = urlParams.get('pet_id') || '';
+                        }
+                        document.getElementById('filter_target_pet').value = urlParams.get('target_pet') || '';
+                        
+                        // Cập nhật class active/inactive của nút chọn thú cưng
+                        document.querySelectorAll('.select-pet-btn').forEach(btn => {
+                            btn.className = 'flex items-center gap-3 px-4 py-2 border rounded-2xl transition duration-300 select-pet-btn hover:shadow-md cursor-pointer shrink-0 bg-white text-gray-700 border-gray-100 hover:border-primary';
+                        });
+                        if (urlParams.get('pet_id')) {
+                            petLink.className = 'flex items-center gap-3 px-4 py-2 border rounded-2xl transition duration-300 select-pet-btn hover:shadow-md cursor-pointer shrink-0 bg-primary text-white border-primary shadow-lg shadow-primary/25';
+                        }
+                    } catch(err) {
+                        console.error('Error syncing pet parameters:', err);
                     }
                 } else if(clearBtn) {
                     e.preventDefault();
@@ -322,6 +383,15 @@ if (!function_exists('buildProductUrl')) {
                                             <i class="<?php echo $isWished ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-base transition-all duration-300"></i>
                                         </button>
                                     </div>
+                                    <?php endif; ?>
+
+                                    <!-- Recommendation Badge (bottom-left) -->
+                                    <?php if(!empty($data['selectedPet']) && isset($product->is_recommended) && $product->is_recommended): ?>
+                                        <div class="absolute bottom-3 left-3 z-10">
+                                            <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-orange-500/20">
+                                                <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> Đề xuất cho <?php echo htmlspecialchars($data['selectedPet']->name); ?>
+                                            </span>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
 

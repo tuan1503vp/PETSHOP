@@ -81,6 +81,58 @@
     </div>
 </section>
 
+<!-- TAB 0: Personalized Product Recommendations -->
+<?php if (!empty($data['recommendedPet']) && !empty($data['recommendedProducts'])): ?>
+<section class="py-16 bg-slate-50/50 border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10 reveal">
+            <span class="inline-flex items-center px-4 py-1.5 mb-3 text-[10px] font-black tracking-widest text-primary uppercase bg-indigo-50 rounded-full border border-indigo-100 shadow-sm">
+                <i class="fa-solid fa-gift mr-1.5"></i> Dành riêng cho bé
+            </span>
+            <h2 class="text-3xl font-black text-gray-900 tracking-tight">Đề xuất mua sắm cho bé <?php echo htmlspecialchars($data['recommendedPet']->name); ?></h2>
+            <p class="text-xs text-gray-500 mt-2">Dựa trên loài <?php echo htmlspecialchars($data['recommendedPet']->species); ?> và thể trạng thực tế của bé cưng.</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <?php foreach($data['recommendedProducts'] as $product): ?>
+                <div onclick="window.location.href='<?php echo URLROOT; ?>/product/show/<?php echo $product->id; ?>'"
+                     class="group relative flex flex-col bg-white border border-gray-100 rounded-[2rem] p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer reveal">
+                    <!-- Image Container -->
+                    <div class="relative w-full aspect-square overflow-hidden bg-slate-50 rounded-2xl mb-4 border border-slate-50">
+                        <img src="<?php echo !empty($product->image) ? URLROOT . '/public/images/' . $product->image : 'https://placehold.co/400x400?text=' . urlencode($product->name); ?>" 
+                             alt="<?php echo htmlspecialchars($product->name); ?>" 
+                             class="w-full h-full object-center object-cover group-hover:scale-105 transition-transform duration-500">
+                        
+                        <!-- Recommendation Tag -->
+                        <div class="absolute bottom-2.5 left-2.5">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] font-black uppercase tracking-wider rounded-lg shadow-md shadow-orange-500/10">
+                                <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> Khuyên dùng
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                                <?php echo htmlspecialchars($product->category_name ?? 'Cửa hàng'); ?>
+                            </span>
+                            <h3 class="text-sm font-black text-gray-800 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                                <?php echo htmlspecialchars($product->name); ?>
+                            </h3>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
+                            <span class="text-sm font-black text-primary"><?php echo number_format($product->price, 0, ',', '.'); ?>đ</span>
+                            <span class="text-[10px] font-black text-indigo-600 hover:underline">Chi tiết</span>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
 <!-- Services Grid -->
 <section class="py-24 max-w-7xl mx-auto px-4">
     <div class="text-center mb-16 reveal">
