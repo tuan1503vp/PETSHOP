@@ -25,7 +25,7 @@
 </style>
 
 <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8" x-data="{ 
-    activeTab: '<?php echo $_GET['tab'] ?? 'clinic_records'; ?>', 
+    activeTab: '<?php echo isset($_GET['tab']) ? $_GET['tab'] : 'clinic_records'; ?>', 
     showAddVaccineModal: false, 
     showAddMilestoneModal: false, 
     petWeight: <?php echo !empty($pet->weight) ? floatval($pet->weight) : 0; ?>, 
@@ -38,7 +38,7 @@
     aiInput: '', 
     aiLoading: false,
     hasAnalyzed: false,
-    cacheKey: 'pet_<?php echo $pet->id; ?>_age_<?php echo $pet->age; ?>_wt_<?php echo !empty($pet->weight) ? floatval($pet->weight) : 0; ?>_logs_<?php echo count($data['health_records'] ?? []); ?>',
+    cacheKey: 'pet_<?php echo $pet->id; ?>_age_<?php echo $pet->age; ?>_wt_<?php echo !empty($pet->weight) ? floatval($pet->weight) : 0; ?>_logs_<?php echo count($data['records'] ?? []); ?>',
 
     calculateNutrition() { 
         if (this.petWeight <= 0) return; 
