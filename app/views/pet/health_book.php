@@ -68,7 +68,7 @@
             // Hiển thị màn hình chào yêu cầu bấm phân tích
             this.aiMessages = [{ 
                 sender: 'ai', 
-                text: 'Xin chào! Mình là Pawsy, trợ lý AI chăm sóc sức khỏe của bé **<?php echo htmlspecialchars($pet->name); ?>**. \n\nHãy nhấn nút **\"🚀 Bắt đầu Phân tích Dinh dưỡng\"** bên dưới để mình phân tích thể trạng và đưa ra thực đơn khuyến nghị tốt nhất cho bé trước khi chúng ta trò chuyện nhé!' 
+                text: 'Xin chào! Mình là Pawsy, trợ lý AI chăm sóc sức khỏe của bé **<?php echo htmlspecialchars($pet->name); ?>**. \n\nHãy nhấn nút **🚀 Bắt đầu Phân tích Dinh dưỡng** bên dưới để mình phân tích thể trạng và đưa ra thực đơn khuyến nghị tốt nhất cho bé trước khi chúng ta trò chuyện nhé!' 
             }];
             this.hasAnalyzed = false;
         }
