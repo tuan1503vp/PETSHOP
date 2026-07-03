@@ -151,7 +151,7 @@ class AiController extends Controller {
         }
         
         // Hỏi về bác sĩ / y tế / bệnh
-        if (strpos($msg_lower, 'bệnh') !== false || strpos($msg_no_accent, 'benh') !== false || strpos($msg_lower, 'ốm') !== false || strpos($msg_no_accent, 'om') !== false || strpos($msg_lower, 'bác sĩ') !== false || strpos($msg_lower, 'bác sỹ') !== false || strpos($msg_no_accent, 'bac si') !== false || strpos($msg_no_accent, 'bac sy') !== false || strpos($msg_lower, 'khám') !== false || strpos($msg_no_accent, 'kham') !== false || strpos($msg_lower, 'tiêm') !== false || strpos($msg_no_accent, 'tiem') !== false) {
+        if (strpos($msg_lower, 'bệnh') !== false || strpos($msg_no_accent, 'benh') !== false || strpos($msg_lower, 'ốm') !== false || strpos($msg_no_accent, 'om') !== false || strpos($msg_lower, 'bác sĩ') !== false || strpos($msg_lower, 'bác sỹ') !== false || strpos($msg_no_accent, 'bac si') !== false || strpos($msg_no_accent, 'bac sy') !== false || strpos($msg_lower, 'khám') !== false || strpos($msg_no_accent, 'kham') !== false || strpos($msg_lower, 'tiêm') !== false || preg_match('/\b(tiem phong|tiem vacxin|tiem ngua)\b/i', $msg_no_accent)) {
             return "Dạ đối với các vấn đề về y tế và khám chữa bệnh, Quý khách nên đăng ký lịch hẹn để Bác sĩ Thú y kiểm tra trực tiếp cho bé ạ.\n\n👉 Quý khách có thể xem và đặt lịch tại đây: [Dịch vụ Khám & Chữa bệnh](" . URLROOT . "/service/book/5)\n👉 Hoặc sử dụng tính năng [Bác sĩ AI](" . URLROOT . "/ai) để được tư vấn phác đồ phòng bệnh chuyên sâu nhé!";
         }
         
@@ -175,7 +175,7 @@ class AiController extends Controller {
         }
 
         // Hỏi về thức ăn / hạt / pate
-        if (strpos($msg_lower, 'thức ăn') !== false || strpos($msg_no_accent, 'thuc an') !== false || strpos($msg_lower, 'hạt') !== false || strpos($msg_no_accent, 'hat') !== false || strpos($msg_lower, 'pate') !== false || strpos($msg_lower, 'đồ ăn') !== false || strpos($msg_no_accent, 'do an') !== false) {
+        if (strpos($msg_lower, 'thức ăn') !== false || strpos($msg_no_accent, 'thuc an') !== false || strpos($msg_lower, 'hạt') !== false || preg_match('/\bhat\b/i', $msg_no_accent) || strpos($msg_lower, 'pate') !== false || strpos($msg_lower, 'đồ ăn') !== false || strpos($msg_no_accent, 'do an') !== false) {
             // Lấy 4 sản phẩm ngẫu nhiên thuộc danh mục thức ăn chó / mèo (1, 2)
             $db->query("SELECT id, name, price FROM products WHERE category_id IN (1, 2) ORDER BY RAND() LIMIT 4");
             $products = $db->resultSet();
