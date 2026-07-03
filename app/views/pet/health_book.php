@@ -53,16 +53,30 @@
     },
 
     checkNutritionCache() {
-        const savedCache = localStorage.getItem('pawsy_nutrition_cache_data');
+        const savedHistory = localStorage.getItem('pawsy_chat_history_pet_<?php echo $pet->id; ?>');
         const savedKey = localStorage.getItem('pawsy_nutrition_cache_key');
         
+        // Nếu có lịch sử chat được lưu trữ và thông số pet chưa đổi -> khôi phục lại toàn bộ cuộc hội thoại cũ
+        if (savedHistory && savedKey === this.cacheKey) {
+            try {
+                this.aiMessages = JSON.parse(savedHistory);
+                this.hasAnalyzed = true;
+                return;
+            } catch (e) {
+                console.error('Error parsing chat history:', e);
+            }
+        }
+        
+        // Trường hợp không có lịch sử nhưng có kết quả phân tích cũ hợp lệ
+        const savedCache = localStorage.getItem('pawsy_nutrition_cache_data');
         if (savedCache && savedKey === this.cacheKey) {
-            // Nạp lại kết quả phân tích cũ từ cache
             this.aiMessages = [
                 { sender: 'ai', text: 'Chào Sen! Pawsy đã tìm thấy kết quả phân tích dinh dưỡng gần nhất của bé **<?php echo htmlspecialchars($pet->name); ?>**. Do các thông số sức khỏe của bé không đổi nên Pawsy xin hiển thị lại ngay nhé!' },
                 { sender: 'ai', text: savedCache }
             ];
             this.hasAnalyzed = true;
+            // Lưu ngay vào lịch sử chat
+            localStorage.setItem('pawsy_chat_history_pet_<?php echo $pet->id; ?>', JSON.stringify(this.aiMessages));
         } else {
             // Hiển thị màn hình chào yêu cầu bấm phân tích
             this.aiMessages = [{ 
@@ -70,6 +84,8 @@
                 text: 'Xin chào! Mình là Pawsy, trợ lý AI chăm sóc sức khỏe của bé **<?php echo htmlspecialchars($pet->name); ?>**. \n\nHãy nhấn nút **🚀 Bắt đầu Phân tích Dinh dưỡng** bên dưới để mình phân tích thể trạng và đưa ra thực đơn khuyến nghị tốt nhất cho bé trước khi chúng ta trò chuyện nhé!' 
             }];
             this.hasAnalyzed = false;
+            // Xóa lịch sử cũ vì thông số pet đã thay đổi (cần phân tích lại)
+            localStorage.removeItem('pawsy_chat_history_pet_<?php echo $pet->id; ?>');
         }
     },
 
@@ -83,7 +99,8 @@
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ 
                     pet_id: <?php echo $pet->id; ?>, 
-                    message: 'Hãy phân tích thể trạng, nhu cầu dinh dưỡng và gợi ý chế độ ăn uống tốt nhất dựa theo thông số của bé cưng.' 
+                    message: 'Hãy phân tích thể trạng, nhu cầu dinh dưỡng và gợi ý chế độ ăn uống tốt nhất dựa theo thông số của bé cưng.',
+                    history: []
                 }) 
             });
             const data = await res.json();
@@ -97,6 +114,9 @@
                 
                 this.aiMessages.push({ sender: 'ai', text: data.reply });
                 this.hasAnalyzed = true;
+                
+                // Lưu lịch sử chat
+                localStorage.setItem('pawsy_chat_history_pet_<?php echo $pet->id; ?>', JSON.stringify(this.aiMessages));
             } else {
                 this.aiMessages.push({ sender: 'ai', text: 'Có lỗi xảy ra trong quá trình phân tích: ' + data.message });
             }
@@ -117,15 +137,30 @@
         this.aiMessages.push({ sender: 'user', text: userMsg }); 
         this.aiInput = ''; 
         this.aiLoading = true; 
+        
+        // Lưu lịch sử chat tạm thời (chứa tin nhắn user)
+        localStorage.setItem('pawsy_chat_history_pet_<?php echo $pet->id; ?>', JSON.stringify(this.aiMessages));
+        
+        this.$nextTick(function() { 
+            const container = document.getElementById('chatMessages'); 
+            if (container) container.scrollTop = container.scrollHeight; 
+        });
+
         try { 
             const res = await fetch('<?php echo URLROOT; ?>/ai/pet_chat', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ pet_id: <?php echo $pet->id; ?>, message: userMsg }) 
+                body: JSON.stringify({ 
+                    pet_id: <?php echo $pet->id; ?>, 
+                    message: userMsg,
+                    history: this.aiMessages 
+                }) 
             }); 
             const data = await res.json(); 
             if (data.success) { 
                 this.aiMessages.push({ sender: 'ai', text: data.reply }); 
+                // Lưu lịch sử chat hoàn chỉnh (có tin nhắn AI phản hồi)
+                localStorage.setItem('pawsy_chat_history_pet_<?php echo $pet->id; ?>', JSON.stringify(this.aiMessages));
             } else { 
                 this.aiMessages.push({ sender: 'ai', text: 'Có lỗi xảy ra: ' + data.message }); 
             } 

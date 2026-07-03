@@ -307,6 +307,7 @@ class AiController extends Controller {
         
         $petId = intval($input['pet_id']);
         $message = trim($input['message']);
+        $history = $input['history'] ?? [];
         
         // Lấy thông tin thú cưng
         $petModel = $this->model('Pet');
@@ -323,7 +324,7 @@ class AiController extends Controller {
         // Lấy tối đa 5 logs
         $logs = array_slice($logs, 0, 5);
         
-        $reply = $this->callOpenRouterApiForPetChat($pet, $logs, $message);
+        $reply = $this->callOpenRouterApiForPetChat($pet, $logs, $message, $history);
         
         if ($reply) {
             echo json_encode(['success' => true, 'reply' => $reply]);
@@ -332,7 +333,7 @@ class AiController extends Controller {
         }
     }
 
-    private function callOpenRouterApiForPetChat($pet, $logs, $message) {
+    private function callOpenRouterApiForPetChat($pet, $logs, $message, $history = []) {
         $apiKey = trim(OPENROUTER_API_KEY);
         
         // Tối ưu hóa Context: Chỉ lấy sản phẩm phù hợp với loài của bé thú cưng để giảm số lượng tokens gửi lên AI
@@ -412,19 +413,41 @@ class AiController extends Controller {
             "openrouter/free" // Tự động định tuyến tới model free bất kỳ đang hoạt động ổn định nhất
         ];
 
+        // Xây dựng danh sách tin nhắn bao gồm cả lịch sử trò chuyện để giữ ngữ cảnh
+        $messagesPayload = [
+            [
+                "role" => "system",
+                "content" => $systemPrompt
+            ]
+        ];
+
+        // Lấy tối đa 10 tin nhắn lịch sử gần nhất để gửi kèm
+        $recentHistory = array_slice($history, -10);
+        foreach ($recentHistory as $msg) {
+            if (!empty($msg['sender']) && !empty($msg['text'])) {
+                // Bỏ qua tin nhắn loading tạm thời
+                if (strpos($msg['text'], '*(Hệ thống đang thu thập') !== false) {
+                    continue;
+                }
+                
+                $role = ($msg['sender'] === 'user') ? 'user' : 'assistant';
+                $messagesPayload[] = [
+                    "role" => $role,
+                    "content" => $msg['text']
+                ];
+            }
+        }
+
+        // Thêm tin nhắn mới nhất của người dùng
+        $messagesPayload[] = [
+            "role" => "user",
+            "content" => $message
+        ];
+
         foreach ($models as $model) {
             $payload = [
                 "model" => $model,
-                "messages" => [
-                    [
-                        "role" => "system",
-                        "content" => $systemPrompt
-                    ],
-                    [
-                        "role" => "user",
-                        "content" => $message
-                    ]
-                ],
+                "messages" => $messagesPayload,
                 "temperature" => 0.7
             ];
 
