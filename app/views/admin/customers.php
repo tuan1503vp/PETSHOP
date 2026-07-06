@@ -127,7 +127,6 @@
             </tbody>
         </table>
     </div>
-    </div>
 
     <!-- Modal Chi Tiết Khách Hàng -->
     <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
