@@ -270,7 +270,7 @@
                 </li>
                 <?php endif; ?>
 
-                <?php if($_SESSION['user_role'] == 'manager'): ?>
+                <?php if($_SESSION['user_role'] == 'admin' || $_SESSION['user_role'] == 'manager'): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/inventory" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/inventory') !== false ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-warehouse w-6"></i>
@@ -293,21 +293,6 @@
                     <a href="<?php echo URLROOT; ?>/admin/payroll" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/payroll') !== false ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-money-check-dollar w-6"></i>
                         <span>Bảng lương</span>
-                    </a>
-                </li>
-                <?php endif; ?>
-
-                <?php if($_SESSION['user_role'] == 'admin'): ?>
-                <li>
-                    <a href="<?php echo URLROOT; ?>/admin/attendance_history" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/attendance_history') !== false ? $active_class : $inactive_class; ?>">
-                        <i class="fa-solid fa-table-list w-6"></i>
-                        <span>Lịch sử Chấm công</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?php echo URLROOT; ?>/admin/payroll" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/payroll') !== false ? $active_class : $inactive_class; ?>">
-                        <i class="fa-solid fa-money-check-dollar w-6"></i>
-                        <span>Báo cáo Bảng lương</span>
                     </a>
                 </li>
                 <?php endif; ?>

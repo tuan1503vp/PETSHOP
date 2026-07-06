@@ -319,7 +319,7 @@
                             <?php elseif(!($data['is_doctor_view'] ?? false) && $_SESSION['user_role'] != 'cashier'): ?>
                             <?php /* Admin/Manager: Phân công */ ?>
                             <button type="button" @click="openModal(<?php echo htmlspecialchars(json_encode($app)); ?>)" class="text-indigo-600 hover:text-indigo-900 font-bold text-sm">
-                                <?php echo ($_SESSION['user_role'] == 'manager') ? 'Xem' : 'Phân công'; ?>
+                                <?php echo (in_array($_SESSION['user_role'], ['admin', 'manager'])) ? 'Phân công' : 'Xem'; ?>
                             </button>
                             <?php endif; ?>
                         </td>

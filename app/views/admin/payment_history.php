@@ -25,7 +25,7 @@
                 <tr>
                     <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Mã Đơn</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Khách hàng</th>
-                    <?php if($_SESSION['user_role'] == 'manager'): ?>
+                    <?php if($_SESSION['user_role'] == 'manager' || $_SESSION['user_role'] == 'admin'): ?>
                     <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Sản phẩm</th>
                     <?php endif; ?>
                     <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Tổng tiền</th>
@@ -36,14 +36,14 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
                 <?php if(empty($data['orders'])): ?>
-                <tr><td colspan="<?php echo $_SESSION['user_role'] == 'manager' ? '7' : '6'; ?>" class="px-6 py-12 text-center text-gray-400 font-bold">Không có đơn hàng nào</td></tr>
+                <tr><td colspan="<?php echo ($_SESSION['user_role'] == 'manager' || $_SESSION['user_role'] == 'admin') ? '7' : '6'; ?>" class="px-6 py-12 text-center text-gray-400 font-bold">Không có đơn hàng nào</td></tr>
                 <?php else: ?>
                     <?php foreach($data['orders'] as $order): ?>
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4"><span class="text-xs font-black text-gray-400">#<?php echo str_pad($order->id, 5, '0', STR_PAD_LEFT); ?></span></td>
                         <td class="px-6 py-4"><span class="text-sm font-bold text-gray-700"><?php echo $order->customer_name ?? 'Khách lẻ'; ?></span></td>
                         
-                        <?php if($_SESSION['user_role'] == 'manager'): ?>
+                        <?php if($_SESSION['user_role'] == 'manager' || $_SESSION['user_role'] == 'admin'): ?>
                         <td class="px-6 py-4">
                             <div class="space-y-1">
                                 <?php if(!empty($order->items)): ?>

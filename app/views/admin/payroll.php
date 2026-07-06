@@ -37,9 +37,7 @@
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Thưởng chuyên cần</th>
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Khấu trừ</th>
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Thực lĩnh</th>
-                    <?php if($_SESSION['user_role'] != 'admin'): ?>
                     <th class="px-8 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-widest">Thao tác</th>
-                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
@@ -54,22 +52,7 @@
                     <?php $current_base = $p->base_salary ?? $p->last_base_salary ?? 0; ?>
                     <?php $total = ($current_base) + ($p->bonus ?? 0) - ($p->deductions ?? 0); ?>
 
-                    <?php if($_SESSION['user_role'] == 'admin'): ?>
-                        <!-- Admin: chỉ xem, không chỉnh sửa -->
-                        <td class="px-8 py-6 whitespace-nowrap">
-                            <span class="text-sm font-bold text-gray-700"><?php echo number_format($current_base, 0, ',', '.'); ?> đ</span>
-                        </td>
-                        <td class="px-8 py-6 whitespace-nowrap">
-                            <span class="text-sm font-bold text-green-600"><?php echo number_format($p->bonus ?? 0, 0, ',', '.'); ?> đ</span>
-                        </td>
-                        <td class="px-8 py-6 whitespace-nowrap">
-                            <span class="text-sm font-bold text-red-500"><?php echo number_format($p->deductions ?? 0, 0, ',', '.'); ?> đ</span>
-                        </td>
-                        <td class="px-8 py-6 whitespace-nowrap">
-                            <span class="text-sm font-black text-indigo-600"><?php echo number_format($total, 0, ',', '.'); ?> đ</span>
-                        </td>
-                    <?php else: ?>
-                        <!-- Manager: chỉnh sửa được -->
+                        <!-- Quyền cập nhật bảng lương (Admin & Manager) -->
                         <form action="<?php echo URLROOT; ?>/admin/payroll_save" method="POST" class="contents">
                             <input type="hidden" name="user_id" value="<?php echo $p->user_id; ?>">
                             <input type="hidden" name="month" value="<?php echo $data['current_month']; ?>">
@@ -95,7 +78,6 @@
                                 </button>
                             </td>
                         </form>
-                    <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
