@@ -1147,6 +1147,70 @@ class AdminController extends Controller {
         $this->view('admin/customers', ['customers' => $customers]);
     }
 
+    public function customer_details($id) {
+        $this->checkAccess();
+        header('Content-Type: application/json');
+        
+        $userModel = $this->model('User');
+        $customer = $userModel->getUserById($id);
+        
+        if (!$customer) {
+            echo json_encode(['success' => false, 'message' => 'Không tìm thấy khách hàng.']);
+            exit;
+        }
+        
+        // Lấy thông tin chi tiết mua sắm & chi tiêu
+        $db = new Database();
+        $db->query("SELECT 
+                        COALESCE(SUM(total_amount), 0) as total_spent,
+                        COALESCE(SUM(CASE WHEN YEAR(created_at) = YEAR(NOW()) THEN total_amount ELSE 0 END), 0) as annual_spent
+                    FROM orders 
+                    WHERE customer_id = :id AND status = 'completed'");
+        $db->bind(':id', $id);
+        $spendStats = $db->single();
+        $customer->total_spent = $spendStats->total_spent;
+        $customer->annual_spent = $spendStats->annual_spent;
+
+        // Lấy danh sách thú cưng của khách hàng
+        $petModel = $this->model('Pet');
+        $pets = $petModel->getPetsByCustomer($id);
+        
+        // Lấy danh sách đơn hàng gần đây
+        $orderModel = $this->model('Order');
+        $db->query("SELECT o.* FROM orders o WHERE o.customer_id = :id ORDER BY o.created_at DESC LIMIT 10");
+        $db->bind(':id', $id);
+        $orders = $db->resultSet();
+        // Lấy items cho từng đơn hàng
+        foreach ($orders as &$o) {
+            $o->items = $orderModel->getOrderItems($o->id);
+            $o->formatted_date = date('d/m/Y H:i', strtotime($o->created_at));
+        }
+        unset($o);
+
+        // Lấy danh sách lịch hẹn gần đây
+        $db->query("SELECT a.*, s.name as service_name 
+                    FROM appointments a 
+                    JOIN services s ON a.service_id = s.id 
+                    WHERE a.customer_id = :id 
+                    ORDER BY a.appointment_date DESC, a.appointment_time DESC 
+                    LIMIT 10");
+        $db->bind(':id', $id);
+        $appointments = $db->resultSet();
+        foreach ($appointments as &$a) {
+            $a->formatted_date = date('d/m/Y', strtotime($a->appointment_date)) . ' ' . $a->appointment_time;
+        }
+        unset($a);
+        
+        echo json_encode([
+            'success' => true,
+            'customer' => $customer,
+            'pets' => $pets,
+            'orders' => $orders,
+            'appointments' => $appointments
+        ]);
+        exit;
+    }
+
     public function customer_delete($id) {
         $this->checkAccess();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
