@@ -50,7 +50,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans flex h-screen overflow-hidden">
+<body class="bg-gray-100 font-sans flex h-screen overflow-hidden" x-data="{ mobileSidebarOpen: false }">
     <!-- Sidebar -->
     <?php 
         $current_url = $_SERVER['REQUEST_URI'];
@@ -99,12 +99,24 @@
             }
         }
     ?>
-    <aside class="w-64 bg-gradient-to-b from-dark to-darker text-white flex flex-col h-full hidden md:flex shadow-xl z-20">
-        <div class="p-6 flex items-center border-b border-white/5">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20 mr-3">
-                <i class="fa-solid fa-paw text-white text-xl"></i>
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false"
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300">
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+           class="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-dark to-darker text-white flex flex-col h-full transform md:transform-none md:relative transition-transform duration-300 ease-in-out shadow-xl z-40 md:z-20">
+        <div class="p-6 flex items-center justify-between border-b border-white/5">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20 mr-3">
+                    <i class="fa-solid fa-paw text-white text-xl"></i>
+                </div>
+                <span class="text-xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">PETSHOP</span>
             </div>
-            <span class="text-xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">PETSHOP</span>
+            <button @click="mobileSidebarOpen = false" class="text-gray-400 hover:text-white md:hidden focus:outline-none">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
         </div>
         <div class="p-4 flex-1 overflow-y-auto no-scrollbar">
             <ul class="space-y-2">
@@ -342,7 +354,7 @@
         <!-- Top header for mobile / Breadcrumbs -->
         <header class="bg-white/80 backdrop-blur-md shadow-sm z-10 flex items-center justify-between p-4 lg:px-8 h-16 border-b border-gray-100/50 sticky top-0">
             <div class="flex items-center md:hidden">
-                <button class="text-gray-500 hover:text-gray-700">
+                <button @click="mobileSidebarOpen = true" class="text-gray-500 hover:text-gray-700 focus:outline-none">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <span class="ml-4 text-lg font-bold text-gray-900">PETSHOP</span>
