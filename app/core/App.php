@@ -5,6 +5,16 @@ class App {
     protected $params = [];
 
     public function __construct() {
+        // Tự động hủy các đơn hàng trực tuyến chưa thanh toán sau 1 tiếng
+        $db = new Database();
+        $db->query("UPDATE orders 
+                    SET status = 'cancelled', 
+                        cancel_reason = 'Hệ thống tự động hủy đơn do quá hạn thanh toán 1 tiếng.' 
+                    WHERE status = 'pending' 
+                      AND payment_method IN ('transfer', 'vnpay') 
+                      AND created_at <= DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+        $db->execute();
+
         $url = $this->parseUrl();
 
         // Kiểm tra controller
