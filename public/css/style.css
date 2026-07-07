@@ -182,3 +182,9 @@ html.dark .glass {
     background: rgba(15, 23, 42, 0.7) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
 }
+
+/* Ẩn nút hiển thị mật khẩu mặc định của trình duyệt (ví dụ: Microsoft Edge, IE) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
