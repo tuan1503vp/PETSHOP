@@ -8,7 +8,7 @@ define('BANK_ACCOUNT', '0947647052');
 define('BANK_OWNER',   'NGUYEN MINH TUAN');
 define('BANK_BRANCH',  'Hội sở');
 // ================================
-$transfer_content = 'PETSHOP ' . str_pad($_SESSION['user_id'], 4, '0', STR_PAD_LEFT);
+$transfer_content = 'PS' . str_pad($_SESSION['user_id'], 4, '0', STR_PAD_LEFT);
 $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-compact2.jpg'
         . '?amount=' . urlencode($data['total'])
         . '&addInfo=' . urlencode($transfer_content)

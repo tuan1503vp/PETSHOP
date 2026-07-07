@@ -32,7 +32,7 @@ class WebhookController extends Controller {
 
         // Extract Order ID using regex. Pattern: PETSHOP followed by spaces/zeros then digits
         // Example: PETSHOP 000123, PETSHOP00123, PETSHOP123
-        if (preg_match('/PETSHOP\s*0*(\d+)/', $content, $matches)) {
+        if (preg_match('/(?:PETSHOP|PETSH|PS)\s*0*(\d+)/i', $content, $matches)) {
             $order_id = (int)$matches[1];
 
             $orderModel = $this->model('Order');
