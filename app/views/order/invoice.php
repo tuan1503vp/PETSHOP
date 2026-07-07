@@ -33,10 +33,49 @@
             </div>
             <div class="text-right">
                 <h2 class="text-xl font-black text-gray-900 uppercase tracking-widest mb-1">Hóa đơn</h2>
-                <p class="text-sm font-bold text-indigo-600 mb-4">#<?php echo $data['type'] == 'order' ? 'ORD-'.str_pad($data['order']->id, 5, '0', STR_PAD_LEFT) : 'SRV-'.str_pad($data['detail']->id, 5, '0', STR_PAD_LEFT); ?></p>
-                <div class="text-xs text-gray-400 font-medium">
+                <p class="text-sm font-bold text-indigo-600 mb-2">#<?php echo $data['type'] == 'order' ? 'ORD-'.str_pad($data['order']->id, 5, '0', STR_PAD_LEFT) : 'SRV-'.str_pad($data['detail']->id, 5, '0', STR_PAD_LEFT); ?></p>
+                <div class="text-xs text-gray-400 font-medium space-y-1">
                     <p>Ngày lập: <?php echo date('d/m/Y H:i'); ?></p>
-                    <p>Phương thức: <?php echo $data['type'] == 'order' ? strtoupper($data['order']->payment_method) : 'Tiền mặt'; ?></p>
+                    <p>Phương thức: <?php 
+                        if ($data['type'] == 'order') {
+                            $pm = $data['order']->payment_method;
+                            echo $pm == 'cash' ? 'Tiền mặt (COD)' : ($pm == 'vnpay' ? 'VNPay' : 'Chuyển khoản QR');
+                        } else {
+                            echo 'Tiền mặt';
+                        }
+                    ?></p>
+                </div>
+                <div class="mt-3">
+                    <?php 
+                        $status_label = 'Chưa thanh toán';
+                        $status_color = 'text-red-600 border-red-200 bg-red-50';
+                        
+                        if ($data['type'] == 'order') {
+                            $order = $data['order'];
+                            if ($order->status == 'completed' || $order->status == 'shipping') {
+                                $status_label = 'Đã thanh toán';
+                                $status_color = 'text-green-600 border-green-200 bg-green-50';
+                            } elseif ($order->payment_method == 'cash') {
+                                $status_label = 'Thanh toán COD';
+                                $status_color = 'text-blue-600 border-blue-200 bg-blue-50';
+                            } else {
+                                $status_label = 'Chờ thanh toán';
+                                $status_color = 'text-orange-600 border-orange-200 bg-orange-50';
+                            }
+                        } else {
+                            $appt = $data['detail'];
+                            if ($appt->status == 'completed') {
+                                $status_label = 'Đã thanh toán';
+                                $status_color = 'text-green-600 border-green-200 bg-green-50';
+                            } else {
+                                $status_label = 'Chưa thanh toán';
+                                $status_color = 'text-red-600 border-red-200 bg-red-50';
+                            }
+                        }
+                    ?>
+                    <span class="inline-block px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg border <?php echo $status_color; ?>">
+                        <?php echo $status_label; ?>
+                    </span>
                 </div>
             </div>
         </div>

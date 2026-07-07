@@ -167,6 +167,12 @@
                                 <?php echo $item->type == 'order' ? ($item->order_type == 'pos' ? 'Mua tại cửa hàng' : 'Mua trực tuyến') : 'Dịch vụ tại trung tâm'; ?>
                             </span>
                             <div class="flex gap-2 items-center">
+                                <?php if($item->type == 'order' && $item->status == 'pending' && in_array($item->payment_method, ['transfer', 'vnpay'])): ?>
+                                    <a href="<?php echo URLROOT; ?>/order/success/<?php echo $item->id; ?>" class="px-4 py-2 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl hover:bg-emerald-600 hover:text-white transition shadow-sm border border-emerald-100 flex items-center">
+                                        <i class="fa-solid fa-credit-card mr-1.5"></i> Thanh toán ngay
+                                    </a>
+                                <?php endif; ?>
+
                                 <?php if($item->type == 'order' && $item->status == 'cancelled' && in_array($item->payment_method, ['transfer', 'vnpay'])): ?>
                                     <?php if($item->refund_status == 'none'): ?>
                                         <button @click="openRefundModal(<?php echo $item->id; ?>)" class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-600 hover:text-white transition shadow-sm border border-red-100">Yêu cầu hoàn tiền</button>
