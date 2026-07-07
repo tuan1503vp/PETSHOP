@@ -220,45 +220,31 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2 flex-wrap mb-1">
-                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider <?php echo $order->order_type == 'online' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-orange-50 text-orange-600 border border-orange-100'; ?>">
-                                            <?php echo $order->order_type == 'online' ? 'Online' : 'POS'; ?>
-                                        </span>
                                         <?php if($order->payment_method === 'transfer'): ?>
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider <?php echo $isPendingTransfer ? 'bg-amber-100 text-amber-700 animate-pulse' : 'bg-green-100 text-green-700'; ?>">
-                                                <i class="fa-solid fa-building-columns"></i>
-                                                <?php echo $isPendingTransfer ? 'Chờ CK' : 'Đã CK'; ?>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                                                <i class="fa-solid fa-building-columns"></i> Chuyển khoản
                                             </span>
-                                            <?php if($order->refund_status === 'pending'): ?>
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-700 border border-red-200 animate-pulse shadow-sm">
-                                                    Y/C Hoàn tiền
-                                                </span>
-                                            <?php elseif($order->refund_status === 'completed'): ?>
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-600">
-                                                    Đã hoàn tiền
-                                                </span>
-                                            <?php endif; ?>
                                         <?php elseif($order->payment_method === 'vnpay'): ?>
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider
-                                                <?php echo $isVNPayPaid ? 'bg-blue-100 text-blue-700 border border-blue-200' : ($isVNPayPending ? 'bg-amber-100 text-amber-700 animate-pulse' : 'bg-gray-100 text-gray-500'); ?>">
-                                                <i class="fa-solid fa-credit-card"></i>
-                                                <?php
-                                                    if ($isVNPayPaid)    echo 'VNPay ✓';
-                                                    elseif ($isVNPayPending) echo 'VNPay...';
-                                                    else echo 'VNPay';
-                                                ?>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                                                <i class="fa-solid fa-credit-card"></i> VNPay
                                             </span>
-                                            <?php if($order->refund_status === 'pending'): ?>
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-700 border border-red-200 animate-pulse">
-                                                    <i class="fa-solid fa-rotate-left"></i> Hoàn tiền VNPay
-                                                </span>
-                                            <?php elseif($order->refund_status === 'completed'): ?>
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-gray-100 text-gray-500">
-                                                    Đã hoàn tiền
-                                                </span>
-                                            <?php endif; ?>
                                         <?php elseif($order->payment_method === 'cod'): ?>
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-gray-100 text-gray-500">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
                                                 <i class="fa-solid fa-money-bill-wave"></i> COD
+                                            </span>
+                                        <?php elseif($order->payment_method === 'cash'): ?>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                                                <i class="fa-solid fa-wallet"></i> Tiền mặt
+                                            </span>
+                                        <?php endif; ?>
+
+                                        <?php if($order->refund_status === 'pending'): ?>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-red-100 text-red-700 border border-red-200 animate-pulse shadow-sm">
+                                                Y/C Hoàn tiền
+                                            </span>
+                                        <?php elseif($order->refund_status === 'completed'): ?>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gray-100 text-gray-600">
+                                                Đã hoàn tiền
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -294,8 +280,12 @@
                                                 <i class="fa-solid fa-ban"></i> Đã hủy
                                             </span>
                                             <?php if($isPaidOrder): ?>
-                                                <span class="text-[8px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-200">
-                                                    Đã thanh toán trước đó
+                                                <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                                    <i class="fa-solid fa-circle-check"></i> Đã thanh toán
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200">
+                                                    <i class="fa-regular fa-clock"></i> Chưa thanh toán
                                                 </span>
                                             <?php endif; ?>
                                         <?php elseif($isPaidOrder): ?>
@@ -344,17 +334,25 @@
                                     </button>
                                     <?php endif; ?>
                                     
-                                    <?php if($isPendingTransfer): ?>
-                                    <button type="button" @click="openApproveModal(<?php echo htmlspecialchars(json_encode($order)); ?>)"
-                                            class="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-black rounded-xl shadow-sm shadow-green-200 transition-all hover:shadow-green-300">
-                                        <i class="fa-solid fa-circle-check"></i> Duyệt CK
-                                    </button>
-                                    <?php endif; ?>
-                                    <button type="button"
-                                            @click="openModal(<?php echo htmlspecialchars(json_encode($order)); ?>)"
-                                            class="text-gray-400 hover:text-primary transition" title="Xem chi tiết">
-                                        <i class="fa-solid fa-eye text-lg"></i>
-                                    </button>
+                                    <?php if($order->status === 'cancelled' && $isPaidOrder && $order->refund_status !== 'completed'): ?>
+                                     <button type="button" @click="openModal(<?php echo htmlspecialchars(json_encode($order)); ?>)"
+                                             class="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black rounded-xl shadow-sm shadow-red-200 transition-all hover:shadow-red-300"
+                                             title="Xử lý hoàn tiền">
+                                         <i class="fa-solid fa-rotate-left"></i> Hoàn tiền
+                                     </button>
+                                     <?php endif; ?>
+
+                                     <?php if($isPendingTransfer): ?>
+                                     <button type="button" @click="openApproveModal(<?php echo htmlspecialchars(json_encode($order)); ?>)"
+                                             class="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-black rounded-xl shadow-sm shadow-green-200 transition-all hover:shadow-green-300">
+                                         <i class="fa-solid fa-circle-check"></i> Duyệt CK
+                                     </button>
+                                     <?php endif; ?>
+                                     <button type="button"
+                                             @click="openModal(<?php echo htmlspecialchars(json_encode($order)); ?>)"
+                                             class="text-gray-400 hover:text-primary transition" title="Xem chi tiết">
+                                         <i class="fa-solid fa-eye text-lg"></i>
+                                     </button>
                                 </div>
                             </td>
                                 </tr>
@@ -528,6 +526,23 @@
                                 <p class="text-sm font-black text-gray-800" x-text="selectedOrder?.refund_name"></p>
                             </div>
                         </div>
+                    </div>
+                </template>
+
+                <!-- Admin manual refund option for paid cancelled orders where customer hasn't submitted details yet -->
+                <template x-if="selectedOrder?.status === 'cancelled' && selectedOrder?.refund_status === 'none' && parseFloat(selectedOrder?.paid_amount) > 0">
+                    <div class="mb-6 p-5 rounded-2xl bg-red-50 border border-red-200 flex justify-between items-center gap-4">
+                        <div>
+                            <h4 class="text-sm font-black text-red-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-exclamation"></i> Đơn hàng đã được thanh toán
+                            </h4>
+                            <p class="text-xs text-red-600 mt-1">Khách hàng chưa điền tài khoản nhận hoàn tiền. Bạn vẫn có thể ghi nhận đã hoàn tiền thủ công sau khi chuyển khoản cho khách.</p>
+                        </div>
+                        <form :action="'<?php echo URLROOT; ?>/admin/complete_refund/' + selectedOrder?.id" method="POST" onsubmit="return confirm('Bạn muốn xác nhận đã hoàn tiền thủ công cho khách hàng này?');">
+                            <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-xl shadow-sm whitespace-nowrap">
+                                <i class="fa-solid fa-circle-check mr-1"></i> Xác nhận hoàn tiền
+                            </button>
+                        </form>
                     </div>
                 </template>
 
