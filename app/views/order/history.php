@@ -23,6 +23,13 @@
         this.showRefundModal = true;
     },
 
+    showCancelRefundModal: false,
+    cancelRefundOrderId: null,
+    openCancelRefundModal(id) {
+        this.cancelRefundOrderId = id;
+        this.showCancelRefundModal = true;
+    },
+
     showReviewModal: false,
     reviewApptId: null,
     rating: 5,
@@ -168,11 +175,17 @@
                             </span>
                             <div class="flex gap-2 items-center">
                                 <?php if($item->type == 'order' && in_array($item->status, ['pending', 'shipping'])): ?>
-                                    <form action="<?php echo URLROOT; ?>/order/cancel/<?php echo $item->id; ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')" class="inline">
-                                        <button type="submit" class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-600 hover:text-white transition shadow-sm border border-red-100 flex items-center">
+                                    <?php if($item->status == 'pending'): ?>
+                                        <form action="<?php echo URLROOT; ?>/order/cancel/<?php echo $item->id; ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')" class="inline">
+                                            <button type="submit" class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-600 hover:text-white transition shadow-sm border border-red-100 flex items-center">
+                                                <i class="fa-solid fa-trash-can mr-1.5"></i> Hủy đơn
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <button type="button" @click="openCancelRefundModal(<?php echo $item->id; ?>)" class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-600 hover:text-white transition shadow-sm border border-red-100 flex items-center">
                                             <i class="fa-solid fa-trash-can mr-1.5"></i> Hủy đơn
                                         </button>
-                                    </form>
+                                    <?php endif; ?>
                                 <?php endif; ?>
 
                                 <?php if($item->type == 'order' && $item->status == 'pending' && in_array($item->payment_method, ['transfer', 'vnpay'])): ?>
@@ -358,6 +371,43 @@
                         <div class="flex gap-3">
                             <button type="button" @click="showRefundModal = false" class="flex-1 px-6 py-4 rounded-2xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Hủy</button>
                             <button type="submit" class="flex-1 px-6 py-4 rounded-2xl text-sm font-black text-white bg-primary hover:bg-indigo-600 shadow-lg shadow-primary/20 transition-all">Gửi Yêu Cầu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel & Refund Modal for Paid Orders -->
+    <div x-show="showCancelRefundModal" x-cloak class="fixed inset-0 z-[300] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+            <div x-show="showCancelRefundModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showCancelRefundModal = false"></div>
+
+            <div x-show="showCancelRefundModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-middle bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-md w-full">
+                <div class="bg-white px-8 pt-8 pb-6">
+                    <div class="h-16 w-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto animate-pulse">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-gray-800 text-center mb-2">Hủy Đơn & Hoàn Tiền</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6 px-2">Đơn hàng này đã được thanh toán. Sau khi hủy, hệ thống sẽ tự động gửi yêu cầu hoàn tiền. Vui lòng nhập thông tin ngân hàng thụ hưởng:</p>
+
+                    <form :action="'<?php echo URLROOT; ?>/order/cancel/' + cancelRefundOrderId" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này và gửi thông tin hoàn tiền?')">
+                        <div class="mb-4">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Ngân hàng thụ hưởng</label>
+                            <input type="text" name="refund_bank" required placeholder="VD: Vietcombank, MB Bank..." class="w-full px-5 py-3 rounded-xl border border-gray-100 bg-gray-50 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Số tài khoản</label>
+                            <input type="text" name="refund_account" required placeholder="Nhập số tài khoản" class="w-full px-5 py-3 rounded-xl border border-gray-100 bg-gray-50 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Tên chủ tài khoản</label>
+                            <input type="text" name="refund_name" required placeholder="VIET HOA CHU KHONG DAU" class="w-full px-5 py-3 rounded-xl border border-gray-100 bg-gray-50 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20 uppercase">
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="button" @click="showCancelRefundModal = false" class="flex-1 px-6 py-4 rounded-2xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Quay lại</button>
+                            <button type="submit" class="flex-1 px-6 py-4 rounded-2xl text-sm font-black text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all">Xác Nhận Hủy</button>
                         </div>
                     </form>
                 </div>

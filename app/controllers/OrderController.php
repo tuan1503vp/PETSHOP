@@ -589,9 +589,32 @@ class OrderController extends Controller {
             return;
         }
 
-        $reason = 'Khách hàng tự hủy đơn hàng qua lịch sử mua hàng.';
+        $refund_bank = isset($_POST['refund_bank']) ? trim($_POST['refund_bank']) : null;
+        $refund_account = isset($_POST['refund_account']) ? trim($_POST['refund_account']) : null;
+        $refund_name = isset($_POST['refund_name']) ? trim($_POST['refund_name']) : null;
 
-        if ($this->orderModel->updateStatusWithReason($order_id, 'cancelled', $reason)) {
+        $db = new Database();
+        $success = false;
+
+        if ($refund_bank && $refund_account && $refund_name) {
+            $db->query("UPDATE orders 
+                        SET status = 'cancelled', 
+                            cancel_reason = 'Khách hàng tự hủy đơn hàng và yêu cầu hoàn tiền.', 
+                            refund_bank = :bank, 
+                            refund_account = :account, 
+                            refund_name = :name, 
+                            refund_status = 'pending' 
+                        WHERE id = :id");
+            $db->bind(':bank', $refund_bank);
+            $db->bind(':account', $refund_account);
+            $db->bind(':name', $refund_name);
+            $db->bind(':id', $order_id);
+            $success = $db->execute();
+        } else {
+            $success = $this->orderModel->updateStatusWithReason($order_id, 'cancelled', 'Khách hàng tự hủy đơn hàng qua lịch sử mua hàng.');
+        }
+
+        if ($success) {
             // Nếu đơn hàng đã thanh toán (paid_amount > 0 hoặc status là shipping), hoàn lại số lượng tồn kho sản phẩm
             if ($order->status === 'shipping' || (float)$order->paid_amount > 0) {
                 $items = $this->orderModel->getOrderItems($order_id);
