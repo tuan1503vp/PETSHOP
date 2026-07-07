@@ -266,37 +266,41 @@ class Mailer {
     // -----------------------------------------------------------------------
     public function sendContactReply($email, $customer_name, $reply_message) {
         $subject = "Phản hồi từ PETSHOP - Cảm ơn bạn đã liên hệ";
-        $url_home = defined('URLROOT') ? URLROOT : 'https://pet.kesug.com';
+        $url_home = defined('URLROOT') ? URLROOT : 'https://petshop.id.vn';
 
         $body = "
         <div style='background-color: #f8fafc; padding: 40px 0;'>
-            <div style='font-family: \"Inter\", Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);'>
+            <div style='font-family: \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 0; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e2e8f0;'>
                 
-                <!-- Header -->
-                <div style='text-align: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px;'>
-                    <h1 style='color: #4f46e5; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;'>PETSHOP</h1>
-                    <p style='color: #64748b; margin: 5px 0 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Hỗ trợ Khách hàng</p>
+                <!-- Header Banner -->
+                <div style='background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); padding: 35px 20px; text-align: center; color: #ffffff;'>
+                    <h1 style='margin: 0; font-size: 30px; font-weight: 800; letter-spacing: 1px;'>PETSHOP</h1>
+                    <p style='margin: 5px 0 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.85;'>Hỗ trợ Khách hàng</p>
                 </div>
                 
-                <h2 style='color: #0f172a; font-size: 20px; margin-top: 0;'>Xin chào $customer_name,</h2>
-                <p style='color: #475569; line-height: 1.6; font-size: 16px;'>Cảm ơn bạn đã liên hệ với <strong>PETSHOP</strong>. Đội ngũ chăm sóc khách hàng đã nhận được yêu cầu của bạn và xin gửi đến bạn thông tin phản hồi như sau:</p>
-                
-                <!-- Reply Content -->
-                <div style='background-color: #eef2ff; padding: 20px 25px; border-left: 5px solid #4f46e5; border-radius: 0 12px 12px 0; margin: 25px 0;'>
-                    <p style='margin: 0; color: #1e1b4b; line-height: 1.7; font-size: 15px; white-space: pre-wrap;'>" . htmlspecialchars($reply_message) . "</p>
-                </div>
-                
-                <p style='color: #475569; line-height: 1.6; font-size: 15px;'>Nếu bạn vẫn còn bất kỳ thắc mắc nào khác, xin đừng ngần ngại trả lời trực tiếp email này hoặc truy cập trang web của chúng tôi.</p>
-                
-                <!-- Call to Action -->
-                <div style='text-align: center; margin: 35px 0;'>
-                    <a href='{$url_home}' style='background-color: #ffffff; color: #4f46e5; border: 2px solid #4f46e5; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block; transition: all 0.3s;'>Trở lại trang chủ</a>
+                <!-- Content -->
+                <div style='padding: 45px 35px;'>
+                    <h2 style='color: #0f172a; font-size: 20px; margin-top: 0; font-weight: 700;'>Xin chào $customer_name,</h2>
+                    <p style='color: #475569; line-height: 1.6; font-size: 15px;'>Cảm ơn bạn đã gửi câu hỏi và liên hệ với **PETSHOP**. Đội ngũ CSKH của chúng tôi đã tiếp nhận ý kiến của bạn và xin gửi thông tin phản hồi chính thức như sau:</p>
+                    
+                    <!-- Reply Content Box -->
+                    <div style='background-color: #eef2ff; border-left: 4px solid #4f46e5; padding: 25px; border-radius: 0 16px 16px 0; margin: 30px 0;'>
+                        <span style='display: block; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #4f46e5; letter-spacing: 1px; margin-bottom: 10px;'>Nội dung phản hồi từ PETSHOP:</span>
+                        <p style='margin: 0; color: #1e1b4b; line-height: 1.7; font-size: 15px; white-space: pre-wrap; font-weight: 500;'>" . htmlspecialchars($reply_message) . "</p>
+                    </div>
+                    
+                    <p style='color: #64748b; line-height: 1.6; font-size: 14px;'>Nếu bạn vẫn còn bất kỳ thắc mắc hoặc cần hỗ trợ thêm thông tin nào khác, xin vui lòng phản hồi trực tiếp email này hoặc truy cập website của chúng tôi.</p>
+                    
+                    <!-- Call to Action -->
+                    <div style='text-align: center; margin: 35px 0 15px 0;'>
+                        <a href='{$url_home}' style='background-color: #4f46e5; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); transition: all 0.3s;'>Trở lại trang chủ</a>
+                    </div>
                 </div>
                 
                 <!-- Footer -->
-                <div style='text-align: center; border-top: 1px solid #e2e8f0; margin-top: 40px; padding-top: 20px;'>
-                    <p style='color: #64748b; font-size: 14px; font-weight: bold; margin: 0 0 10px 0;'>Trân trọng,<br/>Đội ngũ CSKH PETSHOP</p>
-                    <p style='color: #94a3b8; font-size: 12px; margin: 0;'>&copy; " . date('Y') . " PETSHOP. All rights reserved.</p>
+                <div style='text-align: center; background-color: #f8fafc; padding: 25px; border-top: 1px solid #f1f5f9;'>
+                    <p style='color: #64748b; font-size: 13px; font-weight: bold; margin: 0 0 5px 0;'>Trân trọng,<br/>Đội ngũ CSKH PETSHOP</p>
+                    <p style='color: #94a3b8; font-size: 11px; margin: 0;'>&copy; " . date('Y') . " PETSHOP. Bảo lưu mọi quyền.</p>
                 </div>
             </div>
         </div>";
