@@ -126,22 +126,41 @@ class Mailer {
     public function sendOTP($email, $fullname, $otp) {
         $subject = "Mã xác thực tài khoản PETSHOP";
         $body = "
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px; text-align: center;'>
-            <h1 style='color: #4f46e5; margin: 0;'>PETSHOP</h1>
-            <h2 style='color: #0f172a;'>Xin chào $fullname,</h2>
-            <p style='color: #334155; line-height: 1.6;'>Mã xác thực (OTP) của bạn là:</p>
-            <h1 style='color: #e11d48; letter-spacing: 5px; font-size: 36px; background: #f8fafc; padding: 15px; border-radius: 8px; display: inline-block; margin: 10px 0;'>$otp</h1>
-            <p style='color: #64748b; font-size: 14px;'>Mã này sẽ hết hạn sau 10 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
+        <div style='background-color: #f8fafc; padding: 40px 0;'>
+            <div style='font-family: \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; box-shadow: 0 10px 30px rgba(79, 70, 229, 0.05); overflow: hidden; border: 1px solid #e2e8f0;'>
+                <!-- Header Banner -->
+                <div style='background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); padding: 35px 20px; text-align: center; color: #ffffff;'>
+                    <h1 style='margin: 0; font-size: 32px; font-weight: 800; letter-spacing: 1px;'>PETSHOP</h1>
+                    <p style='margin: 5px 0 0 0; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8;'>Xác thực tài khoản của bạn</p>
+                </div>
+                <!-- Content -->
+                <div style='padding: 40px 35px; color: #1e293b;'>
+                    <h2 style='margin-top: 0; font-size: 20px; color: #0f172a; font-weight: 700;'>Xin chào $fullname,</h2>
+                    <p style='font-size: 15px; line-height: 1.6; color: #475569;'>Cảm ơn bạn đã lựa chọn và tin tưởng **PETSHOP**. Để hoàn tất quy trình xác thực tài khoản của mình, vui lòng sử dụng mã xác nhận một lần (OTP) bên dưới:</p>
+                    
+                    <!-- OTP Box -->
+                    <div style='text-align: center; margin: 30px 0; padding: 25px; background-color: #f8fafc; border-radius: 16px; border: 1px dashed #c7d2fe;'>
+                        <span style='display: block; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #6366f1; letter-spacing: 1.5px; margin-bottom: 12px;'>MÃ XÁC THỰC CỦA BẠN</span>
+                        <span style='font-family: monospace; font-size: 38px; font-weight: 800; letter-spacing: 6px; color: #4f46e5; background: #e0e7ff; padding: 12px 25px; border-radius: 12px; display: inline-block;'>$otp</span>
+                    </div>
+                    
+                    <p style='font-size: 13px; line-height: 1.6; color: #64748b; text-align: center; margin-bottom: 0;'>
+                        ⚠️ <strong>Lưu ý bảo mật:</strong> Mã OTP này chỉ có hiệu lực trong vòng **10 phút**. Vui lòng tuyệt đối không chia sẻ mã này cho bất kỳ ai để bảo vệ an toàn cho tài khoản của bạn.
+                    </p>
+                </div>
+                <!-- Footer -->
+                <div style='background-color: #f8fafc; padding: 25px; text-align: center; border-top: 1px solid #f1f5f9;'>
+                    <p style='margin: 0; font-size: 12px; color: #94a3b8;'>Đây là email tự động từ hệ thống PETSHOP, vui lòng không phản hồi email này.</p>
+                    <p style='margin: 5px 0 0 0; font-size: 11px; color: #94a3b8;'>&copy; " . date('Y') . " PETSHOP. Bảo lưu mọi quyền.</p>
+                </div>
+            </div>
         </div>";
         return $this->send($email, $subject, $body);
     }
 
-    // -----------------------------------------------------------------------
-    // Xác nhận đơn hàng
-    // -----------------------------------------------------------------------
     public function sendOrderConfirmation($email, $customer_name, $order_id, $total_amount, $payment_method) {
         $subject = "Xác nhận đơn hàng #ORD-" . str_pad($order_id, 5, '0', STR_PAD_LEFT) . " từ PETSHOP";
-        $payment_text = ($payment_method == 'transfer') ? 'Chuyển khoản ngân hàng' : 'Thanh toán khi nhận hàng (COD)';
+        $payment_text = ($payment_method == 'transfer') ? 'Chuyển khoản ngân hàng (SePay tự động)' : 'Thanh toán khi nhận hàng (COD)';
         
         // Lấy chi tiết sản phẩm trong đơn hàng
         $this->db->query("SELECT oi.*, p.name as product_name, p.image FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = :order_id");
@@ -150,84 +169,97 @@ class Mailer {
         
         $items_html = "<table style='width: 100%; border-collapse: collapse; margin-top: 15px;'>
                         <thead>
-                            <tr style='border-bottom: 2px solid #e2e8f0; text-align: left; color: #64748b; font-size: 14px;'>
+                            <tr style='border-bottom: 2px solid #f1f5f9; text-align: left; color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;'>
                                 <th style='padding: 10px 5px;'>Sản phẩm</th>
-                                <th style='padding: 10px 5px; text-align: center;'>SL</th>
-                                <th style='padding: 10px 5px; text-align: right;'>Thành tiền</th>
+                                <th style='padding: 10px 5px; text-align: center; width: 60px;'>SL</th>
+                                <th style='padding: 10px 5px; text-align: right; width: 100px;'>Thành tiền</th>
                             </tr>
                         </thead>
                         <tbody>";
                         
         foreach ($items as $item) {
             $items_html .= "
-                            <tr style='border-bottom: 1px solid #f1f5f9;'>
-                                <td style='padding: 12px 5px; color: #334155; font-weight: 500;'>{$item->product_name}</td>
-                                <td style='padding: 12px 5px; text-align: center; color: #64748b;'>x{$item->quantity}</td>
-                                <td style='padding: 12px 5px; text-align: right; color: #0f172a; font-weight: 600;'>" . number_format($item->price * $item->quantity, 0, ',', '.') . "đ</td>
+                            <tr style='border-bottom: 1px solid #f8fafc;'>
+                                <td style='padding: 14px 5px; color: #334155; font-size: 14px; font-weight: 600;'>{$item->product_name}</td>
+                                <td style='padding: 14px 5px; text-align: center; color: #64748b; font-size: 14px;'>x{$item->quantity}</td>
+                                <td style='padding: 14px 5px; text-align: right; color: #0f172a; font-weight: 700; font-size: 14px;'>" . number_format($item->price * $item->quantity, 0, ',', '.') . "đ</td>
                             </tr>";
         }
         $items_html .= "</tbody></table>";
-
-        $url_home = defined('URLROOT') ? URLROOT : 'https://pet.kesug.com';
+ 
+        $url_home = defined('URLROOT') ? URLROOT : 'https://petshop.id.vn';
         $body = "
         <div style='background-color: #f8fafc; padding: 40px 0;'>
-            <div style='font-family: \"Inter\", Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);'>
+            <div style='font-family: \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 0; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e2e8f0;'>
                 
-                <!-- Header -->
-                <div style='text-align: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px;'>
-                    <h1 style='color: #4f46e5; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;'>PETSHOP</h1>
-                    <p style='color: #64748b; margin: 5px 0 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;'>Nơi yêu thương bắt đầu</p>
+                <!-- Header Banner -->
+                <div style='background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 35px 20px; text-align: center; color: #ffffff;'>
+                    <h1 style='margin: 0; font-size: 30px; font-weight: 800; letter-spacing: 1px;'>PETSHOP</h1>
+                    <p style='margin: 5px 0 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.85;'>Cảm ơn bạn đã mua sắm tại cửa hàng</p>
                 </div>
                 
-                <!-- Greeting -->
-                <h2 style='color: #0f172a; font-size: 20px; margin-top: 0;'>Xin chào $customer_name,</h2>
-                <p style='color: #475569; line-height: 1.6; font-size: 16px;'>Cảm ơn bạn đã tin tưởng mua sắm tại <strong>PETSHOP</strong>! Chúng tôi rất vui mừng thông báo đơn hàng của bạn đã được hệ thống ghi nhận và đang được xử lý.</p>
-                
-                <!-- Order Details Box -->
-                <div style='background-color: #ffffff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; margin: 30px 0;'>
-                    <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;'>
-                        <div>
-                            <p style='margin: 0; color: #64748b; font-size: 13px; text-transform: uppercase;'>Mã đơn hàng</p>
-                            <h3 style='margin: 5px 0 0 0; color: #0f172a; font-size: 18px;'>#ORD-" . str_pad($order_id, 5, '0', STR_PAD_LEFT) . "</h3>
-                        </div>
-                        <div style='text-align: right;'>
-                            <p style='margin: 0; color: #64748b; font-size: 13px; text-transform: uppercase;'>Ngày đặt</p>
-                            <h3 style='margin: 5px 0 0 0; color: #0f172a; font-size: 16px; font-weight: 500;'>" . date('d/m/Y') . "</h3>
-                        </div>
-                    </div>
+                <!-- Content -->
+                <div style='padding: 45px 35px;'>
+                    <h2 style='color: #0f172a; font-size: 20px; margin-top: 0; font-weight: 700;'>Xin chào $customer_name,</h2>
+                    <p style='color: #475569; line-height: 1.6; font-size: 15px;'>Đơn hàng của bạn đã được ghi nhận trên hệ thống và đang được nhân sự PETSHOP xử lý nhanh chóng. Dưới đây là thông tin chi tiết đơn hàng của bạn:</p>
                     
-                    <!-- Items -->
-                    $items_html
-                    
-                    <!-- Summary -->
-                    <div style='margin-top: 20px; padding-top: 15px; border-top: 2px dashed #e2e8f0;'>
+                    <!-- Order Details Box -->
+                    <div style='background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; margin: 25px 0;'>
                         <table style='width: 100%; border-collapse: collapse;'>
                             <tr>
-                                <td style='padding: 5px 0; color: #64748b;'>Phương thức thanh toán:</td>
-                                <td style='padding: 5px 0; text-align: right; color: #0f172a; font-weight: 500;'>$payment_text</td>
+                                <td style='padding: 6px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; font-weight: bold; width: 130px;'>Mã đơn hàng:</td>
+                                <td style='padding: 6px 0; color: #0f172a; font-weight: 700; font-size: 15px;'>#ORD-" . str_pad($order_id, 5, '0', STR_PAD_LEFT) . "</td>
                             </tr>
                             <tr>
-                                <td style='padding: 10px 0; color: #0f172a; font-size: 18px; font-weight: bold;'>Tổng thanh toán:</td>
-                                <td style='padding: 10px 0; text-align: right; color: #e11d48; font-size: 20px; font-weight: 800;'>" . number_format($total_amount, 0, ',', '.') . "đ</td>
+                                <td style='padding: 6px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; font-weight: bold;'>Ngày mua hàng:</td>
+                                <td style='padding: 6px 0; color: #0f172a; font-weight: 700; font-size: 14px;'>" . date('d/m/Y') . "</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 6px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; font-weight: bold;'>Thanh toán:</td>
+                                <td style='padding: 6px 0; color: #4f46e5; font-weight: 700; font-size: 14px;'>$payment_text</td>
                             </tr>
                         </table>
                     </div>
+                    
+                    <!-- Items -->
+                    <h3 style='font-size: 15px; color: #0f172a; margin: 30px 0 10px 0; font-weight: 800; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;'>Danh sách mặt hàng</h3>
+                    $items_html
+                    
+                    <!-- Summary -->
+                    <div style='margin-top: 20px; padding-top: 15px; border-top: 2px dashed #f1f5f9;'>
+                        <table style='width: 100%; border-collapse: collapse;'>
+                            <tr>
+                                <td style='padding: 5px 0; color: #0f172a; font-size: 16px; font-weight: bold;'>Tổng thanh toán:</td>
+                                <td style='padding: 5px 0; text-align: right; color: #e11d48; font-size: 22px; font-weight: 800;'>" . number_format($total_amount, 0, ',', '.') . "đ</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Call to Action -->
+                    <div style='text-align: center; margin: 35px 0 15px 0;'>
+                        <a href='{$url_home}' style='background-color: #4f46e5; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); transition: all 0.3s;'>Tiếp tục mua sắm</a>
+                    </div>
+                    
+                    <p style='color: #64748b; line-height: 1.6; font-size: 13px; text-align: center; margin-top: 20px; font-style: italic;'>Nhân sự PETSHOP sẽ sớm liên hệ với bạn để giao hàng. Chúc bạn và bé cưng luôn vui vẻ!</p>
                 </div>
-                
-                <!-- Call to Action -->
-                <div style='text-align: center; margin: 40px 0;'>
-                    <a href='{$url_home}' style='background-color: #4f46e5; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;'>Tiếp tục mua sắm</a>
-                </div>
-                
-                <p style='color: #475569; line-height: 1.6; font-size: 15px; text-align: center;'>Đội ngũ PETSHOP sẽ sớm liên hệ với bạn để giao hàng. Chúc bạn và thú cưng một ngày vui vẻ!</p>
                 
                 <!-- Footer -->
-                <div style='text-align: center; border-top: 1px solid #e2e8f0; margin-top: 40px; padding-top: 20px;'>
-                    <p style='color: #94a3b8; font-size: 13px; margin: 0 0 10px 0;'>Đây là email tự động, vui lòng không trả lời trực tiếp email này.</p>
-                    <p style='color: #64748b; font-size: 13px; margin: 0;'><strong>&copy; " . date('Y') . " PETSHOP.</strong> All rights reserved.</p>
+                <div style='text-align: center; background-color: #f8fafc; padding: 25px; border-top: 1px solid #f1f5f9;'>
+                    <p style='color: #94a3b8; font-size: 11px; margin: 0 0 5px 0;'>Đây là email tự động từ hệ thống PETSHOP, vui lòng không trả lời trực tiếp email này.</p>
+                    <p style='color: #94a3b8; font-size: 11px; margin: 0;'><strong>&copy; " . date('Y') . " PETSHOP.</strong> Bảo lưu mọi quyền.</p>
                 </div>
             </div>
         </div>";
+ 
+        $this->db->query("INSERT INTO email_logs (recipient_email, subject, body, status) VALUES (:email, :subject, :body, 'sent')");
+        $this->db->bind(':email', $email);
+        $this->db->bind(':subject', $subject);
+        $this->db->bind(':body', $body);
+        $log_success = $this->db->execute();
+ 
+        $this->send($email, $subject, $body);
+        return $log_success;
+    }";
 
         $this->db->query("INSERT INTO email_logs (recipient_email, subject, body, status) VALUES (:email, :subject, :body, 'sent')");
         $this->db->bind(':email', $email);
