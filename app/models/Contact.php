@@ -25,4 +25,10 @@ class Contact {
         $this->db->bind(':status', $status);
         return $this->db->execute();
     }
+
+    public function getContactById($id) {
+        $this->db->query("SELECT * FROM contacts WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
 }

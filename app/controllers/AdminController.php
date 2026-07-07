@@ -166,6 +166,11 @@ class AdminController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $status = $_POST['status'] ?? 'pending';
             $contactModel = $this->model('Contact');
+            
+            // Lấy thông tin liên hệ trước khi xử lý
+            $contact = $contactModel->getContactById($id);
+            $original_message = $contact ? $contact->message : '';
+            
             $contactModel->updateStatus($id, $status);
             
             // Nếu có nội dung reply thì gửi email phản hồi
@@ -173,7 +178,7 @@ class AdminController extends Controller {
                 require_once APPROOT . '/helpers/Mailer.php';
                 $mailer = new Mailer();
                 $customer_email = $_POST['customer_email'];
-                $mailer->sendContactReply($customer_email, $_POST['customer_name'] ?? 'Khách hàng', trim($_POST['reply_message']));
+                $mailer->sendContactReply($customer_email, $_POST['customer_name'] ?? 'Khách hàng', trim($_POST['reply_message']), $original_message);
                 
                 // Kiểm tra xem email này có thuộc tài khoản nào trên hệ thống không
                 $userModel = $this->model('User');

@@ -264,9 +264,19 @@ class Mailer {
     // -----------------------------------------------------------------------
     // Phản hồi liên hệ từ Admin → Khách hàng
     // -----------------------------------------------------------------------
-    public function sendContactReply($email, $customer_name, $reply_message) {
+    public function sendContactReply($email, $customer_name, $reply_message, $original_message = '') {
         $subject = "Phản hồi từ PETSHOP - Cảm ơn bạn đã liên hệ";
         $url_home = defined('URLROOT') ? URLROOT : 'https://petshop.id.vn';
+
+        $original_box = "";
+        if (!empty($original_message)) {
+            $original_box = "
+            <!-- Original Message Box -->
+            <div style='background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin: 25px 0;'>
+                <span style='display: block; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #64748b; letter-spacing: 1px; margin-bottom: 8px;'>Yêu cầu gốc của bạn:</span>
+                <p style='margin: 0; color: #475569; line-height: 1.6; font-size: 14px; white-space: pre-wrap; font-style: italic;'>" . htmlspecialchars($original_message) . "</p>
+            </div>";
+        }
 
         $body = "
         <div style='background-color: #f8fafc; padding: 40px 0;'>
@@ -282,6 +292,8 @@ class Mailer {
                 <div style='padding: 45px 35px;'>
                     <h2 style='color: #0f172a; font-size: 20px; margin-top: 0; font-weight: 700;'>Xin chào $customer_name,</h2>
                     <p style='color: #475569; line-height: 1.6; font-size: 15px;'>Cảm ơn bạn đã gửi câu hỏi và liên hệ với **PETSHOP**. Đội ngũ CSKH của chúng tôi đã tiếp nhận ý kiến của bạn và xin gửi thông tin phản hồi chính thức như sau:</p>
+                    
+                    $original_box
                     
                     <!-- Reply Content Box -->
                     <div style='background-color: #eef2ff; border-left: 4px solid #4f46e5; padding: 25px; border-radius: 0 16px 16px 0; margin: 30px 0;'>
