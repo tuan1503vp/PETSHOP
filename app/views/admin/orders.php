@@ -282,20 +282,25 @@
                                     $isPaidOrder = false;
                                     if ($order->payment_method === 'vnpay' && ($order->paid_amount >= $order->total_amount || in_array($order->status, ['shipping','completed']))) {
                                          $isPaidOrder = true;
-                                    } elseif ($order->payment_method === 'transfer' && $order->status !== 'pending') {
-                                        $isPaidOrder = true;
+                                    } elseif ($order->payment_method === 'transfer' && (in_array($order->status, ['shipping','completed']) || (float)$order->paid_amount > 0)) {
+                                         $isPaidOrder = true;
                                     } elseif (in_array($order->payment_method, ['cash','cod']) && $order->status === 'completed') {
                                         $isPaidOrder = true;
                                     }
                                     ?>
-                                    <div class="mt-1.5 flex justify-end">
-                                        <?php if($isPaidOrder): ?>
+                                    <div class="mt-1.5 flex justify-end flex-col items-end gap-1">
+                                        <?php if($order->status === 'cancelled'): ?>
+                                            <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
+                                                <i class="fa-solid fa-ban"></i> Đã hủy
+                                            </span>
+                                            <?php if($isPaidOrder): ?>
+                                                <span class="text-[8px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-200">
+                                                    Đã thanh toán trước đó
+                                                </span>
+                                            <?php endif; ?>
+                                        <?php elseif($isPaidOrder): ?>
                                             <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
                                                 <i class="fa-solid fa-circle-check"></i> Đã thanh toán
-                                            </span>
-                                        <?php elseif($order->status === 'cancelled'): ?>
-                                            <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
-                                                <i class="fa-solid fa-ban"></i> Đã hủy
                                             </span>
                                         <?php else: ?>
                                             <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200">
@@ -471,8 +476,8 @@
                         <div class="bg-gray-50 rounded-xl p-3 text-center">
                             <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Đã thanh toán</p>
                             <span class="text-xs font-black px-2 py-0.5 rounded-full"
-                                  :class="(selectedOrder?.payment_method === 'vnpay' && (parseFloat(selectedOrder?.paid_amount) > 0 || ['shipping','completed'].includes(selectedOrder?.status))) || (selectedOrder?.payment_method === 'transfer' && selectedOrder?.status !== 'pending') || selectedOrder?.payment_method === 'cash' || (selectedOrder?.payment_method === 'cod' && selectedOrder?.status === 'completed') ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'"
-                                  x-text="(selectedOrder?.payment_method === 'vnpay' && (parseFloat(selectedOrder?.paid_amount) > 0 || ['shipping','completed'].includes(selectedOrder?.status))) || (selectedOrder?.payment_method === 'transfer' && selectedOrder?.status !== 'pending') || selectedOrder?.payment_method === 'cash' || (selectedOrder?.payment_method === 'cod' && selectedOrder?.status === 'completed') ? '✓ Đã thanh toán' : '⏳ Chưa thanh toán'"></span>
+                                  :class="(selectedOrder?.payment_method === 'vnpay' && (parseFloat(selectedOrder?.paid_amount) > 0 || ['shipping','completed'].includes(selectedOrder?.status))) || (selectedOrder?.payment_method === 'transfer' && (['shipping','completed'].includes(selectedOrder?.status) || parseFloat(selectedOrder?.paid_amount) > 0)) || selectedOrder?.payment_method === 'cash' || (selectedOrder?.payment_method === 'cod' && selectedOrder?.status === 'completed') ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'"
+                                  x-text="(selectedOrder?.payment_method === 'vnpay' && (parseFloat(selectedOrder?.paid_amount) > 0 || ['shipping','completed'].includes(selectedOrder?.status))) || (selectedOrder?.payment_method === 'transfer' && (['shipping','completed'].includes(selectedOrder?.status) || parseFloat(selectedOrder?.paid_amount) > 0)) || selectedOrder?.payment_method === 'cash' || (selectedOrder?.payment_method === 'cod' && selectedOrder?.status === 'completed') ? '✓ Đã thanh toán' : '⏳ Chưa thanh toán'"></span>
                         </div>
                         <div class="bg-gray-50 rounded-xl p-3 text-center">
                             <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Trạng thái</p>
