@@ -259,16 +259,6 @@ class Mailer {
  
         $this->send($email, $subject, $body);
         return $log_success;
-    }";
-
-        $this->db->query("INSERT INTO email_logs (recipient_email, subject, body, status) VALUES (:email, :subject, :body, 'sent')");
-        $this->db->bind(':email', $email);
-        $this->db->bind(':subject', $subject);
-        $this->db->bind(':body', $body);
-        $log_success = $this->db->execute();
-
-        $this->send($email, $subject, $body);
-        return $log_success;
     }
 
     // -----------------------------------------------------------------------
