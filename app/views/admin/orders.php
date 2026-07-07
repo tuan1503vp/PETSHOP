@@ -1,5 +1,7 @@
-<?php require APPROOT . '/views/admin/header.php'; ?>
-
+<?php 
+// Trigger deployment: 17834345
+require APPROOT . '/views/admin/header.php'; 
+?>
 <style>[x-cloak] { display: none !important; }</style>
 
 <div class="p-6" x-data="{
