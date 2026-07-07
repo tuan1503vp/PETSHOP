@@ -2,11 +2,11 @@
 
 <?php
 // ===== CẤU HÌNH NGÂN HÀNG =====
-define('BANK_CODE',    'VCB');
-define('BANK_NAME',    'Vietcombank (VCB)');
-define('BANK_ACCOUNT', '1047429167');
+define('BANK_CODE',    'MB');
+define('BANK_NAME',    'Ngân hàng Quân Đội (MBBank)');
+define('BANK_ACCOUNT', '0947647052');
 define('BANK_OWNER',   'NGUYEN MINH TUAN');
-define('BANK_BRANCH',  'PGD Yên Mỹ');
+define('BANK_BRANCH',  'Hội sở');
 // ================================
 
 $orderModel = new Order();

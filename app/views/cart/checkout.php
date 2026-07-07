@@ -2,11 +2,11 @@
 
 <?php
 // ===== CẤU HÌNH NGÂN HÀNG =====
-define('BANK_CODE',    'VCB');
-define('BANK_NAME',    'Vietcombank (VCB)');
-define('BANK_ACCOUNT', '1047429167');
+define('BANK_CODE',    'MB');
+define('BANK_NAME',    'Ngân hàng Quân Đội (MBBank)');
+define('BANK_ACCOUNT', '0947647052');
 define('BANK_OWNER',   'NGUYEN MINH TUAN');
-define('BANK_BRANCH',  'PGD Yên Mỹ');
+define('BANK_BRANCH',  'Hội sở');
 // ================================
 $transfer_content = 'PETSHOP ' . str_pad($_SESSION['user_id'], 4, '0', STR_PAD_LEFT);
 $qr_url = 'https://img.vietqr.io/image/' . BANK_CODE . '-' . BANK_ACCOUNT . '-compact2.jpg'
