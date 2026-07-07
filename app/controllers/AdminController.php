@@ -886,15 +886,26 @@ class AdminController extends Controller {
 
                     // Chỉ thông báo các trạng thái quan trọng: hủy, đang giao, hoàn thành
                     if (in_array($status, ['shipping', 'completed', 'cancelled'])) {
+                        $orderCode = "#ORD-" . str_pad($id, 5, '0', STR_PAD_LEFT);
                         if ($status == 'shipping') {
-                            $msg = "Đơn hàng #ORD-" . str_pad($id, 5, '0', STR_PAD_LEFT) . " đã được xác nhận. Đặt hàng thành công! Kiện hàng đang trên đường giao đến bạn.";
+                            $msg = "Đơn hàng " . $orderCode . " đã được xác nhận. Đặt hàng thành công! Kiện hàng đang trên đường giao đến bạn.";
                         } else {
-                            $msg = "Đơn hàng #ORD-" . str_pad($id, 5, '0', STR_PAD_LEFT) . " của bạn hiện " . ($statusText[$status] ?? $status) . ".";
+                            $msg = "Đơn hàng " . $orderCode . " của bạn hiện " . ($statusText[$status] ?? $status) . ".";
                         }
-                        if ($status == 'cancelled' && !empty($reason)) {
-                            $msg = "Đơn hàng #ORD-" . str_pad($id, 5, '0', STR_PAD_LEFT) . " của bạn hiện đã bị hủy. Lý do: " . $reason . ".";
+                        if ($status == 'cancelled') {
+                            $reasonText = !empty($reason) ? htmlspecialchars($reason) : 'Không có lý do cụ thể';
                             if ($isPaid && in_array($o->payment_method, ['transfer', 'vnpay'])) {
-                                $msg .= " Vui lòng truy cập trang \"Lịch sử mua hàng\" và yêu cầu hoàn tiền. Mọi thắc mắc vui lòng liên hệ qua trang \"Liên Hệ\" hoặc chat trực tiếp với chúng tôi qua Messenger, Zalo hoặc Hotline 0947647052.<br><a href=\"" . URLROOT . "/order/history\" class=\"inline-block mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black rounded-xl shadow-sm transition-all\"><i class=\"fa-solid fa-history mr-1\"></i> Đi tới Lịch sử mua hàng</a>";
+                                $msg = '<div class="space-y-2">' .
+                                       '<p class="font-bold text-gray-800">Đơn hàng <strong>' . $orderCode . '</strong> của bạn đã được hủy thành công.</p>' .
+                                       '<p class="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-100 mt-1"><strong>Lý do hủy đơn:</strong> ' . $reasonText . '</p>' .
+                                       '<p class="text-[11px] text-gray-500 leading-normal mt-2">Vì đơn hàng này đã được thanh toán trực tuyến, vui lòng nhấn nút dưới đây để cập nhật thông tin tài khoản nhận tiền hoàn trả thụ hưởng:</p>' .
+                                       '<div class="py-1">' .
+                                       '  <a href="' . URLROOT . '/order/history" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black rounded-xl shadow-sm transition-all"><i class="fa-solid fa-clock-rotate-left"></i> Yêu cầu hoàn tiền ngay</a>' .
+                                       '</div>' .
+                                       '<p class="text-[9px] text-gray-400 border-t border-gray-100 pt-2 mt-2">Mọi thắc mắc xin vui lòng liên hệ mục <strong>Liên Hệ</strong> hoặc Hotline/Zalo: <strong>0947647052</strong>.</p>' .
+                                       '</div>';
+                            } else {
+                                $msg = "Đơn hàng " . $orderCode . " của bạn đã được hủy thành công. Lý do: " . $reasonText . ".";
                             }
                         }
 
