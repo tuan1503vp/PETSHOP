@@ -86,16 +86,19 @@
         // Đếm số đơn hàng và dịch vụ chờ xác nhận
         $_sidebar_pending_order_count = 0;
         $_sidebar_pending_appt_count = 0;
+        $_sidebar_pending_contact_count = 0;
         if(in_array($_SESSION['user_role'], ['admin','manager'])) {
             $tmpDb3 = new Database;
             $tmpDb3->query("SELECT 
                 (SELECT COUNT(*) FROM orders WHERE status = 'pending') as o_cnt,
-                (SELECT COUNT(*) FROM appointments WHERE status = 'pending') as a_cnt
+                (SELECT COUNT(*) FROM appointments WHERE status = 'pending') as a_cnt,
+                (SELECT COUNT(*) FROM contacts WHERE status = 'pending') as c_cnt
             ");
             $_sidebar_pending_row = $tmpDb3->single();
             if ($_sidebar_pending_row) {
                 $_sidebar_pending_order_count = $_sidebar_pending_row->o_cnt;
                 $_sidebar_pending_appt_count = $_sidebar_pending_row->a_cnt;
+                $_sidebar_pending_contact_count = $_sidebar_pending_row->c_cnt;
             }
         }
     ?>
@@ -152,7 +155,7 @@
                     <a href="<?php echo URLROOT; ?>/admin/orders" class="flex items-center p-3 rounded-lg <?php echo $is_orders ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-file-invoice-dollar w-6"></i>
                         <span class="flex-1">Đơn hàng</span>
-                        <span class="badge-pending-order ml-2 text-[10px] font-black bg-orange-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-md shadow-orange-500/50" style="<?php echo $_sidebar_pending_order_count > 0 ? 'display: inline-flex;' : 'display: none;'; ?>"><?php echo $_sidebar_pending_order_count; ?></span>
+                        <span class="badge-pending-order ml-2 text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-md shadow-red-500/50" style="<?php echo $_sidebar_pending_order_count > 0 ? 'display: inline-flex;' : 'display: none;'; ?>"><?php echo $_sidebar_pending_order_count; ?></span>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -174,7 +177,7 @@
                         <?php if(($_SESSION['user_role'] == 'admin' || $_SESSION['user_role'] == 'manager') && $_sidebar_payment_waiting_count > 0): ?>
                         <span class="ml-2 text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-md shadow-red-500/50"><?php echo $_sidebar_payment_waiting_count; ?></span>
                         <?php endif; ?>
-                        <span class="badge-pending-appt ml-2 text-[10px] font-black bg-orange-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-md shadow-orange-500/50" style="<?php echo $_sidebar_pending_appt_count > 0 ? 'display: inline-flex;' : 'display: none;'; ?>"><?php echo $_sidebar_pending_appt_count; ?></span>
+                        <span class="badge-pending-appt ml-2 text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-md shadow-red-500/50" style="<?php echo $_sidebar_pending_appt_count > 0 ? 'display: inline-flex;' : 'display: none;'; ?>"><?php echo $_sidebar_pending_appt_count; ?></span>
                     </a>
                 </li>
                 <?php endif; ?>
@@ -256,7 +259,10 @@
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/contacts" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/contacts') !== false ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-envelope-open-text w-6"></i>
-                        <span>Hộp thư liên hệ</span>
+                        <span class="flex-1">Hộp thư liên hệ</span>
+                        <?php if($_sidebar_pending_contact_count > 0): ?>
+                        <span class="ml-2 text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-md shadow-red-500/50"><?php echo $_sidebar_pending_contact_count; ?></span>
+                        <?php endif; ?>
                     </a>
                 </li>
                 <?php endif; ?>
