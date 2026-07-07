@@ -59,7 +59,7 @@
                 <div class="relative">
                     <label for="password" class="sr-only">Mật khẩu</label>
                     <input id="password" name="password" type="password" autocomplete="new-password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}" title="Ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt" value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm pr-10" placeholder="Mật khẩu">
-                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20 top-0 bottom-0 mb-[45px]">
+                    <button type="button" id="togglePassword" tabindex="-1" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20 top-0 bottom-0 mb-[45px]">
                         <i class="fa-regular fa-eye text-gray-400 hover:text-primary transition-colors cursor-pointer" id="eyeIcon"></i>
                     </button>
                     <!-- Password Strength Meter -->
@@ -75,7 +75,7 @@
                 <div class="relative">
                     <label for="confirm_password" class="sr-only">Xác nhận mật khẩu</label>
                     <input id="confirm_password" name="confirm_password" type="password" value="<?php echo isset($data['confirm_password']) ? $data['confirm_password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['confirm_password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm pr-10" placeholder="Xác nhận mật khẩu">
-                    <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
+                    <button type="button" id="toggleConfirmPassword" tabindex="-1" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
                         <i class="fa-regular fa-eye text-gray-400 hover:text-primary transition-colors cursor-pointer" id="eyeIconConfirm"></i>
                     </button>
                     <span id="confirm-password-error" class="text-red-500 text-xs italic block mt-1"><?php echo $data['confirm_password_err']; ?></span>

@@ -50,7 +50,7 @@
                     <label for="password" class="block text-sm font-medium text-gray-700">Mật khẩu mới</label>
                     <div class="relative mt-1">
                         <input id="password" name="password" type="password" class="appearance-none block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm pr-10" placeholder="Ít nhất 8 ký tự">
-                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
+                        <button type="button" id="togglePassword" tabindex="-1" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
                             <i class="fa-regular fa-eye text-gray-400 hover:text-secondary cursor-pointer" id="eyeIcon"></i>
                         </button>
                     </div>
@@ -73,7 +73,7 @@
                     <label for="confirm_password" class="block text-sm font-medium text-gray-700">Xác nhận mật khẩu mới</label>
                     <div class="relative mt-1">
                         <input id="confirm_password" name="confirm_password" type="password" class="appearance-none block w-full px-3 py-2 border <?php echo (!empty($data['confirm_password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm pr-10" placeholder="Nhập lại mật khẩu">
-                        <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
+                        <button type="button" id="toggleConfirmPassword" tabindex="-1" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
                             <i class="fa-regular fa-eye text-gray-400 hover:text-secondary cursor-pointer" id="eyeIconConfirm"></i>
                         </button>
                     </div>

@@ -52,7 +52,7 @@
                 <div class="relative">
                     <label for="password" class="sr-only">Mật khẩu</label>
                     <input id="password" name="password" type="password" autocomplete="current-password" value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>" class="appearance-none rounded-none relative block w-full px-3 py-2 border <?php echo (!empty($data['password_err'])) ? 'border-red-500' : 'border-gray-300'; ?> placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-secondary focus:border-secondary focus:z-10 sm:text-sm pr-10" placeholder="Mật khẩu">
-                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20 h-full">
+                    <button type="button" id="togglePassword" tabindex="-1" class="absolute inset-y-0 right-0 pr-3 flex items-center z-20 h-full">
                         <i class="fa-regular fa-eye text-gray-400 hover:text-secondary transition-colors cursor-pointer" id="eyeIcon"></i>
                     </button>
                     <span class="text-red-500 text-xs italic block mt-1"><?php echo $data['password_err']; ?></span>
