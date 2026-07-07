@@ -86,8 +86,7 @@
                                         </div>
                                     </div>
                                 <?php else: ?>
-                                    <input type="hidden" name="status" value="pending">
-                                    <button type="submit" class="text-xs font-bold text-gray-400 hover:text-gray-700 px-3 py-1.5 rounded-lg transition">Bỏ đánh dấu</button>
+                                    <span class="text-xs text-gray-400 font-bold"><i class="fa-solid fa-check-double text-green-500 mr-1"></i> Đã xong</span>
                                 <?php endif; ?>
                             </form>
                         </td>
