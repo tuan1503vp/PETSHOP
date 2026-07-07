@@ -138,7 +138,7 @@
                 </li>
                 <?php endif; ?>
 
-                <?php if(!in_array($_SESSION['user_role'], ['doctor', 'cashier', 'manager', 'staff'])): ?>
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'manager'])): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/products" class="flex items-center p-3 rounded-lg <?php echo $is_products ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-box w-6"></i>
@@ -157,7 +157,7 @@
                 </li>
                 <?php endif; ?>
 
-                <?php if($_SESSION['user_role'] == 'manager'): ?>
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'manager'])): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/service_list" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/service_') !== false ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-list-check w-6"></i>
@@ -179,7 +179,7 @@
                 </li>
                 <?php endif; ?>
 
-                <?php if(in_array($_SESSION['user_role'], ['admin', 'doctor'])): ?>
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'manager', 'doctor'])): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/medical_report" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/medical_report') !== false ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-staff-snake w-6 text-emerald-400"></i>
@@ -197,7 +197,7 @@
                 </li>
                 <?php endif; ?>
 
-                <?php if(in_array($_SESSION['user_role'], ['manager', 'cashier'])): ?>
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'manager', 'cashier'])): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/boarding" class="flex items-center p-3 rounded-lg <?php echo strpos($current_url, '/admin/boarding') !== false ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-house-chimney-window w-6"></i>
@@ -206,7 +206,7 @@
                 </li>
                 <?php endif; ?>
 
-                <?php if(!in_array($_SESSION['user_role'], ['doctor', 'cashier', 'manager', 'staff'])): ?>
+                <?php if(in_array($_SESSION['user_role'], ['admin', 'manager'])): ?>
                 <li>
                     <a href="<?php echo URLROOT; ?>/admin/customers" class="flex items-center p-3 rounded-lg <?php echo $is_customers ? $active_class : $inactive_class; ?>">
                         <i class="fa-solid fa-users w-6"></i>

@@ -271,7 +271,7 @@ class AdminController extends Controller {
     }
 
     public function medical_report() {
-        if ($_SESSION['user_role'] != 'admin' && $_SESSION['user_role'] != 'doctor') {
+        if ($_SESSION['user_role'] != 'admin' && $_SESSION['user_role'] != 'manager' && $_SESSION['user_role'] != 'doctor') {
             header('Location: ' . URLROOT . '/admin');
             exit();
         }
