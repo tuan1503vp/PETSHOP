@@ -389,7 +389,7 @@
                                                                :class="parseInt(n.is_read) === 1 ? 'font-medium text-gray-600' : 'font-bold text-gray-800 text-primary'"
                                                                x-text="n.title">
                                                             </p>
-                                                            <p class="text-[11px] text-gray-500 leading-normal truncate w-full" x-text="n.message"></p>
+                                                            <p class="text-[11px] text-gray-500 leading-normal truncate w-full" x-text="n.message.replace(/<[^>]*>?/gm, '')"></p>
                                                             <p class="text-[9px] text-gray-400 mt-2 font-medium" x-text="new Date(n.created_at).toLocaleString('vi-VN')"></p>
                                                         </div>
                                                         <template x-if="parseInt(n.is_read) === 0">
@@ -427,7 +427,7 @@
                                         </div>
                                         
                                         <div class="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100">
-                                            <p class="text-xs text-gray-600 leading-relaxed font-medium" x-text="selectedNotif?.message"></p>
+                                            <div class="text-xs text-gray-600 leading-relaxed font-medium" x-html="selectedNotif?.message"></div>
                                         </div>
                                         
                                         <button @click="showNotifDetail = false" 

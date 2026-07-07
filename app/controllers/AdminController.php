@@ -870,7 +870,7 @@ class AdminController extends Controller {
                 }
                 // Gửi thông báo cho khách hàng
                 $db_temp = new Database();
-                $db_temp->query("SELECT customer_id, payment_method FROM orders WHERE id = :id");
+                $db_temp->query("SELECT customer_id, payment_method, status, paid_amount FROM orders WHERE id = :id");
                 $db_temp->bind(':id', $id);
                 $o = $db_temp->single();
 
@@ -882,6 +882,8 @@ class AdminController extends Controller {
                         'cancelled' => 'đã bị hủy'
                     ];
 
+                    $isPaid = ($o->status === 'shipping' || $o->status === 'completed' || (float)$o->paid_amount > 0);
+
                     // Chỉ thông báo các trạng thái quan trọng: hủy, đang giao, hoàn thành
                     if (in_array($status, ['shipping', 'completed', 'cancelled'])) {
                         if ($status == 'shipping') {
@@ -890,9 +892,9 @@ class AdminController extends Controller {
                             $msg = "Đơn hàng #ORD-" . str_pad($id, 5, '0', STR_PAD_LEFT) . " của bạn hiện " . ($statusText[$status] ?? $status) . ".";
                         }
                         if ($status == 'cancelled' && !empty($reason)) {
-                            $msg .= " Lý do: " . $reason;
-                            if ($o->payment_method == 'transfer') {
-                                $msg .= "\nDo bạn thanh toán qua chuyển khoản, vui lòng liên hệ Zalo/Hotline hoặc phản hồi email cung cấp STK để chúng tôi hoàn tiền lại cho bạn.";
+                            $msg = "Đơn hàng #ORD-" . str_pad($id, 5, '0', STR_PAD_LEFT) . " của bạn hiện đã bị hủy. Lý do: " . $reason . ".";
+                            if ($isPaid && in_array($o->payment_method, ['transfer', 'vnpay'])) {
+                                $msg .= " Vui lòng truy cập trang \"Lịch sử mua hàng\" và yêu cầu hoàn tiền. Mọi thắc mắc vui lòng liên hệ qua trang \"Liên Hệ\" hoặc chat trực tiếp với chúng tôi qua Messenger, Zalo hoặc Hotline 0947647052.<br><a href=\"" . URLROOT . "/order/history\" class=\"inline-block mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black rounded-xl shadow-sm transition-all\"><i class=\"fa-solid fa-history mr-1\"></i> Đi tới Lịch sử mua hàng</a>";
                             }
                         }
 
