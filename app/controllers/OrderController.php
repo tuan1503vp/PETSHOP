@@ -324,6 +324,7 @@ class OrderController extends Controller {
                 $customer_phone = !empty($input['customer_phone']) ? $input['customer_phone'] : null;
                 $payment_method = !empty($input['payment_method']) ? $input['payment_method'] : 'cash';
                 $voucher_code = !empty($input['voucher_code']) ? trim($input['voucher_code']) : null;
+                $pos_payment_code = !empty($input['pos_payment_code']) ? trim($input['pos_payment_code']) : null;
                 
                 $customer_id = null;
                 $userModel = $this->model('User');
@@ -437,7 +438,7 @@ class OrderController extends Controller {
                     // Ghi nhật ký hành vi thanh toán POS thành công
                     $payment_label = ($payment_method == 'cash') ? 'Tiền mặt' : 'Chuyển khoản VietQR';
                     $log_details = "Thanh toán đơn POS #" . str_pad($order_id, 5, '0', STR_PAD_LEFT) . " cho " . $customer_name . ".\n";
-                    $log_details .= "Hình thức: " . $payment_label . ".\n";
+                    $log_details .= "Hình thức: " . $payment_label . ($pos_payment_code ? " (Mã chuyển khoản: $pos_payment_code)" : "") . ".\n";
                     $log_details .= "Tổng thanh toán: " . number_format($grand_total) . "đ.\n";
                     $log_details .= "Chi tiết mục mua: " . implode(', ', $details_log);
                     

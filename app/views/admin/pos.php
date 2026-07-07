@@ -503,12 +503,12 @@
             <!-- VietQR details -->
             <div x-show="paymentMethod === 'vietqr'" x-transition class="flex flex-col items-center justify-center gap-4 py-2">
                 <div class="bg-white border-2 border-indigo-100 p-3 rounded-2xl shadow-inner relative group">
-                    <img :src="`https://img.vietqr.io/image/MB-0947647052-compact2.png?amount=${finalPrice}&addInfo=${encodeURIComponent((customerName || 'Khach le') + ' - THANH TOAN PETSHOP TOI NGUYEN MINH TUAN')}&accountName=NGUYEN%20MINH%20TUAN`" 
+                    <img :src="`https://img.vietqr.io/image/MB-0947647052-compact2.png?amount=${finalPrice}&addInfo=${posPaymentCode}&accountName=NGUYEN%20MINH%20TUAN`" 
                          class="w-48 h-48 object-contain rounded-xl" alt="Mã VietQR Thanh Toán">
                 </div>
                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider text-center leading-relaxed">
                     Chuyển khoản chính xác số tiền hiển thị ở trên.<br>
-                    Nội dung: <span class="text-primary font-black" x-text="`${customerName || 'Khach le'} - THANH TOAN PETSHOP TOI NGUYEN MINH TUAN`"></span>
+                    Nội dung: <span class="text-primary font-black" x-text="posPaymentCode"></span>
                 </p>
             </div>
         </div>
@@ -741,6 +741,7 @@ document.addEventListener('alpine:init', () => {
         paymentMethod: 'cash',
         completedOrder: null,
         cashReceived: 0,
+        posPaymentCode: '',
         
         voucherCode: '',
         voucherDiscount: 0,
@@ -1174,6 +1175,7 @@ document.addEventListener('alpine:init', () => {
             if (this.cart.length === 0) return;
             // Mở modal chọn phương thức thanh toán thay vì thanh toán ngay lập tức
             this.paymentMethod = 'cash';
+            this.posPaymentCode = 'PS' + Math.floor(100000 + Math.random() * 900000);
             this.showPaymentModal = true;
         },
 
@@ -1205,7 +1207,8 @@ document.addEventListener('alpine:init', () => {
                     customer_name: this.customerName || 'Khách lẻ',
                     customer_phone: this.customerPhone || '',
                     payment_method: this.paymentMethod,
-                    voucher_code: this.voucherDiscount > 0 ? this.voucherCode : null
+                    voucher_code: this.voucherDiscount > 0 ? this.voucherCode : null,
+                    pos_payment_code: this.paymentMethod === 'vietqr' ? this.posPaymentCode : null
                 })
             })
             .then(async response => {
