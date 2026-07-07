@@ -50,13 +50,14 @@
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Tổng chi</th>
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Hạng</th>
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Ngày tham gia</th>
+                    <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Trạng thái</th>
                     <th class="px-8 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-widest">Thao tác</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
                 <?php if(empty($data['customers'])): ?>
                     <tr>
-                        <td colspan="6" class="px-8 py-20 text-center">
+                        <td colspan="9" class="px-8 py-20 text-center">
                             <div class="flex flex-col items-center">
                                 <i class="fa-solid fa-users-slash text-5xl text-gray-200 mb-4"></i>
                                 <p class="text-gray-400 font-medium">Chưa có khách hàng nào đăng ký</p>
@@ -103,6 +104,17 @@
                                 <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider <?php echo $badgeClass; ?>">
                                     <?php echo $level; ?>
                                 </span>
+                            </td>
+                            <td class="px-8 py-6 whitespace-nowrap">
+                                <?php if (($customer->is_verified ?? 0) == 1): ?>
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-700">
+                                        Đã xác minh
+                                    </span>
+                                <?php else: ?>
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 animate-pulse">
+                                        Chờ xác minh
+                                    </span>
+                                <?php endif; ?>
                             </td>
                             <td class="px-8 py-6 whitespace-nowrap">
                                 <span class="text-xs font-bold text-gray-400">
