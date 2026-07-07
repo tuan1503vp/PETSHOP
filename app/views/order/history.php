@@ -167,6 +167,14 @@
                                 <?php echo $item->type == 'order' ? ($item->order_type == 'pos' ? 'Mua tại cửa hàng' : 'Mua trực tuyến') : 'Dịch vụ tại trung tâm'; ?>
                             </span>
                             <div class="flex gap-2 items-center">
+                                <?php if($item->type == 'order' && in_array($item->status, ['pending', 'shipping'])): ?>
+                                    <form action="<?php echo URLROOT; ?>/order/cancel/<?php echo $item->id; ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')" class="inline">
+                                        <button type="submit" class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-600 hover:text-white transition shadow-sm border border-red-100 flex items-center">
+                                            <i class="fa-solid fa-trash-can mr-1.5"></i> Hủy đơn
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+
                                 <?php if($item->type == 'order' && $item->status == 'pending' && in_array($item->payment_method, ['transfer', 'vnpay'])): ?>
                                     <a href="<?php echo URLROOT; ?>/order/success/<?php echo $item->id; ?>" class="px-4 py-2 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl hover:bg-emerald-600 hover:text-white transition shadow-sm border border-emerald-100 flex items-center">
                                         <i class="fa-solid fa-credit-card mr-1.5"></i> Thanh toán ngay

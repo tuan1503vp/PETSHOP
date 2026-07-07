@@ -183,6 +183,14 @@ class Product {
         return $this->db->execute();
     }
 
+    // Tăng số lượng tồn kho khi hủy đơn hàng
+    public function increaseStock($id, $quantity) {
+        $this->db->query('UPDATE products SET stock_quantity = stock_quantity + :quantity WHERE id = :id');
+        $this->db->bind(':quantity', $quantity);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
     // Lấy danh sách ảnh bổ sung của sản phẩm
     public function getProductImages($product_id) {
         $this->db->query('SELECT * FROM product_images WHERE product_id = :product_id ORDER BY id ASC');

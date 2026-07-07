@@ -574,4 +574,39 @@ class OrderController extends Controller {
         header('Location: ' . URLROOT . '/order/history');
         exit;
     }
+
+    public function cancel($order_id) {
+        if (!isLoggedIn()) {
+            header('Location: ' . URLROOT . '/auth/login');
+            return;
+        }
+
+        $order = $this->orderModel->getOrderById($order_id);
+        
+        if (!$order || $order->customer_id != $_SESSION['user_id'] || !in_array($order->status, ['pending', 'shipping'])) {
+            flash('history_msg', 'Không thể hủy đơn hàng này.', 'alert alert-danger bg-red-100 text-red-700 border-red-200');
+            header('Location: ' . URLROOT . '/order/history');
+            return;
+        }
+
+        $reason = 'Khách hàng tự hủy đơn hàng qua lịch sử mua hàng.';
+
+        if ($this->orderModel->updateStatusWithReason($order_id, 'cancelled', $reason)) {
+            // Nếu đơn hàng đã thanh toán (paid_amount > 0 hoặc status là shipping), hoàn lại số lượng tồn kho sản phẩm
+            if ($order->status === 'shipping' || (float)$order->paid_amount > 0) {
+                $items = $this->orderModel->getOrderItems($order_id);
+                $productModel = $this->model('Product');
+                foreach ($items as $item) {
+                    $productModel->increaseStock($item->product_id, $item->quantity);
+                }
+            }
+
+            flash('history_msg', 'Đơn hàng #' . str_pad($order_id, 5, '0', STR_PAD_LEFT) . ' đã được hủy thành công.');
+        } else {
+            flash('history_msg', 'Có lỗi xảy ra khi hủy đơn hàng. Vui lòng thử lại.', 'alert alert-danger bg-red-100 text-red-700 border-red-200');
+        }
+
+        header('Location: ' . URLROOT . '/order/history');
+        exit;
+    }
 }
