@@ -916,7 +916,7 @@ class AdminController extends Controller {
     public function export_products() {
         $this->checkAccess();
         $productModel = $this->model('Product');
-        $products = $productModel->getAllProducts();
+        $products = $productModel->getProducts();
         
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename=petshop_products_' . date('Ymd') . '.csv');
