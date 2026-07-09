@@ -533,8 +533,11 @@ class AdminController extends Controller {
             'offset' => $offset
         ]);
         
+        $categories = $this->productModel->getProductCategories();
+        
         $this->view('admin/products', [
             'products' => $products,
+            'categories' => $categories,
             'pagination' => [
                 'total_products' => $totalProducts,
                 'total_pages' => $totalPages,
