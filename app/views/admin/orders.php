@@ -387,8 +387,8 @@ require APPROOT . '/views/admin/header.php';
 
             <div class="p-8 max-h-[70vh] overflow-y-auto">
 
-                <!-- Thông tin khách hàng (chỉ hiện cho đơn hàng Online) -->
-                <template x-if="selectedOrder?.order_type === 'online'">
+                <!-- Thông tin khách hàng (hiện cho cả Online và POS) -->
+                <template x-if="selectedOrder?.order_type === 'online' || selectedOrder?.customer_name">
                     <div class="mb-8 p-5 rounded-2xl bg-blue-50/50 border border-blue-100">
                         <h4 class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-4 flex items-center gap-1">
                             <i class="fa-solid fa-user-circle"></i> Thông tin người đặt hàng
