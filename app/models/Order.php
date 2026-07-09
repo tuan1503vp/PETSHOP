@@ -91,6 +91,17 @@ class Order {
             $sql .= ' AND o.order_type = :order_type';
         }
         
+        if (!empty($filters['filter_date'])) {
+            $len = strlen($filters['filter_date']);
+            if ($len == 10) {
+                $sql .= ' AND DATE(o.created_at) = :filter_date';
+            } elseif ($len == 7) {
+                $sql .= ' AND DATE_FORMAT(o.created_at, "%Y-%m") = :filter_date';
+            } elseif ($len == 4) {
+                $sql .= ' AND YEAR(o.created_at) = :filter_date';
+            }
+        }
+        
         $sql .= ' ORDER BY o.created_at DESC';
         
         if (isset($filters['limit']) && isset($filters['offset'])) {
@@ -101,6 +112,9 @@ class Order {
         
         if (isset($filters['order_type']) && $filters['order_type'] !== 'all') {
             $this->db->bind(':order_type', $filters['order_type']);
+        }
+        if (!empty($filters['filter_date'])) {
+            $this->db->bind(':filter_date', $filters['filter_date']);
         }
         if (isset($filters['limit']) && isset($filters['offset'])) {
             $this->db->bind(':limit', (int)$filters['limit']);
@@ -117,10 +131,24 @@ class Order {
             $sql .= ' AND o.order_type = :order_type';
         }
         
+        if (!empty($filters['filter_date'])) {
+            $len = strlen($filters['filter_date']);
+            if ($len == 10) {
+                $sql .= ' AND DATE(o.created_at) = :filter_date';
+            } elseif ($len == 7) {
+                $sql .= ' AND DATE_FORMAT(o.created_at, "%Y-%m") = :filter_date';
+            } elseif ($len == 4) {
+                $sql .= ' AND YEAR(o.created_at) = :filter_date';
+            }
+        }
+        
         $this->db->query($sql);
         
         if (isset($filters['order_type']) && $filters['order_type'] !== 'all') {
             $this->db->bind(':order_type', $filters['order_type']);
+        }
+        if (!empty($filters['filter_date'])) {
+            $this->db->bind(':filter_date', $filters['filter_date']);
         }
         
         return $this->db->single()->count;

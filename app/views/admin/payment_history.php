@@ -15,6 +15,22 @@ if (!empty($data['filter_date'])) {
         $filter_val = $data['filter_date'];
     }
 }
+
+$pos_filter_type = 'all';
+$pos_filter_val = '';
+if (!empty($data['pos_filter_date'])) {
+    $len = strlen($data['pos_filter_date']);
+    if ($len == 10) {
+        $pos_filter_type = 'day';
+        $pos_filter_val = $data['pos_filter_date'];
+    } elseif ($len == 7) {
+        $pos_filter_type = 'month';
+        $pos_filter_val = $data['pos_filter_date'];
+    } elseif ($len == 4) {
+        $pos_filter_type = 'year';
+        $pos_filter_val = $data['pos_filter_date'];
+    }
+}
 ?>
 
 <div class="p-6 lg:p-8" x-data="{ tab: '<?php echo $data['tab'] ?? 'pos'; ?>' }">
@@ -38,7 +54,7 @@ if (!empty($data['filter_date'])) {
     <!-- Tab POS -->
     <div x-show="tab === 'pos'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <!-- Bộ lọc cho POS/Online -->
-        <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+        <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4" x-data="{ posFilterType: '<?php echo $pos_filter_type; ?>', posFilterValue: '<?php echo $pos_filter_val; ?>' }">
             <form action="" method="GET" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <input type="hidden" name="tab" value="pos">
                 
@@ -50,11 +66,46 @@ if (!empty($data['filter_date'])) {
                         <option value="online" <?php echo $data['order_type'] == 'online' ? 'selected' : ''; ?>>Trực tuyến (Online)</option>
                     </select>
                 </div>
+
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-black text-gray-400 uppercase tracking-wider">Thời gian:</label>
+                    <select x-model="posFilterType" class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="all">Xem tất cả</option>
+                        <option value="day">Theo ngày</option>
+                        <option value="month">Theo tháng</option>
+                        <option value="year">Theo năm</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center">
+                    <!-- Ngày -->
+                    <template x-if="posFilterType === 'day'">
+                        <input type="date" name="pos_filter_date" x-model="posFilterValue" required
+                               class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                    </template>
+                    
+                    <!-- Tháng -->
+                    <template x-if="posFilterType === 'month'">
+                        <input type="month" name="pos_filter_date" x-model="posFilterValue" required
+                               class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                    </template>
+                    
+                    <!-- Năm -->
+                    <template x-if="posFilterType === 'year'">
+                        <input type="number" name="pos_filter_date" x-model="posFilterValue" min="2020" max="2035" required placeholder="VD: 2026"
+                               class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary w-24">
+                    </template>
+
+                    <!-- Ẩn khi xem tất cả -->
+                    <template x-if="posFilterType === 'all'">
+                        <input type="hidden" name="pos_filter_date" value="">
+                    </template>
+                </div>
                 
                 <button type="submit" class="px-5 py-1.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-indigo-700 transition shadow-sm">
                     <i class="fa-solid fa-filter mr-1"></i> Lọc
                 </button>
-                <?php if ($data['order_type'] !== 'all'): ?>
+                <?php if ($data['order_type'] !== 'all' || !empty($data['pos_filter_date'])): ?>
                     <a href="?tab=pos" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-xs transition flex items-center">
                         <i class="fa-solid fa-rotate-left mr-1"></i> Thiết lập lại
                     </a>
@@ -134,7 +185,7 @@ if (!empty($data['filter_date'])) {
             </div>
             <div class="flex gap-1.5">
                 <?php if($data['pos_page'] > 1): ?>
-                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_page=<?php echo $data['pos_page'] - 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
+                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_filter_date=<?php echo urlencode($data['pos_filter_date'] ?? ''); ?>&pos_page=<?php echo $data['pos_page'] - 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
                         <i class="fa-solid fa-chevron-left text-[9px]"></i> Trước
                     </a>
                 <?php else: ?>
@@ -148,13 +199,13 @@ if (!empty($data['filter_date'])) {
                 $end_page = min($data['total_pos_pages'], $data['pos_page'] + 2);
                 for ($i = $start_page; $i <= $end_page; $i++):
                 ?>
-                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_page=<?php echo $i; ?>" class="px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm <?php echo $i == $data['pos_page'] ? 'bg-primary text-white shadow-primary/20 border border-primary' : 'bg-white hover:bg-gray-50 text-gray-600 border border-gray-200'; ?>">
+                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_filter_date=<?php echo urlencode($data['pos_filter_date'] ?? ''); ?>&pos_page=<?php echo $i; ?>" class="px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm <?php echo $i == $data['pos_page'] ? 'bg-primary text-white shadow-primary/20 border border-primary' : 'bg-white hover:bg-gray-50 text-gray-600 border border-gray-200'; ?>">
                         <?php echo $i; ?>
                     </a>
                 <?php endfor; ?>
 
                 <?php if($data['pos_page'] < $data['total_pos_pages']): ?>
-                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_page=<?php echo $data['pos_page'] + 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
+                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_filter_date=<?php echo urlencode($data['pos_filter_date'] ?? ''); ?>&pos_page=<?php echo $data['pos_page'] + 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
                         Sau <i class="fa-solid fa-chevron-right text-[9px]"></i>
                     </a>
                 <?php else: ?>

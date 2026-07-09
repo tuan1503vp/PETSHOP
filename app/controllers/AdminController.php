@@ -2062,6 +2062,9 @@ class AdminController extends Controller {
         $order_type = isset($_GET['order_type']) ? $_GET['order_type'] : 'all';
         $order_filters['order_type'] = $order_type;
 
+        $pos_filter_date = isset($_GET['pos_filter_date']) ? trim($_GET['pos_filter_date']) : '';
+        $order_filters['filter_date'] = $pos_filter_date;
+
         $pos_limit = 10;
         $pos_page = isset($_GET['pos_page']) ? max((int)$_GET['pos_page'], 1) : 1;
         $pos_offset = ($pos_page - 1) * $pos_limit;
@@ -2100,6 +2103,7 @@ class AdminController extends Controller {
             // POS
             'orders' => $completedOrders,
             'order_type' => $order_type,
+            'pos_filter_date' => $pos_filter_date,
             'pos_page' => $pos_page,
             'total_pos_pages' => $total_pos_pages,
             'total_pos' => $total_pos,
