@@ -75,6 +75,10 @@ class Appointment {
                   END ASC, 
                   a.appointment_date DESC, a.appointment_time DESC";
 
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $sql .= ' LIMIT :limit OFFSET :offset';
+        }
+
         $this->db->query($sql);
 
         if (isset($filters['status_not'])) {
@@ -83,8 +87,39 @@ class Appointment {
         if (isset($filters['status'])) {
             $this->db->bind(':status', $filters['status']);
         }
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $this->db->bind(':limit', (int)$filters['limit']);
+            $this->db->bind(':offset', (int)$filters['offset']);
+        }
 
         return $this->db->resultSet();
+    }
+
+    public function getTotalAppointments($filters = []) {
+        $sql = 'SELECT COUNT(*) as count FROM appointments a';
+        
+        $whereClauses = [];
+        if (isset($filters['status'])) {
+            $whereClauses[] = 'a.status = :status';
+        }
+        if (isset($filters['status_not'])) {
+            $whereClauses[] = 'a.status != :status_not';
+        }
+        
+        if (!empty($whereClauses)) {
+            $sql .= ' WHERE ' . implode(' AND ', $whereClauses);
+        }
+        
+        $this->db->query($sql);
+        
+        if (isset($filters['status'])) {
+            $this->db->bind(':status', $filters['status']);
+        }
+        if (isset($filters['status_not'])) {
+            $this->db->bind(':status_not', $filters['status_not']);
+        }
+        
+        return $this->db->single()->count;
     }
 
     public function updateStatus($id, $status) {

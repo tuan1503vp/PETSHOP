@@ -270,6 +270,46 @@
                 <?php endif; ?>
             </tbody>
         </table>
+
+        <!-- Phân trang -->
+        <?php if(!($data['is_doctor_view'] ?? false) && isset($data['total_pages']) && $data['total_pages'] > 1): ?>
+        <div class="flex items-center justify-between px-6 py-4 bg-gray-50/30 border-t border-gray-100">
+            <div class="text-xs text-gray-500 font-bold">
+                Hiển thị trang <span class="font-extrabold text-primary"><?php echo $data['page']; ?></span> / <span class="font-extrabold text-gray-700"><?php echo $data['total_pages']; ?></span> (Tổng số <span class="font-extrabold text-gray-700"><?php echo $data['total_appointments']; ?></span> lịch hẹn)
+            </div>
+            <div class="flex gap-1.5">
+                <?php if($data['page'] > 1): ?>
+                    <a href="?page=<?php echo $data['page'] - 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Trước
+                    </a>
+                <?php else: ?>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-150 rounded-xl text-xs font-bold text-gray-300 cursor-not-allowed flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Trước
+                    </span>
+                <?php endif; ?>
+
+                <?php
+                $start_page = max(1, $data['page'] - 2);
+                $end_page = min($data['total_pages'], $data['page'] + 2);
+                for ($i = $start_page; $i <= $end_page; $i++):
+                ?>
+                    <a href="?page=<?php echo $i; ?>" class="px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm <?php echo $i == $data['page'] ? 'bg-primary text-white shadow-primary/20 border border-primary' : 'bg-white hover:bg-gray-50 text-gray-600 border border-gray-200'; ?>">
+                        <?php echo $i; ?>
+                    </a>
+                <?php endfor; ?>
+
+                <?php if($data['page'] < $data['total_pages']): ?>
+                    <a href="?page=<?php echo $data['page'] + 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
+                        Sau <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                    </a>
+                <?php else: ?>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-150 rounded-xl text-xs font-bold text-gray-300 cursor-not-allowed flex items-center gap-1">
+                        Sau <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                    </span>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <?php if(!($data['is_doctor_view'] ?? false) && in_array($_SESSION['user_role'], ['admin','manager','staff'])): ?>

@@ -1142,6 +1142,18 @@ class AdminController extends Controller {
             if ($_SESSION['user_role'] == 'cashier') {
                 $filters['status'] = 'confirmed';
             }
+
+            // Cấu hình phân trang
+            $limit = 10;
+            $page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
+            $offset = ($page - 1) * $limit;
+
+            $totalAppointments = $appointmentModel->getTotalAppointments($filters);
+            $totalPages = ceil($totalAppointments / $limit);
+
+            $filters['limit'] = $limit;
+            $filters['offset'] = $offset;
+
             $appointments = $appointmentModel->getAllAppointments($filters);
 
             // Lấy danh sách bác sĩ cho quản lý xem trạng thái rảnh/bận
@@ -1175,7 +1187,10 @@ class AdminController extends Controller {
                 'products' => $products,
                 'appt_today' => $appt_today,
                 'appt_pending' => $appt_pending,
-                'appt_revenue' => $appt_revenue
+                'appt_revenue' => $appt_revenue,
+                'page' => $page,
+                'total_pages' => $totalPages,
+                'total_appointments' => $totalAppointments
             ]);
         }
     }
