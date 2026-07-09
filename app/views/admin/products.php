@@ -320,18 +320,18 @@
                     </div>
                     
                     <form action="<?php echo URLROOT; ?>/admin/product_add" method="POST" enctype="multipart/form-data">
-                        <div class="p-8 space-y-5 max-h-[calc(100vh-16rem)] overflow-y-auto">
+                        <div class="p-6 space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
                             <!-- Cơ bản -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
-                                    <label for="modal_name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Tên Sản Phẩm <span class="text-red-500">*</span></label>
-                                    <input type="text" name="name" id="modal_name" required class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm" placeholder="VD: Hạt Royal Canin cho mèo">
+                                    <label for="modal_name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Tên Sản Phẩm <span class="text-red-500">*</span></label>
+                                    <input type="text" name="name" id="modal_name" required class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs" placeholder="VD: Hạt Royal Canin cho mèo">
                                 </div>
 
                                 <div>
-                                    <label for="modal_category_id" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Danh Mục <span class="text-red-500">*</span></label>
+                                    <label for="modal_category_id" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Danh Mục <span class="text-red-500">*</span></label>
                                     <div class="flex gap-2">
-                                        <select name="category_id" id="modal_category_id" required class="flex-1 border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm">
+                                        <select name="category_id" id="modal_category_id" required class="flex-1 border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
                                             <option value="">-- Chọn danh mục --</option>
                                             <?php foreach($data['categories'] as $category): ?>
                                                 <option value="<?php echo $category->id; ?>">
@@ -339,44 +339,44 @@
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <button type="button" @click="showAddCatModal = true" class="px-3 py-2 bg-indigo-50 text-primary rounded-xl hover:bg-primary hover:text-white transition-all border border-indigo-100 text-sm">
+                                        <button type="button" @click="showAddCatModal = true" class="px-2.5 py-1.5 bg-indigo-50 text-primary rounded-xl hover:bg-primary hover:text-white transition-all border border-indigo-100 text-xs">
                                             <i class="fa-solid fa-plus"></i>
                                         </button>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label for="modal_price" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Giá Bán (VNĐ) <span class="text-red-500">*</span></label>
+                                    <label for="modal_price" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Giá Bán (VNĐ) <span class="text-red-500">*</span></label>
                                     <div class="relative">
-                                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 text-sm">₫</span>
-                                        <input type="number" name="price" id="modal_price" required min="0" step="1000" class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 pl-10 pr-4 focus:ring-primary focus:border-primary border transition-all text-sm">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs">₫</span>
+                                        <input type="number" name="price" id="modal_price" required min="0" step="1000" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 pl-8 pr-3 focus:ring-primary focus:border-primary border transition-all text-xs">
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label for="modal_stock_quantity" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Số lượng tồn kho <span class="text-red-500">*</span></label>
-                                    <input type="number" name="stock_quantity" id="modal_stock_quantity" required min="0" value="0" class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm">
+                                    <label for="modal_stock_quantity" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Số lượng tồn kho <span class="text-red-500">*</span></label>
+                                    <input type="number" name="stock_quantity" id="modal_stock_quantity" required min="0" value="0" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
                                 </div>
 
                                 <div>
-                                    <label for="modal_expiry_date" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Hạn sử dụng</label>
-                                    <input type="date" name="expiry_date" id="modal_expiry_date" class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm">
+                                    <label for="modal_expiry_date" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Hạn sử dụng</label>
+                                    <input type="date" name="expiry_date" id="modal_expiry_date" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
                                 </div>
 
                                 <div>
-                                    <label for="modal_image" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Hình ảnh chính <span class="text-red-500">*</span></label>
-                                    <input type="file" name="image" id="modal_image" required accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
+                                    <label for="modal_image" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Hình ảnh chính <span class="text-red-500">*</span></label>
+                                    <input type="file" name="image" id="modal_image" required accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
                                 </div>
 
-                                <div>
-                                    <label for="modal_additional_images" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Hình ảnh bổ sung (nhiều ảnh)</label>
-                                    <input type="file" name="additional_images[]" id="modal_additional_images" accept="image/*" multiple class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
+                                <div class="md:col-span-2">
+                                    <label for="modal_additional_images" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Hình ảnh bổ sung (nhiều ảnh)</label>
+                                    <input type="file" name="additional_images[]" id="modal_additional_images" accept="image/*" multiple class="w-full text-xs text-gray-500 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
                                 </div>
                             </div>
 
                             <div>
-                                <label for="modal_description" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Mô Tả Sản Phẩm</label>
-                                <textarea name="description" id="modal_description" rows="4" class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm placeholder:text-gray-300" placeholder="Thông tin chi tiết về sản phẩm..."></textarea>
+                                <label for="modal_description" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Mô Tả Sản Phẩm</label>
+                                <textarea name="description" id="modal_description" rows="3" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs placeholder:text-gray-300" placeholder="Thông tin chi tiết về sản phẩm..."></textarea>
                             </div>
                         </div>
 
