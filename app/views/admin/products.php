@@ -1,15 +1,69 @@
 <?php require APPROOT . '/views/admin/header.php'; ?>
 
-<div class="p-6">
+<style>[x-cloak] { display: none !important; }</style>
+
+<div class="p-6" x-data="{ 
+    showAddModal: false, 
+    showAddCatModal: false,
+    async saveCategory() {
+        const name = document.getElementById('new_category_name').value.trim();
+        const desc = document.getElementById('new_category_desc').value.trim();
+        const errorMsg = document.getElementById('category-error');
+
+        if (!name) {
+            errorMsg.textContent = 'Vui lòng nhập tên danh mục';
+            errorMsg.classList.remove('hidden');
+            return;
+        }
+
+        const btnSave = document.getElementById('btn-save-category');
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<i class=&quot;fa-solid fa-spinner fa-spin mr-1&quot;></i> Đang lưu...';
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('description', desc);
+        formData.append('type', 'product');
+
+        try {
+            const response = await fetch('<?php echo URLROOT; ?>/admin/add_category_ajax', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                const categorySelect = document.getElementById('modal_category_id');
+                const option = new Option(result.name, result.id);
+                categorySelect.add(option);
+                categorySelect.value = result.id;
+                
+                document.getElementById('new_category_name').value = '';
+                document.getElementById('new_category_desc').value = '';
+                errorMsg.classList.add('hidden');
+                this.showAddCatModal = false;
+            } else {
+                errorMsg.textContent = result.message;
+                errorMsg.classList.remove('hidden');
+            }
+        } catch (error) {
+            errorMsg.textContent = 'Lỗi kết nối';
+            errorMsg.classList.remove('hidden');
+        } finally {
+            btnSave.disabled = false;
+            btnSave.textContent = 'Lưu lại';
+        }
+    }
+}">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
         <div class="flex gap-3">
             <a href="<?php echo URLROOT; ?>/admin/export_products" class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition flex items-center">
                 <i class="fa-solid fa-download mr-2 text-green-600"></i> Xuất Excel (CSV)
             </a>
-            <a href="<?php echo URLROOT; ?>/admin/product_add" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition flex items-center">
+            <button type="button" @click="showAddModal = true" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition flex items-center">
                 <i class="fa-solid fa-plus mr-2"></i> Thêm sản phẩm mới
-            </a>
+            </button>
         </div>
     </div>
 
@@ -248,6 +302,125 @@
                 </div>
             </div>
         <?php endif; ?>
+        <!-- Product Add Modal (Popup) -->
+        <div x-show="showAddModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                <!-- Overlay background -->
+                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-dark/60 transition-opacity backdrop-blur-sm" @click="showAddModal = false"></div>
+
+                <!-- Modal panel -->
+                <div x-show="showAddModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-middle bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-2xl w-full">
+                    <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-box-open text-primary"></i> Thêm Sản Phẩm Mới
+                        </h3>
+                        <button type="button" @click="showAddModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <form action="<?php echo URLROOT; ?>/admin/product_add" method="POST" enctype="multipart/form-data">
+                        <div class="p-8 space-y-5 max-h-[calc(100vh-16rem)] overflow-y-auto">
+                            <!-- Cơ bản -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="md:col-span-2">
+                                    <label for="modal_name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Tên Sản Phẩm <span class="text-red-500">*</span></label>
+                                    <input type="text" name="name" id="modal_name" required class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm" placeholder="VD: Hạt Royal Canin cho mèo">
+                                </div>
+
+                                <div>
+                                    <label for="modal_category_id" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Danh Mục <span class="text-red-500">*</span></label>
+                                    <div class="flex gap-2">
+                                        <select name="category_id" id="modal_category_id" required class="flex-1 border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm">
+                                            <option value="">-- Chọn danh mục --</option>
+                                            <?php foreach($data['categories'] as $category): ?>
+                                                <option value="<?php echo $category->id; ?>">
+                                                    <?php echo $category->name; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <button type="button" @click="showAddCatModal = true" class="px-3 py-2 bg-indigo-50 text-primary rounded-xl hover:bg-primary hover:text-white transition-all border border-indigo-100 text-sm">
+                                            <i class="fa-solid fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="modal_price" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Giá Bán (VNĐ) <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 text-sm">₫</span>
+                                        <input type="number" name="price" id="modal_price" required min="0" step="1000" class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 pl-10 pr-4 focus:ring-primary focus:border-primary border transition-all text-sm">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="modal_stock_quantity" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Số lượng tồn kho <span class="text-red-500">*</span></label>
+                                    <input type="number" name="stock_quantity" id="modal_stock_quantity" required min="0" value="0" class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm">
+                                </div>
+
+                                <div>
+                                    <label for="modal_expiry_date" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Hạn sử dụng</label>
+                                    <input type="date" name="expiry_date" id="modal_expiry_date" class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm">
+                                </div>
+
+                                <div>
+                                    <label for="modal_image" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Hình ảnh chính <span class="text-red-500">*</span></label>
+                                    <input type="file" name="image" id="modal_image" required accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
+                                </div>
+
+                                <div>
+                                    <label for="modal_additional_images" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Hình ảnh bổ sung (nhiều ảnh)</label>
+                                    <input type="file" name="additional_images[]" id="modal_additional_images" accept="image/*" multiple class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="modal_description" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Mô Tả Sản Phẩm</label>
+                                <textarea name="description" id="modal_description" rows="4" class="w-full border-gray-200 rounded-xl shadow-sm py-2.5 px-4 focus:ring-primary focus:border-primary border transition-all text-sm placeholder:text-gray-300" placeholder="Thông tin chi tiết về sản phẩm..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 rounded-b-3xl">
+                            <button type="button" @click="showAddModal = false" class="px-6 py-2.5 text-gray-600 font-bold hover:text-gray-900 transition-colors text-sm">Hủy bỏ</button>
+                            <button type="submit" class="px-8 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-primary/20 flex items-center text-sm">
+                                <i class="fa-solid fa-save mr-2"></i> Lưu Sản Phẩm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Add Modal (Nested Popup) -->
+        <div x-show="showAddCatModal" x-cloak class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                <div x-show="showAddCatModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-dark/60 transition-opacity backdrop-blur-sm" @click="showAddCatModal = false"></div>
+
+                <div x-show="showAddCatModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-middle bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-md w-full">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="text-base font-bold text-gray-800">Thêm Danh Mục Mới</h3>
+                        <button type="button" @click="showAddCatModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label for="new_category_name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Tên danh mục <span class="text-red-500">*</span></label>
+                            <input type="text" id="new_category_name" class="w-full border-gray-200 rounded-xl shadow-sm py-2 px-3 focus:ring-primary focus:border-primary border transition-all text-sm" placeholder="VD: Thức ăn khô">
+                        </div>
+                        <div>
+                            <label for="new_category_desc" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Mô tả</label>
+                            <textarea id="new_category_desc" rows="3" class="w-full border-gray-200 rounded-xl shadow-sm py-2 px-3 focus:ring-primary focus:border-primary border transition-all text-sm placeholder:text-gray-300" placeholder="Mô tả danh mục..."></textarea>
+                        </div>
+                        <div id="category-error" class="text-xs text-red-600 font-medium hidden"></div>
+                    </div>
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-2 rounded-b-3xl">
+                        <button type="button" @click="showAddCatModal = false" class="px-4 py-2 text-gray-600 font-bold hover:text-gray-900 transition-colors text-xs">Hủy</button>
+                        <button type="button" @click="saveCategory()" id="btn-save-category" class="px-5 py-2 bg-primary text-white font-bold rounded-xl hover:bg-indigo-700 transition-all text-xs shadow-sm">Lưu lại</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
