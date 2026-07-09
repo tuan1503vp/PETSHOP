@@ -1,6 +1,23 @@
 <?php require APPROOT . '/views/admin/header.php'; ?>
+<?php
+$filter_type = 'all';
+$filter_val = '';
+if (!empty($data['filter_date'])) {
+    $len = strlen($data['filter_date']);
+    if ($len == 10) {
+        $filter_type = 'day';
+        $filter_val = $data['filter_date'];
+    } elseif ($len == 7) {
+        $filter_type = 'month';
+        $filter_val = $data['filter_date'];
+    } elseif ($len == 4) {
+        $filter_type = 'year';
+        $filter_val = $data['filter_date'];
+    }
+}
+?>
 
-<div class="p-6 lg:p-8" x-data="{ tab: 'pos' }">
+<div class="p-6 lg:p-8" x-data="{ tab: '<?php echo $data['tab'] ?? 'pos'; ?>' }">
     <div class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-2xl font-black text-gray-800">Lịch Sử Thanh Toán</h1>
@@ -20,6 +37,31 @@
 
     <!-- Tab POS -->
     <div x-show="tab === 'pos'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Bộ lọc cho POS/Online -->
+        <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+            <form action="" method="GET" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <input type="hidden" name="tab" value="pos">
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-black text-gray-400 uppercase tracking-wider">Kênh đơn hàng:</label>
+                    <select name="order_type" class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="all" <?php echo $data['order_type'] == 'all' ? 'selected' : ''; ?>>Tất cả kênh</option>
+                        <option value="pos" <?php echo $data['order_type'] == 'pos' ? 'selected' : ''; ?>>Tại quầy (POS)</option>
+                        <option value="online" <?php echo $data['order_type'] == 'online' ? 'selected' : ''; ?>>Trực tuyến (Online)</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="px-5 py-1.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-indigo-700 transition shadow-sm">
+                    <i class="fa-solid fa-filter mr-1"></i> Lọc
+                </button>
+                <?php if ($data['order_type'] !== 'all'): ?>
+                    <a href="?tab=pos" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-xs transition flex items-center">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Thiết lập lại
+                    </a>
+                <?php endif; ?>
+            </form>
+        </div>
+
         <table class="min-w-full divide-y divide-gray-100">
             <thead class="bg-gray-50/50">
                 <tr>
@@ -83,10 +125,101 @@
                 <?php endif; ?>
             </tbody>
         </table>
+
+        <!-- Phân trang POS -->
+        <?php if(isset($data['total_pos_pages']) && $data['total_pos_pages'] > 1): ?>
+        <div class="flex items-center justify-between px-6 py-4 bg-gray-50/30 border-t border-gray-100">
+            <div class="text-xs text-gray-500 font-bold">
+                Hiển thị trang <span class="font-extrabold text-primary"><?php echo $data['pos_page']; ?></span> / <span class="font-extrabold text-gray-700"><?php echo $data['total_pos_pages']; ?></span> (Tổng số <span class="font-extrabold text-gray-700"><?php echo $data['total_pos']; ?></span> đơn hàng)
+            </div>
+            <div class="flex gap-1.5">
+                <?php if($data['pos_page'] > 1): ?>
+                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_page=<?php echo $data['pos_page'] - 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Trước
+                    </a>
+                <?php else: ?>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-150 rounded-xl text-xs font-bold text-gray-300 cursor-not-allowed flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Trước
+                    </span>
+                <?php endif; ?>
+
+                <?php
+                $start_page = max(1, $data['pos_page'] - 2);
+                $end_page = min($data['total_pos_pages'], $data['pos_page'] + 2);
+                for ($i = $start_page; $i <= $end_page; $i++):
+                ?>
+                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_page=<?php echo $i; ?>" class="px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm <?php echo $i == $data['pos_page'] ? 'bg-primary text-white shadow-primary/20 border border-primary' : 'bg-white hover:bg-gray-50 text-gray-600 border border-gray-200'; ?>">
+                        <?php echo $i; ?>
+                    </a>
+                <?php endfor; ?>
+
+                <?php if($data['pos_page'] < $data['total_pos_pages']): ?>
+                    <a href="?tab=pos&order_type=<?php echo $data['order_type']; ?>&pos_page=<?php echo $data['pos_page'] + 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
+                        Sau <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                    </a>
+                <?php else: ?>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-150 rounded-xl text-xs font-bold text-gray-300 cursor-not-allowed flex items-center gap-1">
+                        Sau <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                    </span>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Tab Service -->
     <div x-show="tab === 'service'" style="display: none;" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Bộ lọc cho Service -->
+        <div class="bg-gray-50/50 p-6 border-b border-gray-100" x-data="{ filterType: '<?php echo $filter_type; ?>', filterValue: '<?php echo $filter_val; ?>' }">
+            <form action="" method="GET" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <input type="hidden" name="tab" value="service">
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-black text-gray-400 uppercase tracking-wider">Lọc theo:</label>
+                    <select x-model="filterType" class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="all">Xem tất cả</option>
+                        <option value="day">Theo ngày</option>
+                        <option value="month">Theo tháng</option>
+                        <option value="year">Theo năm</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center">
+                    <!-- Ngày -->
+                    <template x-if="filterType === 'day'">
+                        <input type="date" name="filter_date" x-model="filterValue" required
+                               class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                    </template>
+                    
+                    <!-- Tháng -->
+                    <template x-if="filterType === 'month'">
+                        <input type="month" name="filter_date" x-model="filterValue" required
+                               class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                    </template>
+                    
+                    <!-- Năm -->
+                    <template x-if="filterType === 'year'">
+                        <input type="number" name="filter_date" x-model="filterValue" min="2020" max="2035" required placeholder="VD: 2026"
+                               class="border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary w-24">
+                    </template>
+
+                    <!-- Ẩn khi xem tất cả -->
+                    <template x-if="filterType === 'all'">
+                        <input type="hidden" name="filter_date" value="">
+                    </template>
+                </div>
+                
+                <button type="submit" class="px-5 py-1.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-indigo-700 transition shadow-sm">
+                    <i class="fa-solid fa-filter mr-1"></i> Lọc
+                </button>
+                <?php if (!empty($data['filter_date'])): ?>
+                    <a href="?tab=service" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-xs transition flex items-center">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Thiết lập lại
+                    </a>
+                <?php endif; ?>
+            </form>
+        </div>
+
         <table class="min-w-full divide-y divide-gray-100">
             <thead class="bg-gray-50/50">
                 <tr>
@@ -132,6 +265,46 @@
                 <?php endif; ?>
             </tbody>
         </table>
+
+        <!-- Phân trang Dịch vụ -->
+        <?php if(isset($data['total_services_pages']) && $data['total_services_pages'] > 1): ?>
+        <div class="flex items-center justify-between px-6 py-4 bg-gray-50/30 border-t border-gray-100">
+            <div class="text-xs text-gray-500 font-bold">
+                Hiển thị trang <span class="font-extrabold text-primary"><?php echo $data['service_page']; ?></span> / <span class="font-extrabold text-gray-700"><?php echo $data['total_services_pages']; ?></span> (Tổng số <span class="font-extrabold text-gray-700"><?php echo $data['total_services']; ?></span> dịch vụ)
+            </div>
+            <div class="flex gap-1.5">
+                <?php if($data['service_page'] > 1): ?>
+                    <a href="?tab=service&filter_date=<?php echo urlencode($data['filter_date']); ?>&service_page=<?php echo $data['service_page'] - 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Trước
+                    </a>
+                <?php else: ?>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-150 rounded-xl text-xs font-bold text-gray-300 cursor-not-allowed flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Trước
+                    </span>
+                <?php endif; ?>
+
+                <?php
+                $start_page = max(1, $data['service_page'] - 2);
+                $end_page = min($data['total_services_pages'], $data['service_page'] + 2);
+                for ($i = $start_page; $i <= $end_page; $i++):
+                ?>
+                    <a href="?tab=service&filter_date=<?php echo urlencode($data['filter_date']); ?>&service_page=<?php echo $i; ?>" class="px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm <?php echo $i == $data['service_page'] ? 'bg-primary text-white shadow-primary/20 border border-primary' : 'bg-white hover:bg-gray-50 text-gray-600 border border-gray-200'; ?>">
+                        <?php echo $i; ?>
+                    </a>
+                <?php endfor; ?>
+
+                <?php if($data['service_page'] < $data['total_services_pages']): ?>
+                    <a href="?tab=service&filter_date=<?php echo urlencode($data['filter_date']); ?>&service_page=<?php echo $data['service_page'] + 1; ?>" class="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 transition flex items-center gap-1 shadow-sm">
+                        Sau <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                    </a>
+                <?php else: ?>
+                    <span class="px-3 py-1.5 bg-gray-50 border border-gray-150 rounded-xl text-xs font-bold text-gray-300 cursor-not-allowed flex items-center gap-1">
+                        Sau <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                    </span>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
 </div>

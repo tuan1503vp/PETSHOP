@@ -224,6 +224,71 @@ class Appointment {
         return $this->db->resultSet();
     }
 
+    public function getAllCompletedAppointmentsFiltered($filters = []) {
+        $sql = 'SELECT a.*, s.name as service_name, s.price as service_price, cat.name as category_name,
+                       COALESCE(c.fullname, a.customer_name) as customer_name, 
+                       COALESCE(p.name, a.pet_info) as pet_name, u.fullname as doctor_name
+                       FROM appointments a
+                       JOIN services s ON a.service_id = s.id
+                       LEFT JOIN categories cat ON s.category_id = cat.id
+                       LEFT JOIN users c ON a.customer_id = c.id
+                       LEFT JOIN pets p ON a.pet_id = p.id
+                       LEFT JOIN users u ON a.doctor_id = u.id
+                       WHERE a.status = "completed"';
+        
+        if (!empty($filters['filter_date'])) {
+            $len = strlen($filters['filter_date']);
+            if ($len == 10) {
+                $sql .= ' AND a.appointment_date = :filter_date';
+            } elseif ($len == 7) {
+                $sql .= ' AND DATE_FORMAT(a.appointment_date, "%Y-%m") = :filter_date';
+            } elseif ($len == 4) {
+                $sql .= ' AND YEAR(a.appointment_date) = :filter_date';
+            }
+        }
+        
+        $sql .= ' ORDER BY a.appointment_date DESC, a.appointment_time DESC';
+        
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $sql .= ' LIMIT :limit OFFSET :offset';
+        }
+        
+        $this->db->query($sql);
+        
+        if (!empty($filters['filter_date'])) {
+            $this->db->bind(':filter_date', $filters['filter_date']);
+        }
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $this->db->bind(':limit', (int)$filters['limit']);
+            $this->db->bind(':offset', (int)$filters['offset']);
+        }
+        
+        return $this->db->resultSet();
+    }
+
+    public function getTotalCompletedAppointments($filters = []) {
+        $sql = 'SELECT COUNT(*) as count FROM appointments a WHERE a.status = "completed"';
+        
+        if (!empty($filters['filter_date'])) {
+            $len = strlen($filters['filter_date']);
+            if ($len == 10) {
+                $sql .= ' AND a.appointment_date = :filter_date';
+            } elseif ($len == 7) {
+                $sql .= ' AND DATE_FORMAT(a.appointment_date, "%Y-%m") = :filter_date';
+            } elseif ($len == 4) {
+                $sql .= ' AND YEAR(a.appointment_date) = :filter_date';
+            }
+        }
+        
+        $this->db->query($sql);
+        
+        if (!empty($filters['filter_date'])) {
+            $this->db->bind(':filter_date', $filters['filter_date']);
+        }
+        
+        return $this->db->single()->count;
+    }
+
     // Lấy các lịch hẹn đã hoàn thành của một nhân viên/bác sĩ cụ thể
     public function getCompletedAppointmentsByDoctor($doctor_id, $month = null, $year = null) {
         $sql = 'SELECT a.*, s.name as service_name, 

@@ -81,6 +81,51 @@ class Order {
         return $this->db->resultSet();
     }
 
+    public function getCompletedOrdersFiltered($filters = []) {
+        $sql = 'SELECT o.*, COALESCE(o.customer_name, u.fullname) as customer_name 
+                FROM orders o 
+                LEFT JOIN users u ON o.customer_id = u.id 
+                WHERE o.status = "completed"';
+        
+        if (isset($filters['order_type']) && $filters['order_type'] !== 'all') {
+            $sql .= ' AND o.order_type = :order_type';
+        }
+        
+        $sql .= ' ORDER BY o.created_at DESC';
+        
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $sql .= ' LIMIT :limit OFFSET :offset';
+        }
+        
+        $this->db->query($sql);
+        
+        if (isset($filters['order_type']) && $filters['order_type'] !== 'all') {
+            $this->db->bind(':order_type', $filters['order_type']);
+        }
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $this->db->bind(':limit', (int)$filters['limit']);
+            $this->db->bind(':offset', (int)$filters['offset']);
+        }
+        
+        return $this->db->resultSet();
+    }
+
+    public function getTotalCompletedOrders($filters = []) {
+        $sql = 'SELECT COUNT(*) as count FROM orders o WHERE o.status = "completed"';
+        
+        if (isset($filters['order_type']) && $filters['order_type'] !== 'all') {
+            $sql .= ' AND o.order_type = :order_type';
+        }
+        
+        $this->db->query($sql);
+        
+        if (isset($filters['order_type']) && $filters['order_type'] !== 'all') {
+            $this->db->bind(':order_type', $filters['order_type']);
+        }
+        
+        return $this->db->single()->count;
+    }
+
     // Cập nhật trạng thái đơn hàng
     public function updateStatus($order_id, $status) {
         $this->db->query('UPDATE orders SET status = :status WHERE id = :id');

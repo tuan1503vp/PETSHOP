@@ -2054,18 +2054,62 @@ class AdminController extends Controller {
         $orderModel = $this->model('Order');
         $appointmentModel = $this->model('Appointment');
 
-        $completedOrders = $orderModel->getCompletedOrders();
+        // Tab hiện tại
+        $tab = isset($_GET['tab']) ? $_GET['tab'] : 'pos';
+
+        // 1. Phân trang & Lọc cho Đơn hàng POS/Online
+        $order_filters = [];
+        $order_type = isset($_GET['order_type']) ? $_GET['order_type'] : 'all';
+        $order_filters['order_type'] = $order_type;
+
+        $pos_limit = 10;
+        $pos_page = isset($_GET['pos_page']) ? max((int)$_GET['pos_page'], 1) : 1;
+        $pos_offset = ($pos_page - 1) * $pos_limit;
+
+        $total_pos = $orderModel->getTotalCompletedOrders($order_filters);
+        $total_pos_pages = ceil($total_pos / $pos_limit);
+
+        $order_filters['limit'] = $pos_limit;
+        $order_filters['offset'] = $pos_offset;
+        $completedOrders = $orderModel->getCompletedOrdersFiltered($order_filters);
         
         // Đính kèm danh sách sản phẩm vào từng đơn hàng
         foreach ($completedOrders as $order) {
             $order->items = $orderModel->getOrderItems($order->id);
         }
 
-        $completedAppointments = $appointmentModel->getAllCompletedAppointments();
+        // 2. Phân trang & Lọc cho Dịch vụ
+        $appt_filters = [];
+        $filter_date = isset($_GET['filter_date']) ? trim($_GET['filter_date']) : '';
+        $appt_filters['filter_date'] = $filter_date;
+
+        $service_limit = 10;
+        $service_page = isset($_GET['service_page']) ? max((int)$_GET['service_page'], 1) : 1;
+        $service_offset = ($service_page - 1) * $service_limit;
+
+        $total_services = $appointmentModel->getTotalCompletedAppointments($appt_filters);
+        $total_services_pages = ceil($total_services / $service_limit);
+
+        $appt_filters['limit'] = $service_limit;
+        $appt_filters['offset'] = $service_offset;
+        $completedAppointments = $appointmentModel->getAllCompletedAppointmentsFiltered($appt_filters);
 
         $this->view('admin/payment_history', [
+            'tab' => $tab,
+            
+            // POS
             'orders' => $completedOrders,
-            'appointments' => $completedAppointments
+            'order_type' => $order_type,
+            'pos_page' => $pos_page,
+            'total_pos_pages' => $total_pos_pages,
+            'total_pos' => $total_pos,
+            
+            // SERVICE
+            'appointments' => $completedAppointments,
+            'filter_date' => $filter_date,
+            'service_page' => $service_page,
+            'total_services_pages' => $total_services_pages,
+            'total_services' => $total_services
         ]);
     }
 
