@@ -94,7 +94,7 @@ class Product {
         return $this->db->resultSet();
     }
 
-    // Đếm tổng số lượng sản phẩm theo bộ lọc để phân trang
+    // Đếm số lượng sản phẩm để phân trang
     public function getProductsCount($params = []) {
         $sql = 'SELECT COUNT(*) as total 
                 FROM products p 

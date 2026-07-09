@@ -517,8 +517,31 @@ class AdminController extends Controller {
 
     public function products() {
         $this->checkAccess(['admin', 'manager']);
-        $products = $this->productModel->getProducts();
-        $this->view('admin/products', ['products' => $products]);
+        
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($page < 1) {
+            $page = 1;
+        }
+        $limit = 15; // 15 sản phẩm mỗi trang cho Admin gọn đẹp
+        $offset = ($page - 1) * $limit;
+        
+        $totalProducts = $this->productModel->getProductsCount();
+        $totalPages = ceil($totalProducts / $limit);
+        
+        $products = $this->productModel->getProducts([
+            'limit' => $limit,
+            'offset' => $offset
+        ]);
+        
+        $this->view('admin/products', [
+            'products' => $products,
+            'pagination' => [
+                'total_products' => $totalProducts,
+                'total_pages' => $totalPages,
+                'current_page' => $page,
+                'limit' => $limit
+            ]
+        ]);
     }
 
     public function product_add() {

@@ -20,13 +20,8 @@ class ProductController extends Controller {
             'price_min' => $_GET['price_min'] ?? '',
             'price_max' => $_GET['price_max'] ?? '',
             'target_pet' => $_GET['target_pet'] ?? '',
-            'pet_id' => $_GET['pet_id'] ?? '',
-            'page' => isset($_GET['page']) ? (int)$_GET['page'] : 1
+            'pet_id' => $_GET['pet_id'] ?? ''
         ];
-
-        if ($params['page'] < 1) {
-            $params['page'] = 1;
-        }
 
         $userPets = [];
         $selectedPet = null;
@@ -81,18 +76,7 @@ class ProductController extends Controller {
             }
         }
 
-        // Cấu hình phân trang
-        $limit = 9; // 9 sản phẩm mỗi trang cho hiển thị 3 cột tối ưu
-        $offset = ($params['page'] - 1) * $limit;
-        
-        $totalProducts = $this->productModel->getProductsCount($params);
-        $totalPages = ceil($totalProducts / $limit);
-
-        // Lấy sản phẩm có giới hạn phân trang
-        $dbParams = $params;
-        $dbParams['limit'] = $limit;
-        $dbParams['offset'] = $offset;
-        $products = $this->productModel->getProducts($dbParams);
+        $products = $this->productModel->getProducts($params);
         
         // Thực hiện đánh dấu và sắp xếp đề xuất nếu có chọn thú cưng
         if ($selectedPet) {
@@ -133,12 +117,6 @@ class ProductController extends Controller {
             'params' => $params,
             'userPets' => $userPets,
             'selectedPet' => $selectedPet,
-            'pagination' => [
-                'total_products' => $totalProducts,
-                'total_pages' => $totalPages,
-                'current_page' => $params['page'],
-                'limit' => $limit
-            ],
             'seo' => [
                 'title' => 'Cửa hàng Thú cưng - PETSHOP',
                 'description' => 'Khám phá ngay hàng trăm sản phẩm thức ăn, phụ kiện, đồ chơi chính hãng cho thú cưng của bạn tại PETSHOP. Cam kết chất lượng, giao hàng tận nơi.',

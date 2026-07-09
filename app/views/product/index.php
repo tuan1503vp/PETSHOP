@@ -4,9 +4,6 @@
 if (!function_exists('buildProductUrl')) {
     function buildProductUrl($data, $changes = []) {
         $params = $data['params'];
-        if (!isset($changes['page'])) {
-            $params['page'] = 1;
-        }
         foreach ($changes as $key => $val) {
             $params[$key] = $val;
         }
@@ -172,11 +169,10 @@ if (!function_exists('buildProductUrl')) {
                 submitFilters();
             });
 
-            // Lắng nghe click danh mục, đối tượng, khoảng giá, phân trang và nút xóa tìm kiếm
+            // Lắng nghe click danh mục, đối tượng, khoảng giá và nút xóa tìm kiếm
             document.addEventListener('click', (e) => {
                 const catLink = e.target.closest('aside a');
                 const petLink = e.target.closest('.select-pet-btn');
-                const pageLink = e.target.closest('.pagination-btn');
                 const clearBtn = e.target.closest('.clear-search');
                 if(catLink) {
                     e.preventDefault();
@@ -216,9 +212,6 @@ if (!function_exists('buildProductUrl')) {
                     } catch(err) {
                         console.error('Error syncing pet parameters:', err);
                     }
-                } else if(pageLink) {
-                    e.preventDefault();
-                    fetchCatalog(pageLink.href);
                 } else if(clearBtn) {
                     e.preventDefault();
                     searchInput.value = '';
@@ -360,12 +353,13 @@ if (!function_exists('buildProductUrl')) {
                         <p class="mt-2 text-gray-500 font-medium">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
                         <a href="<?php echo URLROOT; ?>/product" class="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-black text-sm rounded-xl hover:bg-indigo-75 transition-all">Xóa bộ lọc</a>
                     </div>
-                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <?php else: ?>
+                    <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                         <?php foreach($data['products'] as $product): ?>
-                            <div class="group relative flex flex-col bg-white border border-gray-100/80 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden reveal">
+                            <div class="group relative flex flex-col bg-white border border-gray-100/80 rounded-[32px] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden reveal">
                                 
                                 <!-- Image Container -->
-                                <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-50 border-b border-gray-50">
+                                <div class="relative w-full aspect-square overflow-hidden bg-slate-50 border-b border-gray-50">
                                     <a href="<?php echo URLROOT; ?>/product/show/<?php echo $product->id; ?>">
                                         <img src="<?php echo !empty($product->image) ? URLROOT . '/public/images/' . $product->image : 'https://placehold.co/400x400?text=' . urlencode($product->name); ?>" 
                                              alt="<?php echo $product->name; ?>" 
@@ -402,15 +396,15 @@ if (!function_exists('buildProductUrl')) {
                                 </div>
 
                                 <!-- Info -->
-                                <div class="p-4 flex flex-col flex-1 gap-2">
+                                <div class="p-5 flex flex-col flex-1 gap-3">
                                     <!-- Name & Description -->
-                                    <div class="space-y-1 flex-1">
-                                        <h3 class="text-sm font-black text-gray-800 group-hover:text-primary transition-colors line-clamp-1">
+                                    <div class="space-y-1.5 flex-1">
+                                        <h3 class="text-base font-black text-gray-800 group-hover:text-primary transition-colors line-clamp-1">
                                             <a href="<?php echo URLROOT; ?>/product/show/<?php echo $product->id; ?>">
                                                 <?php echo $product->name; ?>
                                             </a>
                                         </h3>
-                                        <p class="text-xs text-slate-400 font-medium leading-normal line-clamp-2">
+                                        <p class="text-xs text-slate-400 font-medium leading-relaxed line-clamp-2">
                                             <?php echo $product->description; ?>
                                         </p>
                                         <div class="flex items-center text-yellow-400 text-[10px] gap-0.5 pt-0.5">
@@ -424,15 +418,15 @@ if (!function_exists('buildProductUrl')) {
                                     </div>
 
                                     <!-- Price -->
-                                    <p class="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                                    <p class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
                                         <?php echo number_format($product->price, 0, ',', '.'); ?> <span class="text-xs">đ</span>
                                     </p>
 
                                     <!-- Action Buttons -->
-                                    <div class="flex gap-2 pt-0.5 border-t border-gray-50">
+                                    <div class="flex gap-2 pt-1 border-t border-gray-50">
                                         <!-- View Detail -->
                                         <a href="<?php echo URLROOT; ?>/product/show/<?php echo $product->id; ?>"
-                                           class="flex-1 py-2 text-center text-xs font-bold text-primary border border-primary/30 rounded-xl hover:bg-primary hover:text-white transition-all duration-200">
+                                           class="flex-1 py-2.5 text-center text-xs font-bold text-primary border border-primary/30 rounded-xl hover:bg-primary hover:text-white transition-all duration-200">
                                             <i class="fa-solid fa-eye mr-1"></i> Xem chi tiết
                                         </a>
 
@@ -441,18 +435,16 @@ if (!function_exists('buildProductUrl')) {
                                         <form action="<?php echo URLROOT; ?>/cart/add/<?php echo $product->id; ?>" method="POST">
                                             <input type="hidden" name="quantity" value="1">
                                             <button type="submit" 
-                                                    class="w-8.5 h-8.5 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center hover:scale-115 transition-all duration-200 shadow-md shadow-primary/20 animate-none"
-                                                    style="width: 34px; height: 34px;"
+                                                    class="w-10 h-10 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-200 shadow-md shadow-primary/20"
                                                     title="Thêm vào giỏ hàng">
-                                                <i class="fa-solid fa-cart-plus text-xs"></i>
+                                                <i class="fa-solid fa-cart-plus text-sm"></i>
                                             </button>
                                         </form>
                                         <?php else: ?>
                                         <a href="<?php echo URLROOT; ?>/auth/login"
-                                           class="w-8.5 h-8.5 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200"
-                                           style="width: 34px; height: 34px;"
+                                           class="w-10 h-10 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200"
                                            title="Đăng nhập để mua">
-                                            <i class="fa-solid fa-cart-plus text-xs"></i>
+                                            <i class="fa-solid fa-cart-plus text-sm"></i>
                                         </a>
                                         <?php endif; ?>
                                     </div>
@@ -460,36 +452,6 @@ if (!function_exists('buildProductUrl')) {
                             </div>
                         <?php endforeach; ?>
                     </div>
-
-                    <!-- Pagination Controls -->
-                    <?php if($data['pagination']['total_pages'] > 1): ?>
-                        <div class="mt-10 flex justify-center items-center gap-2">
-                            <!-- Nút trang trước -->
-                            <?php if($data['pagination']['current_page'] > 1): ?>
-                                <a href="<?php echo buildProductUrl($data, ['page' => $data['pagination']['current_page'] - 1]); ?>" 
-                                   class="pagination-btn w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:border-primary hover:text-primary transition shadow-sm font-bold text-xs">
-                                    <i class="fa-solid fa-chevron-left"></i>
-                                </a>
-                            <?php endif; ?>
-
-                            <!-- Các số trang -->
-                            <?php for($i = 1; $i <= $data['pagination']['total_pages']; $i++): ?>
-                                <?php $isCurrent = $i == $data['pagination']['current_page']; ?>
-                                <a href="<?php echo buildProductUrl($data, ['page' => $i]); ?>" 
-                                   class="pagination-btn w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs transition <?php echo $isCurrent ? 'bg-primary text-white shadow-md shadow-primary/30 border border-primary' : 'border border-gray-200 bg-white text-gray-600 hover:border-primary hover:text-primary shadow-sm'; ?>">
-                                    <?php echo $i; ?>
-                                </a>
-                            <?php endfor; ?>
-
-                            <!-- Nút trang sau -->
-                            <?php if($data['pagination']['current_page'] < $data['pagination']['total_pages']): ?>
-                                <a href="<?php echo buildProductUrl($data, ['page' => $data['pagination']['current_page'] + 1]); ?>" 
-                                   class="pagination-btn w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:border-primary hover:text-primary transition shadow-sm font-bold text-xs">
-                                    <i class="fa-solid fa-chevron-right"></i>
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>
