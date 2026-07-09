@@ -1977,6 +1977,7 @@ class AdminController extends Controller {
             'record' => $record,
             'prescriptions' => $prescriptions,
             'vaccineRecord' => $vaccineRecord
+        ]);
     }
 
     public function get_appointment_details_json($id) {
