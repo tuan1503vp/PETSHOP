@@ -4,6 +4,8 @@
 <div class="p-6" x-data="{ 
     showModal: false, 
     selectedApp: null, 
+    selectedAppDetails: null,
+    loadingDetails: false,
     availableDoctors: [], 
     loadingDoctors: false, 
     requiredRoleLabel: '',
@@ -44,6 +46,29 @@
         this.showModal = true; 
         this.availableDoctors = []; 
         this.prescriptions = []; 
+        this.selectedAppDetails = null;
+    },
+    async viewAppointmentDetails(apptId) {
+        this.selectedApp = null;
+        this.selectedAppDetails = null;
+        this.loadingDetails = true;
+        this.showModal = true;
+        try {
+            const r = await fetch(`<?php echo URLROOT; ?>/admin/get_appointment_details_json/${apptId}`);
+            const data = await r.json();
+            if (data.success) {
+                this.selectedApp = data.appointment;
+                this.selectedAppDetails = data;
+            } else {
+                alert(data.message);
+                this.showModal = false;
+            }
+        } catch(e) {
+            alert('Không thể tải chi tiết lịch hẹn.');
+            this.showModal = false;
+        } finally {
+            this.loadingDetails = false;
+        }
     },
     async fetchDoctors() { 
         this.loadingDoctors = true; 
@@ -312,9 +337,9 @@
                             </a>
 
                             <?php elseif($app->status == 'completed'): ?>
-                            <a href="<?php echo URLROOT; ?>/admin/appointment_detail/<?php echo $app->id; ?>" target="_blank" class="bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-green-100 transition inline-flex items-center gap-1 shadow-sm">
+                            <button type="button" @click="viewAppointmentDetails(<?php echo $app->id; ?>)" class="bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-green-100 transition inline-flex items-center gap-1 shadow-sm">
                                 <i class="fa-solid fa-eye"></i> Xem
-                            </a>
+                            </button>
 
                             <?php elseif(!($data['is_doctor_view'] ?? false) && $_SESSION['user_role'] != 'cashier'): ?>
                             <?php /* Admin/Manager: Phân công */ ?>
@@ -413,9 +438,9 @@
                     <td class="px-6 py-5"><span class="text-sm text-gray-700"><?php echo $app->pet_name ?? 'N/A'; ?></span></td>
                     <td class="px-6 py-5"><span class="text-sm text-gray-600"><?php echo date('d/m/Y H:i', strtotime($app->appointment_date . ' ' . $app->appointment_time)); ?></span></td>
                     <td class="px-6 py-5 text-right">
-                        <a href="<?php echo URLROOT; ?>/admin/appointment_detail/<?php echo $app->id; ?>" target="_blank" class="bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-green-100 transition inline-flex items-center gap-1 shadow-sm">
+                        <button type="button" @click="viewAppointmentDetails(<?php echo $app->id; ?>)" class="bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-green-100 transition inline-flex items-center gap-1 shadow-sm">
                             <i class="fa-solid fa-eye"></i> Xem
-                        </a>
+                        </button>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -437,7 +462,14 @@
                 <button @click="showModal = false" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             <div class="p-8 max-h-[70vh] overflow-y-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Loading State -->
+                <div x-show="loadingDetails" class="flex flex-col items-center justify-center py-20">
+                    <div class="w-10 h-10 border-4 border-indigo-200 border-t-primary rounded-full animate-spin mb-4"></div>
+                    <p class="text-xs font-bold text-gray-500">Đang tải chi tiết...</p>
+                </div>
+
+                <div x-show="!loadingDetails">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100">
                         <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3"><i class="fa-solid fa-user-tag mr-1 text-primary"></i> Khách hàng</h4>
                         <p class="text-sm font-bold text-gray-800" x-text="selectedApp?.customer_name"></p>
@@ -637,9 +669,114 @@
                             <p class="text-lg font-black text-green-600" x-text="new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedApp?.final_price)"></p>
                         </div>
                     </template>
+                    
+                    <!-- KHU VỰC HIỂN THỊ CHI TIẾT BỆNH ÁN / VẮC-XIN KHI ĐÃ HOÀN THÀNH -->
+                    <template x-if="selectedApp?.status === 'completed' && selectedAppDetails">
+                        <div class="mt-6 pt-6 border-t border-gray-150 space-y-6">
+                            
+                            <!-- 1. THÔNG TIN TIÊM CHỦNG (Nếu có vaccineRecord) -->
+                            <template x-if="selectedAppDetails.vaccineRecord">
+                                <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100/50 space-y-4 text-left">
+                                    <h3 class="text-xs font-black text-emerald-700 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-emerald-100/40">
+                                        <i class="fa-solid fa-syringe text-emerald-500"></i> Chứng nhận tiêm chủng &amp; Sàng lọc
+                                    </h3>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-[9px] text-gray-400 font-bold uppercase">Tên Vắc-xin</p>
+                                            <p class="text-sm font-bold text-gray-800" x-text="selectedAppDetails.vaccineRecord.vaccine_name"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] text-gray-400 font-bold uppercase">Ngày tiêm chủng</p>
+                                            <p class="text-sm font-bold text-gray-800" x-text="new Date(selectedAppDetails.vaccineRecord.vaccinated_date).toLocaleDateString('vi-VN')"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] text-gray-400 font-bold uppercase">Thân nhiệt / Cân nặng</p>
+                                            <p class="text-xs text-gray-700 font-bold" x-text="(selectedAppDetails.vaccineRecord.temperature ? selectedAppDetails.vaccineRecord.temperature + ' °C' : '—') + ' / ' + (selectedAppDetails.vaccineRecord.weight ? selectedAppDetails.vaccineRecord.weight + ' kg' : '—')"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] text-gray-400 font-bold uppercase">Bác sĩ phụ trách</p>
+                                            <p class="text-xs text-gray-700 font-bold" x-text="selectedAppDetails.vaccineRecord.veterinarian_name || selectedApp?.doctor_name || '—'"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-3 bg-white/70 rounded-xl border border-emerald-100/30 text-xs">
+                                        <span class="font-bold text-emerald-800 block mb-1">Khám lâm sàng &amp; Xét nghiệm:</span>
+                                        <p class="text-gray-700 leading-relaxed font-medium whitespace-pre-line" x-text="selectedAppDetails.vaccineRecord.test_result || 'Chưa ghi nhận kết quả sàng lọc'"></p>
+                                    </div>
+
+                                    <template x-if="selectedAppDetails.vaccineRecord.reaction_notes">
+                                        <div class="p-3 bg-white/70 rounded-xl border border-emerald-100/30 text-xs">
+                                            <span class="font-bold text-emerald-800 block mb-1">Dặn dò sau tiêm:</span>
+                                            <p class="text-gray-700 leading-relaxed font-medium whitespace-pre-line" x-text="selectedAppDetails.vaccineRecord.reaction_notes"></p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- 2. THÔNG TIN BỆNH ÁN LÂM SÀNG (Nếu có record) -->
+                            <template x-if="selectedAppDetails.record">
+                                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200/50 space-y-4 text-left">
+                                    <h3 class="text-xs font-black text-indigo-700 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-gray-200/40">
+                                        <i class="fa-solid fa-file-medical text-indigo-500"></i> Bệnh án lâm sàng
+                                    </h3>
+                                    
+                                    <div class="space-y-3">
+                                        <div>
+                                            <span class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Chẩn đoán lâm sàng:</span>
+                                            <div class="p-3 bg-white rounded-xl border border-gray-200/30 text-xs text-gray-700 font-medium whitespace-pre-line text-left" x-text="selectedAppDetails.record.diagnosis || 'Không có thông tin chẩn đoán.'"></div>
+                                        </div>
+                                        <div>
+                                            <span class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Chỉ định điều trị:</span>
+                                            <div class="p-3 bg-white rounded-xl border border-gray-200/30 text-xs text-gray-700 font-medium whitespace-pre-line text-left" x-text="selectedAppDetails.record.treatment || 'Không có chỉ định điều trị.'"></div>
+                                        </div>
+                                        <template x-if="selectedAppDetails.record.notes">
+                                            <div>
+                                                <span class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ghi chú &amp; Hẹn tái khám:</span>
+                                                <div class="p-3 bg-white rounded-xl border border-gray-200/30 text-xs text-gray-700 font-medium whitespace-pre-line text-left" x-text="selectedAppDetails.record.notes"></div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- 3. ĐƠN THUỐC ĐI KÈM -->
+                            <template x-if="selectedAppDetails.prescriptions && selectedAppDetails.prescriptions.length > 0">
+                                <div class="bg-indigo-50/20 p-5 rounded-2xl border border-indigo-100/50 space-y-3 text-left">
+                                    <h3 class="text-xs font-black text-indigo-800 uppercase tracking-wider flex items-center gap-1.5 pb-1">
+                                        <i class="fa-solid fa-pills text-indigo-500"></i> Đơn thuốc kèm theo
+                                    </h3>
+                                    <div class="overflow-hidden border border-gray-100 rounded-xl bg-white">
+                                        <table class="min-w-full divide-y divide-gray-150 text-xs">
+                                            <thead class="bg-indigo-50/30">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left font-bold text-gray-500 uppercase">Tên thuốc</th>
+                                                    <th class="px-3 py-2 text-center font-bold text-gray-500 uppercase w-16">SL</th>
+                                                    <th class="px-3 py-2 text-left font-bold text-gray-500 uppercase">Cách dùng</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-100">
+                                                <template x-for="pres in selectedAppDetails.prescriptions">
+                                                    <tr>
+                                                        <td class="px-3 py-2 font-bold text-gray-800" x-text="pres.product_name"></td>
+                                                        <td class="px-3 py-2 text-center font-black text-indigo-600" x-text="pres.quantity"></td>
+                                                        <td class="px-3 py-2 text-gray-600 font-medium" x-text="pres.instruction || 'Theo chỉ định'"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
                 </div>
             </div>
             <div class="px-8 py-5 bg-gray-50 flex justify-end gap-3">
+                <template x-if="selectedApp?.status === 'completed'">
+                    <button type="button" @click="window.open('<?php echo URLROOT; ?>/admin/appointment_detail/' + selectedApp.id, '_blank')" class="px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition inline-flex items-center gap-1.5 shadow-md shadow-indigo-600/10">
+                        <i class="fa-solid fa-print text-xs"></i> In bệnh án / Chứng nhận
+                    </button>
+                </template>
                 <button @click="showModal = false" class="px-6 py-2 rounded-xl text-sm font-bold text-gray-500 hover:text-gray-800 transition">Đóng</button>
                 <?php if($_SESSION['user_role'] == 'cashier' || $_SESSION['user_role'] == 'admin'): ?>
                 <template x-if="selectedApp?.status === 'confirmed' && selectedApp?.final_price !== null && selectedApp?.final_price !== undefined">

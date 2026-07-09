@@ -1977,7 +1977,43 @@ class AdminController extends Controller {
             'record' => $record,
             'prescriptions' => $prescriptions,
             'vaccineRecord' => $vaccineRecord
+    }
+
+    public function get_appointment_details_json($id) {
+        $this->checkAccess(['admin', 'doctor', 'manager', 'cashier', 'staff']);
+        header('Content-Type: application/json');
+        
+        $appointmentModel = $this->model('Appointment');
+        $appointment = $appointmentModel->getAppointmentById($id);
+        
+        if (!$appointment) {
+            echo json_encode(['success' => false, 'message' => 'Lịch hẹn không tồn tại.']);
+            exit;
+        }
+        
+        $healthRecordModel = $this->model('HealthRecord');
+        $db = new Database();
+        $db->query("SELECT * FROM health_records WHERE appointment_id = :appointment_id LIMIT 1");
+        $db->bind(':appointment_id', $id);
+        $record = $db->single();
+        
+        $prescriptions = [];
+        if ($record) {
+            $prescriptions = $healthRecordModel->getPrescriptionsByRecord($record->id);
+        }
+        
+        $db->query("SELECT * FROM pet_vaccinations WHERE appointment_id = :appointment_id LIMIT 1");
+        $db->bind(':appointment_id', $id);
+        $vaccineRecord = $db->single();
+        
+        echo json_encode([
+            'success' => true,
+            'appointment' => $appointment,
+            'record' => $record,
+            'prescriptions' => $prescriptions,
+            'vaccineRecord' => $vaccineRecord
         ]);
+        exit;
     }
 
     // Quản lý trông giữ thú cưng
