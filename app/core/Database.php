@@ -21,9 +21,29 @@ class Database {
         // Create PDO instance
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
+            $this->autoMigrate();
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             $this->dbh = null;
+        }
+    }
+
+    private function autoMigrate() {
+        if (!$this->dbh) return;
+        try {
+            // 1. Kiểm tra và thêm cột 'is_active' vào bảng 'users' nếu chưa có
+            $checkUsers = $this->dbh->query("SHOW COLUMNS FROM users LIKE 'is_active'")->fetch();
+            if (!$checkUsers) {
+                $this->dbh->exec("ALTER TABLE users ADD COLUMN is_active tinyint(1) DEFAULT 1");
+            }
+
+            // 2. Kiểm tra và thêm cột 'status' vào bảng 'products' nếu chưa có
+            $checkProducts = $this->dbh->query("SHOW COLUMNS FROM products LIKE 'status'")->fetch();
+            if (!$checkProducts) {
+                $this->dbh->exec("ALTER TABLE products ADD COLUMN status varchar(20) DEFAULT 'active'");
+            }
+        } catch (Exception $e) {
+            error_log("Database Auto-Migration Error: " . $e->getMessage());
         }
     }
 
