@@ -120,7 +120,7 @@
                 <?php foreach($groupedProducts as $categoryName => $products): ?>
                     <!-- Category Header Row -->
                     <tr class="bg-gray-50/50">
-                        <td colspan="6" class="px-4 py-2 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200">
+                        <td colspan="6" class="px-3 py-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200">
                             <i class="fa-solid fa-folder-open mr-2 text-primary"></i> <?php echo $categoryName; ?> 
                             <span class="ml-2 text-[10px] font-normal text-gray-400 normal-case">(<?php echo count($products); ?> sản phẩm)</span>
                         </td>
@@ -128,10 +128,10 @@
 
                     <?php foreach($products as $product): ?>
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-4 py-2.5 whitespace-nowrap">
+                        <td class="px-3 py-1.5 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
-                                    <img class="h-10 w-10 rounded-lg object-cover border border-gray-100" src="<?php echo !empty($product->image) ? URLROOT . '/public/images/' . $product->image : 'https://placehold.co/100x100?text=' . urlencode($product->name); ?>" alt="">
+                                <div class="flex-shrink-0 h-8 w-8">
+                                    <img class="h-8 w-8 rounded-lg object-cover border border-gray-100" src="<?php echo !empty($product->image) ? URLROOT . '/public/images/' . $product->image : 'https://placehold.co/100x100?text=' . urlencode($product->name); ?>" alt="">
                                 </div>
                                 <div class="ml-3">
                                     <div class="text-sm font-bold text-gray-900"><?php echo $product->name; ?></div>
@@ -139,16 +139,16 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-4 py-2.5 whitespace-nowrap">
+                        <td class="px-3 py-1.5 whitespace-nowrap">
                             <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full bg-indigo-50 text-primary border border-indigo-100">
                                 <?php echo $product->category_name ?? 'Chưa phân loại'; ?>
                             </span>
                         </td>
-                        <td class="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 font-black">
+                        <td class="px-3 py-1.5 whitespace-nowrap text-sm text-gray-900 font-black">
                             <?php echo number_format($product->price, 0, ',', '.'); ?> đ
                         </td>
                         <!-- Stock Status -->
-                        <td class="px-4 py-2.5 whitespace-nowrap">
+                        <td class="px-3 py-1.5 whitespace-nowrap">
                             <div class="space-y-0.5">
                                 <span class="text-sm font-bold <?php echo $product->stock_quantity <= 5 ? 'text-red-600' : 'text-gray-800'; ?>">
                                     <?php echo $product->stock_quantity; ?>
@@ -161,7 +161,7 @@
                             </div>
                         </td>
                         <!-- Expiry Date Status -->
-                        <td class="px-4 py-2.5 whitespace-nowrap">
+                        <td class="px-3 py-1.5 whitespace-nowrap">
                             <?php if (!empty($product->expiry_date)): ?>
                                 <?php 
                                     $today = date_create(date('Y-m-d'));
@@ -187,13 +187,13 @@
                                 <span class="text-xs text-gray-400 italic">—</span>
                             <?php endif; ?>
                         </td>
-                        <td class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex justify-end space-x-2">
-                                <a href="<?php echo URLROOT; ?>/admin/product_edit/<?php echo $product->id; ?>" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all">
+                        <td class="px-3 py-1.5 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end space-x-1.5">
+                                <a href="<?php echo URLROOT; ?>/admin/product_edit/<?php echo $product->id; ?>" class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
                                 <form action="<?php echo URLROOT; ?>/admin/product_delete/<?php echo $product->id; ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')">
-                                    <button type="submit" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all">
+                                    <button type="submit" class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-xs">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </form>
