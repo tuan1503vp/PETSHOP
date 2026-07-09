@@ -2,125 +2,7 @@
 
 <style>[x-cloak] { display: none !important; }</style>
 
-<div class="p-6" x-data="{ 
-    showAddModal: false, 
-    showAddCatModal: false,
-    errors: {
-        name: '',
-        category_id: '',
-        price: '',
-        stock_quantity: '',
-        image: ''
-    },
-    async validateAndSubmit(e) {
-        e.preventDefault();
-        const formEl = e.target;
-        this.errors = { name: '', category_id: '', price: '', stock_quantity: '', image: '' };
-        let hasError = false;
-
-        const nameVal = document.getElementById('modal_name').value.trim();
-        const catVal = document.getElementById('modal_category_id').value;
-        const priceVal = document.getElementById('modal_price').value;
-        const stockVal = document.getElementById('modal_stock_quantity').value;
-        const imageVal = document.getElementById('modal_image').value;
-
-        if (!nameVal) {
-            this.errors.name = 'Tên sản phẩm không được để trống';
-            hasError = true;
-        }
-        if (!catVal) {
-            this.errors.category_id = 'Vui lòng chọn danh mục';
-            hasError = true;
-        }
-        if (!priceVal) {
-            this.errors.price = 'Vui lòng nhập giá bán sản phẩm';
-            hasError = true;
-        } else if (parseFloat(priceVal) < 0) {
-            this.errors.price = 'Giá bán phải lớn hơn hoặc bằng 0';
-            hasError = true;
-        }
-        if (!stockVal) {
-            this.errors.stock_quantity = 'Vui lòng nhập số lượng tồn kho';
-            hasError = true;
-        } else if (parseInt(stockVal) < 0) {
-            this.errors.stock_quantity = 'Số lượng tồn kho phải lớn hơn hoặc bằng 0';
-            hasError = true;
-        }
-        if (!imageVal) {
-            this.errors.image = 'Vui lòng chọn ảnh chính cho sản phẩm';
-            hasError = true;
-        }
-
-        if (hasError) {
-            return false;
-        }
-
-        // Kiểm tra trùng tên sản phẩm qua AJAX
-        try {
-            const response = await fetch('<?php echo URLROOT; ?>/admin/check_product_name?name=' + encodeURIComponent(nameVal));
-            const result = await response.json();
-            if (result.exists) {
-                this.errors.name = `Sản phẩm này đã tồn tại! Bạn có thể sử dụng lại hoặc <a href="<?php echo URLROOT; ?>/admin/product_edit/${result.id}" class="text-blue-600 underline font-black">Chỉnh sửa sản phẩm cũ</a>.`;
-                return false;
-            }
-        } catch (err) {
-            console.error('Lỗi kiểm tra tên sản phẩm:', err);
-        }
-
-        // Submit form thủ công nếu không trùng
-        formEl.submit();
-        return true;
-    },
-    async saveCategory() {
-        const name = document.getElementById('new_category_name').value.trim();
-        const desc = document.getElementById('new_category_desc').value.trim();
-        const errorMsg = document.getElementById('category-error');
-
-        if (!name) {
-            errorMsg.textContent = 'Vui lòng nhập tên danh mục';
-            errorMsg.classList.remove('hidden');
-            return;
-        }
-
-        const btnSave = document.getElementById('btn-save-category');
-        btnSave.disabled = true;
-        btnSave.innerHTML = '<i class=&quot;fa-solid fa-spinner fa-spin mr-1&quot;></i> Đang lưu...';
-
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('description', desc);
-        formData.append('type', 'product');
-
-        try {
-            const response = await fetch('<?php echo URLROOT; ?>/admin/add_category_ajax', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-
-            if (result.success) {
-                const categorySelect = document.getElementById('modal_category_id');
-                const option = new Option(result.name, result.id);
-                categorySelect.add(option);
-                categorySelect.value = result.id;
-                
-                document.getElementById('new_category_name').value = '';
-                document.getElementById('new_category_desc').value = '';
-                errorMsg.classList.add('hidden');
-                this.showAddCatModal = false;
-            } else {
-                errorMsg.textContent = result.message;
-                errorMsg.classList.remove('hidden');
-            }
-        } catch (error) {
-            errorMsg.textContent = 'Lỗi kết nối';
-            errorMsg.classList.remove('hidden');
-        } finally {
-            btnSave.disabled = false;
-            btnSave.textContent = 'Lưu lại';
-        }
-    }
-}">
+<div class="p-6" x-data="productManagement()">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
         <div class="flex gap-3">
@@ -494,5 +376,129 @@
         </div>
     </div>
 </div>
+
+<script>
+function productManagement() {
+    return {
+        showAddModal: false,
+        showAddCatModal: false,
+        errors: {
+            name: '',
+            category_id: '',
+            price: '',
+            stock_quantity: '',
+            image: ''
+        },
+        async validateAndSubmit(e) {
+            e.preventDefault();
+            const formEl = e.target;
+            this.errors = { name: '', category_id: '', price: '', stock_quantity: '', image: '' };
+            let hasError = false;
+
+            const nameVal = document.getElementById('modal_name').value.trim();
+            const catVal = document.getElementById('modal_category_id').value;
+            const priceVal = document.getElementById('modal_price').value;
+            const stockVal = document.getElementById('modal_stock_quantity').value;
+            const imageVal = document.getElementById('modal_image').value;
+
+            if (!nameVal) {
+                this.errors.name = 'Tên sản phẩm không được để trống';
+                hasError = true;
+            }
+            if (!catVal) {
+                this.errors.category_id = 'Vui lòng chọn danh mục';
+                hasError = true;
+            }
+            if (!priceVal) {
+                this.errors.price = 'Vui lòng nhập giá bán sản phẩm';
+                hasError = true;
+            } else if (parseFloat(priceVal) < 0) {
+                this.errors.price = 'Giá bán phải lớn hơn hoặc bằng 0';
+                hasError = true;
+            }
+            if (!stockVal) {
+                this.errors.stock_quantity = 'Vui lòng nhập số lượng tồn kho';
+                hasError = true;
+            } else if (parseInt(stockVal) < 0) {
+                this.errors.stock_quantity = 'Số lượng tồn kho phải lớn hơn hoặc bằng 0';
+                hasError = true;
+            }
+            if (!imageVal) {
+                this.errors.image = 'Vui lòng chọn ảnh chính cho sản phẩm';
+                hasError = true;
+            }
+
+            if (hasError) {
+                return false;
+            }
+
+            // Kiểm tra trùng tên sản phẩm qua AJAX
+            try {
+                const response = await fetch('<?php echo URLROOT; ?>/admin/check_product_name?name=' + encodeURIComponent(nameVal));
+                const result = await response.json();
+                if (result.exists) {
+                    this.errors.name = `Sản phẩm này đã tồn tại! Bạn có thể sử dụng lại hoặc <a href="<?php echo URLROOT; ?>/admin/product_edit/${result.id}" class="text-blue-600 underline font-black">Chỉnh sửa sản phẩm cũ</a>.`;
+                    return false;
+                }
+            } catch (err) {
+                console.error('Lỗi kiểm tra tên sản phẩm:', err);
+            }
+
+            // Submit form thủ công
+            formEl.submit();
+            return true;
+        },
+        async saveCategory() {
+            const name = document.getElementById('new_category_name').value.trim();
+            const desc = document.getElementById('new_category_desc').value.trim();
+            const errorMsg = document.getElementById('category-error');
+
+            if (!name) {
+                errorMsg.textContent = 'Vui lòng nhập tên danh mục';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            const btnSave = document.getElementById('btn-save-category');
+            btnSave.disabled = true;
+            btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu...';
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('description', desc);
+            formData.append('type', 'product');
+
+            try {
+                const response = await fetch('<?php echo URLROOT; ?>/admin/add_category_ajax', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const categorySelect = document.getElementById('modal_category_id');
+                    const option = new Option(result.name, result.id);
+                    categorySelect.add(option);
+                    categorySelect.value = result.id;
+                    
+                    document.getElementById('new_category_name').value = '';
+                    document.getElementById('new_category_desc').value = '';
+                    errorMsg.classList.add('hidden');
+                    this.showAddCatModal = false;
+                } else {
+                    errorMsg.textContent = result.message;
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorMsg.textContent = 'Lỗi kết nối';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btnSave.disabled = false;
+                btnSave.textContent = 'Lưu lại';
+            }
+        }
+    };
+}
+</script>
 
 <?php require APPROOT . '/views/admin/footer.php'; ?>
