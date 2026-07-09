@@ -536,7 +536,8 @@ class AdminController extends Controller {
     // AJAX Endpoint: Kiểm tra trùng tên sản phẩm
     public function check_product_name() {
         $this->checkAccess(['admin', 'manager']);
-        $name = trim($_GET['name'] ?? '');
+        // Loại bỏ khoảng trắng thừa đầu, cuối và giữa các từ
+        $name = preg_replace('/\s+/', ' ', trim($_GET['name'] ?? ''));
         $excludeId = isset($_GET['exclude_id']) ? (int)$_GET['exclude_id'] : null;
         
         $product = $this->productModel->getProductByName($name, $excludeId);
@@ -625,8 +626,8 @@ class AdminController extends Controller {
     public function product_add() {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Lọc trùng tên ở backend
-            $nameVal = trim($_POST['name']);
+            // Lọc trùng tên ở backend và chuẩn hóa khoảng trắng thừa
+            $nameVal = preg_replace('/\s+/', ' ', trim($_POST['name']));
             $existing = $this->productModel->getProductByName($nameVal);
             if ($existing) {
                 flash('product_err', 'Sản phẩm có tên này đã tồn tại trên hệ thống.', 'error');
@@ -692,8 +693,8 @@ class AdminController extends Controller {
     public function product_edit($id) {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Lọc trùng tên ở backend (loại trừ ID hiện tại)
-            $nameVal = trim($_POST['name']);
+            // Lọc trùng tên ở backend (loại trừ ID hiện tại) và chuẩn hóa khoảng trắng thừa
+            $nameVal = preg_replace('/\s+/', ' ', trim($_POST['name']));
             $existing = $this->productModel->getProductByName($nameVal, $id);
             if ($existing) {
                 flash('product_err', 'Sản phẩm có tên này đã tồn tại trên hệ thống.', 'error');

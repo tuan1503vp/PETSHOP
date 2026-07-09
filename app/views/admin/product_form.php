@@ -231,7 +231,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     form.addEventListener('submit', async function(e) {
-        const nameVal = nameInput.value.trim();
+        const nameVal = nameInput.value.replace(/\s+/g, ' ').trim();
+        nameInput.value = nameVal; // Gán lại giao diện cho sạch sẽ
         if (!nameVal) return;
 
         e.preventDefault();

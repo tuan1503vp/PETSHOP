@@ -492,7 +492,11 @@ function productManagement() {
             this.errors = { name: '', category_id: '', price: '', stock_quantity: '', image: '' };
             let hasError = false;
 
-            const nameVal = document.getElementById('modal_name').value.trim();
+            // Loại bỏ khoảng trắng thừa đầu, cuối và giữa các từ
+            const nameInput = document.getElementById('modal_name');
+            const nameVal = nameInput.value.replace(/\s+/g, ' ').trim();
+            nameInput.value = nameVal; // Gán lại giao diện cho sạch sẽ
+
             const catVal = document.getElementById('modal_category_id').value;
             const priceVal = document.getElementById('modal_price').value;
             const stockVal = document.getElementById('modal_stock_quantity').value;
@@ -526,7 +530,10 @@ function productManagement() {
             const formEl = e.target;
             this.editErrors = { name: '' };
 
-            const nameVal = this.editProduct.name ? this.editProduct.name.trim() : '';
+            // Loại bỏ khoảng trắng thừa đầu, cuối và giữa các từ
+            const nameVal = this.editProduct.name ? this.editProduct.name.replace(/\s+/g, ' ').trim() : '';
+            this.editProduct.name = nameVal; // Đồng bộ lại state Alpine
+
             if (!nameVal) {
                 this.editErrors.name = 'Tên sản phẩm không được để trống';
                 return false;
