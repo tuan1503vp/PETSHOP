@@ -5,6 +5,56 @@
 <div class="p-6" x-data="{ 
     showAddModal: false, 
     showAddCatModal: false,
+    errors: {
+        name: '',
+        category_id: '',
+        price: '',
+        stock_quantity: '',
+        image: ''
+    },
+    validateAndSubmit(e) {
+        this.errors = { name: '', category_id: '', price: '', stock_quantity: '', image: '' };
+        let hasError = false;
+
+        const nameVal = document.getElementById('modal_name').value.trim();
+        const catVal = document.getElementById('modal_category_id').value;
+        const priceVal = document.getElementById('modal_price').value;
+        const stockVal = document.getElementById('modal_stock_quantity').value;
+        const imageVal = document.getElementById('modal_image').value;
+
+        if (!nameVal) {
+            this.errors.name = 'Tên sản phẩm không được để trống';
+            hasError = true;
+        }
+        if (!catVal) {
+            this.errors.category_id = 'Vui lòng chọn danh mục';
+            hasError = true;
+        }
+        if (!priceVal) {
+            this.errors.price = 'Vui lòng nhập giá bán sản phẩm';
+            hasError = true;
+        } else if (parseFloat(priceVal) < 0) {
+            this.errors.price = 'Giá bán phải lớn hơn hoặc bằng 0';
+            hasError = true;
+        }
+        if (!stockVal) {
+            this.errors.stock_quantity = 'Vui lòng nhập số lượng tồn kho';
+            hasError = true;
+        } else if (parseInt(stockVal) < 0) {
+            this.errors.stock_quantity = 'Số lượng tồn kho phải lớn hơn hoặc bằng 0';
+            hasError = true;
+        }
+        if (!imageVal) {
+            this.errors.image = 'Vui lòng chọn ảnh chính cho sản phẩm';
+            hasError = true;
+        }
+
+        if (hasError) {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    },
     async saveCategory() {
         const name = document.getElementById('new_category_name').value.trim();
         const desc = document.getElementById('new_category_desc').value.trim();
@@ -319,19 +369,20 @@
                         </button>
                     </div>
                     
-                    <form action="<?php echo URLROOT; ?>/admin/product_add" method="POST" enctype="multipart/form-data">
+                    <form action="<?php echo URLROOT; ?>/admin/product_add" method="POST" enctype="multipart/form-data" @submit="validateAndSubmit($event)">
                         <div class="p-6 space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
                             <!-- Cơ bản -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
                                     <label for="modal_name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Tên Sản Phẩm <span class="text-red-500">*</span></label>
-                                    <input type="text" name="name" id="modal_name" required class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs" placeholder="VD: Hạt Royal Canin cho mèo">
+                                    <input type="text" name="name" id="modal_name" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs" placeholder="VD: Hạt Royal Canin cho mèo">
+                                    <span class="text-[10px] text-red-500 font-bold block mt-1" x-show="errors.name" x-text="errors.name"></span>
                                 </div>
 
                                 <div>
                                     <label for="modal_category_id" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Danh Mục <span class="text-red-500">*</span></label>
                                     <div class="flex gap-2">
-                                        <select name="category_id" id="modal_category_id" required class="flex-1 border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
+                                        <select name="category_id" id="modal_category_id" class="flex-1 border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
                                             <option value="">-- Chọn danh mục --</option>
                                             <?php foreach($data['categories'] as $category): ?>
                                                 <option value="<?php echo $category->id; ?>">
@@ -343,19 +394,22 @@
                                             <i class="fa-solid fa-plus"></i>
                                         </button>
                                     </div>
+                                    <span class="text-[10px] text-red-500 font-bold block mt-1" x-show="errors.category_id" x-text="errors.category_id"></span>
                                 </div>
 
                                 <div>
                                     <label for="modal_price" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Giá Bán (VNĐ) <span class="text-red-500">*</span></label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs">₫</span>
-                                        <input type="number" name="price" id="modal_price" required min="0" step="1000" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 pl-8 pr-3 focus:ring-primary focus:border-primary border transition-all text-xs">
+                                        <input type="number" name="price" id="modal_price" min="0" step="1000" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 pl-8 pr-3 focus:ring-primary focus:border-primary border transition-all text-xs">
                                     </div>
+                                    <span class="text-[10px] text-red-500 font-bold block mt-1" x-show="errors.price" x-text="errors.price"></span>
                                 </div>
 
                                 <div>
                                     <label for="modal_stock_quantity" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Số lượng tồn kho <span class="text-red-500">*</span></label>
-                                    <input type="number" name="stock_quantity" id="modal_stock_quantity" required min="0" value="0" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
+                                    <input type="number" name="stock_quantity" id="modal_stock_quantity" min="0" value="0" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
+                                    <span class="text-[10px] text-red-500 font-bold block mt-1" x-show="errors.stock_quantity" x-text="errors.stock_quantity"></span>
                                 </div>
 
                                 <div>
@@ -365,7 +419,8 @@
 
                                 <div>
                                     <label for="modal_image" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Hình ảnh chính <span class="text-red-500">*</span></label>
-                                    <input type="file" name="image" id="modal_image" required accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
+                                    <input type="file" name="image" id="modal_image" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-indigo-50 file:text-primary hover:file:bg-indigo-100 transition-all">
+                                    <span class="text-[10px] text-red-500 font-bold block mt-1" x-show="errors.image" x-text="errors.image"></span>
                                 </div>
 
                                 <div class="md:col-span-2">
