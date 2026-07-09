@@ -19,8 +19,13 @@ class Contact {
         return $this->db->execute();
     }
 
-    public function updateStatus($id, $status) {
-        $this->db->query("UPDATE contacts SET status = :status WHERE id = :id");
+    public function updateStatus($id, $status, $replyMessage = null) {
+        if ($status == 'replied' && $replyMessage !== null) {
+            $this->db->query("UPDATE contacts SET status = :status, reply_message = :reply_message, replied_at = NOW() WHERE id = :id");
+            $this->db->bind(':reply_message', $replyMessage);
+        } else {
+            $this->db->query("UPDATE contacts SET status = :status WHERE id = :id");
+        }
         $this->db->bind(':id', $id);
         $this->db->bind(':status', $status);
         return $this->db->execute();

@@ -171,7 +171,8 @@ class AdminController extends Controller {
             $contact = $contactModel->getContactById($id);
             $original_message = $contact ? $contact->message : '';
             
-            $contactModel->updateStatus($id, $status);
+            $reply_message = isset($_POST['reply_message']) ? trim($_POST['reply_message']) : null;
+            $contactModel->updateStatus($id, $status, $reply_message);
             
             // Nếu có nội dung reply thì gửi email phản hồi
             if ($status == 'replied' && !empty($_POST['reply_message']) && !empty($_POST['customer_email'])) {
@@ -568,16 +569,22 @@ class AdminController extends Controller {
                 "ALTER TABLE orders MODIFY paid_amount DECIMAL(15,2) DEFAULT NULL",
                 "ALTER TABLE vouchers MODIFY discount_amount DECIMAL(15,2) NOT NULL",
                 "ALTER TABLE vouchers MODIFY max_discount DECIMAL(15,2) DEFAULT NULL",
-                "ALTER TABLE vouchers MODIFY min_order_value DECIMAL(15,2) DEFAULT NULL"
+                "ALTER TABLE vouchers MODIFY min_order_value DECIMAL(15,2) DEFAULT NULL",
+                "ALTER TABLE contacts ADD COLUMN reply_message TEXT DEFAULT NULL",
+                "ALTER TABLE contacts ADD COLUMN replied_at TIMESTAMP NULL DEFAULT NULL"
             ];
             
             $results = [];
             foreach ($queries as $q) {
-                $db->query($q);
-                if ($db->execute()) {
-                    $results[] = "Thành công: " . $q;
-                } else {
-                    $results[] = "Thất bại: " . $q;
+                try {
+                    $db->query($q);
+                    if ($db->execute()) {
+                        $results[] = "Thành công: " . $q;
+                    } else {
+                        $results[] = "Thất bại: " . $q;
+                    }
+                } catch (Exception $ex) {
+                    $results[] = "Đã bỏ qua hoặc lỗi (Có thể đã tồn tại): " . $q . " (" . $ex->getMessage() . ")";
                 }
             }
             
