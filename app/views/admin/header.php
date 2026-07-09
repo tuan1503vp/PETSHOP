@@ -40,6 +40,9 @@
         }
     </script>
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
         /* Ẩn thanh trượt (scrollbar) cho Sidebar */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
