@@ -518,32 +518,18 @@ class AdminController extends Controller {
     public function products() {
         $this->checkAccess(['admin', 'manager']);
         
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        if ($page < 1) {
-            $page = 1;
-        }
-        $limit = 15; // 15 sản phẩm mỗi trang cho Admin gọn đẹp
-        $offset = ($page - 1) * $limit;
-        
-        $totalProducts = $this->productModel->getProductsCount();
-        $totalPages = ceil($totalProducts / $limit);
-        
+        // Lấy toàn bộ sản phẩm, sắp xếp theo danh mục
         $products = $this->productModel->getProducts([
-            'limit' => $limit,
-            'offset' => $offset
+            'sort' => 'newest'
         ]);
         
+        $totalProducts = $this->productModel->getProductsCount();
         $categories = $this->productModel->getProductCategories();
         
         $this->view('admin/products', [
             'products' => $products,
             'categories' => $categories,
-            'pagination' => [
-                'total_products' => $totalProducts,
-                'total_pages' => $totalPages,
-                'current_page' => $page,
-                'limit' => $limit
-            ]
+            'total_products' => $totalProducts
         ]);
     }
 
@@ -560,6 +546,33 @@ class AdminController extends Controller {
         } else {
             echo json_encode(['exists' => false]);
         }
+        exit;
+    }
+
+    // AJAX Endpoint: Lấy thông tin chi tiết sản phẩm (JSON) cho popup chỉnh sửa
+    public function get_product_json($id) {
+        $this->checkAccess(['admin', 'manager']);
+        $product = $this->productModel->getProductById($id);
+        if (!$product) {
+            echo json_encode(['error' => 'Không tìm thấy sản phẩm']);
+            exit;
+        }
+        $additionalImages = $this->productModel->getProductImages($id);
+        $imgs = [];
+        foreach ($additionalImages as $img) {
+            $imgs[] = ['id' => $img->id, 'image' => $img->image];
+        }
+        echo json_encode([
+            'id' => $product->id,
+            'name' => $product->name,
+            'category_id' => $product->category_id,
+            'price' => $product->price,
+            'stock_quantity' => $product->stock_quantity,
+            'description' => $product->description,
+            'image' => $product->image,
+            'expiry_date' => $product->expiry_date,
+            'additional_images' => $imgs
+        ]);
         exit;
     }
 
