@@ -1,84 +1,7 @@
 <?php require APPROOT . '/views/admin/header.php'; ?>
 <style>[x-cloak] { display: none !important; }</style>
 
-<div class="p-6" x-data="{ 
-    showModal: false, 
-    selectedApp: null, 
-    selectedAppDetails: null,
-    loadingDetails: false,
-    availableDoctors: [], 
-    loadingDoctors: false, 
-    requiredRoleLabel: '',
-    prescriptions: [],
-    availableProducts: <?php echo json_encode(array_values(array_map(function($p) {
-        $expiry_text = '';
-        $is_expired = false;
-        $is_near_expiry = false;
-        if (!empty($p->expiry_date)) {
-            $expiry_time = strtotime($p->expiry_date);
-            $now = time();
-            $diff_days = ($expiry_time - $now) / (60 * 60 * 24);
-            if ($expiry_time < $now) {
-                $is_expired = true;
-                $expiry_text = ' (HẾT HẠN - ' . date('d/m/Y', $expiry_time) . ')';
-            } elseif ($diff_days <= 30) {
-                $is_near_expiry = true;
-                $expiry_text = ' (SẮP HẾT HẠN - ' . date('d/m/Y', $expiry_time) . ')';
-            } else {
-                $expiry_text = ' (HSD: ' . date('d/m/Y', $expiry_time) . ')';
-            }
-        }
-        return [
-            'id'           => (int)$p->id,
-            'name'         => $p->name . $expiry_text,
-            'price'        => (float)$p->price,
-            'stock'        => (int)$p->stock_quantity,
-            'is_expired'   => $is_expired,
-            'is_near_expiry' => $is_near_expiry
-        ];
-    }, array_filter($data['products'] ?? [], function($p) {
-        // Chỉ hiển thị danh mục Thuốc (category_id = 12)
-        return (int)$p->category_id === 12;
-    })))) ?: '[]'; ?>,
-    
-    async viewAppointmentDetails(apptId) {
-        this.selectedApp = null;
-        this.selectedAppDetails = null;
-        this.loadingDetails = true;
-        this.showModal = true;
-        try {
-            const r = await fetch(`<?php echo URLROOT; ?>/admin/get_appointment_details_json/${apptId}`);
-            const data = await r.json();
-            if (data.success) {
-                this.selectedApp = data.appointment;
-                this.selectedAppDetails = data;
-            } else {
-                alert(data.message);
-                this.showModal = false;
-            }
-        } catch(e) {
-            alert('Không thể tải chi tiết lịch hẹn.');
-            this.showModal = false;
-        } finally {
-            this.loadingDetails = false;
-        }
-    },
-    async fetchDoctors() { 
-        this.loadingDoctors = true; 
-        try { 
-            let role = (this.selectedApp.category_name && this.selectedApp.category_name.toLowerCase().includes('khám')) ? 'doctor' : 'staff';
-            this.requiredRoleLabel = role === 'doctor' ? 'Bác sĩ' : 'Nhân viên';
-            const r = await fetch(`<?php echo URLROOT; ?>/admin/get_available_staff?date=${this.selectedApp.appointment_date}&time=${this.selectedApp.appointment_time}&role=${role}`); 
-            this.availableDoctors = await r.json(); 
-        } catch(e){} finally { this.loadingDoctors = false; } 
-    },
-    addPrescription() {
-        this.prescriptions.push({ product_id: '', quantity: 1, instruction: '' });
-    },
-    removePrescription(index) {
-        this.prescriptions.splice(index, 1);
-    }
-}">
+<div class="p-6" x-data="servicesManager()">
 
     <div class="flex justify-between items-center mb-8">
         <div>
@@ -780,5 +703,58 @@
         </div>
     </div>
 </div>
+
+<script>
+function servicesManager() {
+    return {
+        showModal: false, 
+        selectedApp: null, 
+        selectedAppDetails: null,
+        loadingDetails: false,
+        availableDoctors: [], 
+        loadingDoctors: false, 
+        requiredRoleLabel: '',
+        prescriptions: [],
+        
+        async viewAppointmentDetails(apptId) {
+            this.selectedApp = null;
+            this.selectedAppDetails = null;
+            this.loadingDetails = true;
+            this.showModal = true;
+            try {
+                const r = await fetch(`<?php echo URLROOT; ?>/admin/get_appointment_details_json/${apptId}`);
+                const data = await r.json();
+                if (data.success) {
+                    this.selectedApp = data.appointment;
+                    this.selectedAppDetails = data;
+                } else {
+                    alert(data.message);
+                    this.showModal = false;
+                }
+            } catch(e) {
+                alert('Không thể tải chi tiết lịch hẹn.');
+                this.showModal = false;
+            } finally {
+                this.loadingDetails = false;
+            }
+        },
+        async fetchDoctors() { 
+            this.loadingDoctors = true; 
+            try { 
+                let role = (this.selectedApp.category_name && this.selectedApp.category_name.toLowerCase().includes('khám')) ? 'doctor' : 'staff';
+                this.requiredRoleLabel = role === 'doctor' ? 'Bác sĩ' : 'Nhân viên';
+                const r = await fetch(`<?php echo URLROOT; ?>/admin/get_available_staff?date=${this.selectedApp.appointment_date}&time=${this.selectedApp.appointment_time}&role=${role}`); 
+                this.availableDoctors = await r.json(); 
+            } catch(e){} finally { this.loadingDoctors = false; } 
+        },
+        addPrescription() {
+            this.prescriptions.push({ product_id: '', quantity: 1, instruction: '' });
+        },
+        removePrescription(index) {
+            this.prescriptions.splice(index, 1);
+        }
+    };
+}
+</script>
 
 <?php require APPROOT . '/views/admin/footer.php'; ?>
