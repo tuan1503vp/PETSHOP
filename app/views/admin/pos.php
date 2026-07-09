@@ -918,16 +918,14 @@ document.addEventListener('alpine:init', () => {
                 this.voucherTitle = '';
                 return;
             }
-            if (!this.customerId) {
-                this.voucherMessage = 'Vui lòng chọn khách hàng trước khi áp dụng voucher.';
-                return;
-            }
+            // Cho phép cả khách lẻ áp dụng voucher công khai
+            const checkCustId = this.customerId || 'guest';
             
             try {
                 const res = await fetch('<?php echo URLROOT; ?>/order/validate_voucher', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: this.voucherCode, customer_id: this.customerId })
+                    body: JSON.stringify({ code: this.voucherCode, customer_id: checkCustId })
                 });
                 const data = await res.json();
                 if (data.success) {

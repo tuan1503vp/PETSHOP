@@ -185,9 +185,12 @@ class OrderController extends Controller {
             $data = json_decode($json, true);
             $code = trim($data['code'] ?? '');
             $customer_id = $data['customer_id'] ?? null;
+            if ($customer_id === 'guest' || $customer_id === '') {
+                $customer_id = null;
+            }
             
-            if (!$code || !$customer_id) {
-                echo json_encode(['success' => false, 'message' => 'Dữ liệu không hợp lệ']);
+            if (!$code) {
+                echo json_encode(['success' => false, 'message' => 'Mã voucher không được để trống']);
                 return;
             }
             
