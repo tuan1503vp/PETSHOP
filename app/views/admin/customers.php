@@ -68,36 +68,36 @@
                             </td>
                         </tr>
                     </template>
-                    <template x-for="customer in paginatedCustomers" :key="customer.id">
+                    <template x-for="cust in paginatedCustomers" :key="cust.id">
                         <tr class="hover:bg-gray-50/80 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="h-9 w-9 rounded-full bg-indigo-100 text-primary flex items-center justify-center font-black text-xs mr-3 shadow-inner" x-text="(customer.fullname || '').charAt(0).toUpperCase()"></div>
-                                    <span class="text-sm font-bold text-gray-900" x-text="customer.fullname"></span>
+                                    <div class="h-9 w-9 rounded-full bg-indigo-100 text-primary flex items-center justify-center font-black text-xs mr-3 shadow-inner" x-text="(cust.fullname || '').charAt(0).toUpperCase()"></div>
+                                    <span class="text-sm font-bold text-gray-900" x-text="cust.fullname"></span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-600" x-text="customer.email"></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-600 font-medium" x-text="customer.phone || '---'"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-600" x-text="cust.email"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-600 font-medium" x-text="cust.phone || '---'"></td>
                             <td class="px-6 py-4">
-                                <span class="text-xs text-gray-500 line-clamp-1 max-w-[200px]" :title="customer.address" x-text="customer.address || 'Chưa cập nhật'"></span>
+                                <span class="text-xs text-gray-500 line-clamp-1 max-w-[200px]" :title="cust.address" x-text="cust.address || 'Chưa cập nhật'"></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-black text-green-600 block" x-text="formatMoney(customer.total_spent)"></span>
-                                <span class="text-[10px] text-gray-400" x-text="'Năm nay: ' + formatMoney(customer.annual_spent)"></span>
+                                <span class="text-sm font-black text-green-600 block" x-text="formatMoney(cust.total_spent)"></span>
+                                <span class="text-[10px] text-gray-400" x-text="'Năm nay: ' + formatMoney(cust.annual_spent)"></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider" :class="levelClass(customer.membership_level)" x-text="customer.membership_level || 'Đồng'"></span>
+                                <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider" :class="levelClass(cust.membership_level)" x-text="cust.membership_level || 'Đồng'"></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider" :class="customer.is_verified == 1 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'" x-text="customer.is_verified == 1 ? 'Đã xác minh' : 'Chờ xác minh'"></span>
+                                <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider" :class="cust.is_verified == 1 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'" x-text="cust.is_verified == 1 ? 'Đã xác minh' : 'Chờ xác minh'"></span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold text-gray-400" x-text="formatDate(customer.created_at)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold text-gray-400" x-text="formatDate(cust.created_at)"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <div class="flex justify-end gap-2">
-                                    <button @click="viewDetails(customer.id)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs" title="Xem chi tiết">
+                                    <button @click="viewDetails(cust.id)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs" title="Xem chi tiết">
                                         <i class="fa-solid fa-circle-info"></i>
                                     </button>
-                                    <form :action="'<?php echo URLROOT; ?>/admin/customer_delete/' + customer.id" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa khách hàng này? Thao tác này không thể hoàn tác.')" class="inline-block">
+                                    <form :action="'<?php echo URLROOT; ?>/admin/customer_delete/' + cust.id" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa khách hàng này? Thao tác này không thể hoàn tác.')" class="inline-block">
                                         <button type="submit" class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-xs" title="Xóa tài khoản">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
