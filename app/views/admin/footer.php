@@ -68,8 +68,32 @@
                 }
             });
         }
-                .catch(err => console.error('Polling error:', err));
-        }
+
+        // Việt hóa thông báo lỗi HTML5 mặc định của trình duyệt cho tất cả các form
+        document.addEventListener('invalid', (e) => {
+            const target = e.target;
+            if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA') {
+                if (target.validity.valueMissing) {
+                    target.setCustomValidity('Vui lòng điền vào trường này.');
+                } else if (target.validity.typeMismatch && target.type === 'email') {
+                    target.setCustomValidity('Vui lòng nhập đúng định dạng email (VD: ten@gmail.com).');
+                } else if (target.validity.rangeUnderflow) {
+                    target.setCustomValidity(`Giá trị phải lớn hơn hoặc bằng ${target.min}.`);
+                } else if (target.validity.rangeOverflow) {
+                    target.setCustomValidity(`Giá trị phải nhỏ hơn hoặc bằng ${target.max}.`);
+                } else if (target.validity.stepMismatch) {
+                    target.setCustomValidity('Giá trị không hợp lệ.');
+                }
+            }
+        }, true);
+
+        document.addEventListener('input', (e) => {
+            e.target.setCustomValidity('');
+        });
+        
+        document.addEventListener('change', (e) => {
+            e.target.setCustomValidity('');
+        });
 
         function showToast(msg) {
             const toast = document.createElement('div');
