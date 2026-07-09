@@ -43,7 +43,7 @@
     })))); ?>,
     
     openModal(appId) { 
-        this.selectedApp = this.appointments.find(a => a.id === appId); 
+        this.selectedApp = this.appointments.find(function(a) { return a.id === appId; }); 
         this.showModal = true; 
         this.availableDoctors = []; 
         this.prescriptions = []; 
