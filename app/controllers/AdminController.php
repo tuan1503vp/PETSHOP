@@ -83,7 +83,7 @@ class AdminController extends Controller {
         $appointmentsMonth = $db->single()->val;
 
         // Sản phẩm sắp hết hàng (< 10)
-        $db->query("SELECT COUNT(*) as val FROM products WHERE stock_quantity < 10");
+        $db->query("SELECT COUNT(*) as val FROM products WHERE stock_quantity < 10 AND is_deleted = 0 AND status = 'active'");
         $lowStockCount = $db->single()->val;
 
         // --- Biểu đồ doanh thu 30 ngày ---

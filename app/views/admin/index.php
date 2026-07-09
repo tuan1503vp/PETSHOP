@@ -59,7 +59,7 @@
         <i class="fa-solid fa-triangle-exclamation text-orange-500 text-xl"></i>
         <div>
             <p class="text-sm font-black text-orange-800">Cảnh báo tồn kho thấp</p>
-            <p class="text-xs text-orange-600">Có <strong><?php echo $data['low_stock_count']; ?></strong> sản phẩm có số lượng dưới 10. <a href="<?php echo URLROOT; ?>/admin/inventory" class="underline font-bold">Kiểm tra ngay →</a></p>
+            <p class="text-xs text-orange-600">Có <strong><?php echo $data['low_stock_count']; ?></strong> sản phẩm có số lượng dưới 10. <a href="<?php echo URLROOT; ?>/admin/products" class="underline font-bold">Kiểm tra ngay →</a></p>
         </div>
     </div>
     <?php endif; ?>
