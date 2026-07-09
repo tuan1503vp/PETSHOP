@@ -163,6 +163,18 @@ class Product {
         return $row ? (int)$row->total : 0;
     }
 
+    // Tìm kiếm sản phẩm theo tên (để kiểm tra trùng lặp)
+    public function getProductByName($name, $excludeId = null) {
+        if ($excludeId) {
+            $this->db->query('SELECT * FROM products WHERE name = :name AND id != :exclude_id AND is_deleted = 0 LIMIT 1');
+            $this->db->bind(':exclude_id', $excludeId);
+        } else {
+            $this->db->query('SELECT * FROM products WHERE name = :name AND is_deleted = 0 LIMIT 1');
+        }
+        $this->db->bind(':name', $name);
+        return $this->db->single();
+    }
+
     // Lấy chi tiết sản phẩm theo ID
     public function getProductById($id) {
         $this->db->query('SELECT p.*, c.name as category_name 

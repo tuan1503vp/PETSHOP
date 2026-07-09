@@ -12,7 +12,9 @@
         stock_quantity: '',
         image: ''
     },
-    validateAndSubmit(e) {
+    async validateAndSubmit(e) {
+        e.preventDefault();
+        const formEl = e.target;
         this.errors = { name: '', category_id: '', price: '', stock_quantity: '', image: '' };
         let hasError = false;
 
@@ -50,9 +52,23 @@
         }
 
         if (hasError) {
-            e.preventDefault();
             return false;
         }
+
+        // Kiểm tra trùng tên sản phẩm qua AJAX
+        try {
+            const response = await fetch('<?php echo URLROOT; ?>/admin/check_product_name?name=' + encodeURIComponent(nameVal));
+            const result = await response.json();
+            if (result.exists) {
+                this.errors.name = `Sản phẩm này đã tồn tại! Bạn có thể sử dụng lại hoặc <a href="<?php echo URLROOT; ?>/admin/product_edit/${result.id}" class="text-blue-600 underline font-black">Chỉnh sửa sản phẩm cũ</a>.`;
+                return false;
+            }
+        } catch (err) {
+            console.error('Lỗi kiểm tra tên sản phẩm:', err);
+        }
+
+        // Submit form thủ công nếu không trùng
+        formEl.submit();
         return true;
     },
     async saveCategory() {
@@ -376,7 +392,7 @@
                                 <div class="md:col-span-2">
                                     <label for="modal_name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Tên Sản Phẩm <span class="text-red-500">*</span></label>
                                     <input type="text" name="name" id="modal_name" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs" placeholder="VD: Hạt Royal Canin cho mèo">
-                                    <span class="text-[10px] text-red-500 font-bold block mt-1" x-show="errors.name" x-text="errors.name"></span>
+                                    <span class="text-[10px] text-red-500 font-bold block mt-1" x-show="errors.name" x-html="errors.name"></span>
                                 </div>
 
                                 <div>

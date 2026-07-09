@@ -215,4 +215,59 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const nameInput = document.getElementById('name');
+    const productId = '<?php echo isset($data['product']) ? $data['product']->id : ""; ?>';
+    
+    // Create an error container if it doesn't exist
+    let errorSpan = document.getElementById('name-error');
+    if (!errorSpan) {
+        errorSpan = document.createElement('span');
+        errorSpan.id = 'name-error';
+        errorSpan.className = 'text-xs text-red-500 font-bold block mt-1.5 hidden';
+        nameInput.parentNode.appendChild(errorSpan);
+    }
+
+    form.addEventListener('submit', async function(e) {
+        const nameVal = nameInput.value.trim();
+        if (!nameVal) return;
+
+        e.preventDefault();
+        
+        // Disable save button to avoid duplicate clicks
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang kiểm tra...';
+
+        try {
+            const url = `<?php echo URLROOT; ?>/admin/check_product_name?name=${encodeURIComponent(nameVal)}` + (productId ? `&exclude_id=${productId}` : '');
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (result.exists) {
+                errorSpan.innerHTML = `Sản phẩm này đã tồn tại! Bạn có thể sử dụng lại hoặc <a href="<?php echo URLROOT; ?>/admin/product_edit/${result.id}" class="text-blue-600 underline font-black">Chỉnh sửa sản phẩm trùng tên kia</a>.`;
+                errorSpan.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                errorSpan.classList.add('hidden');
+                form.submit();
+            }
+        } catch (err) {
+            console.error('Lỗi kiểm tra trùng tên:', err);
+            form.submit(); // Fallback: submit form if error
+        }
+    });
+
+    // Clear error message when user starts typing
+    nameInput.addEventListener('input', () => {
+        errorSpan.classList.add('hidden');
+    });
+});
+</script>
+
 <?php require APPROOT . '/views/admin/footer.php'; ?>

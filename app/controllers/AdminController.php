@@ -544,9 +544,34 @@ class AdminController extends Controller {
         ]);
     }
 
+    // AJAX Endpoint: Kiểm tra trùng tên sản phẩm
+    public function check_product_name() {
+        $this->checkAccess(['admin', 'manager']);
+        $name = trim($_GET['name'] ?? '');
+        $excludeId = isset($_GET['exclude_id']) ? (int)$_GET['exclude_id'] : null;
+        
+        $product = $this->productModel->getProductByName($name, $excludeId);
+        
+        if ($product) {
+            echo json_encode(['exists' => true, 'id' => $product->id]);
+        } else {
+            echo json_encode(['exists' => false]);
+        }
+        exit;
+    }
+
     public function product_add() {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Lọc trùng tên ở backend
+            $nameVal = trim($_POST['name']);
+            $existing = $this->productModel->getProductByName($nameVal);
+            if ($existing) {
+                flash('product_err', 'Sản phẩm có tên này đã tồn tại trên hệ thống.', 'error');
+                header('Location: ' . URLROOT . '/admin/products');
+                return;
+            }
+
             // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
             
             $image = '';
@@ -605,6 +630,15 @@ class AdminController extends Controller {
     public function product_edit($id) {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Lọc trùng tên ở backend (loại trừ ID hiện tại)
+            $nameVal = trim($_POST['name']);
+            $existing = $this->productModel->getProductByName($nameVal, $id);
+            if ($existing) {
+                flash('product_err', 'Sản phẩm có tên này đã tồn tại trên hệ thống.', 'error');
+                header('Location: ' . URLROOT . '/admin/product_edit/' . $id);
+                return;
+            }
+
             // Loại bỏ FILTER_SANITIZE_STRING do đã bị deprecated từ PHP 8.1
             
             $image = '';
