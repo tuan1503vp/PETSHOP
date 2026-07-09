@@ -744,7 +744,7 @@ document.addEventListener('alpine:init', () => {
         posPaymentCode: '',
         
         voucherCode: '',
-        voucherDiscount: 0,
+        voucherDetail: null,
         voucherTitle: '',
         voucherMessage: '',
 
@@ -905,6 +905,24 @@ document.addEventListener('alpine:init', () => {
             return Math.round(productDiscount + serviceDiscount);
         },
 
+        get voucherDiscount() {
+            if (!this.voucherDetail) return 0;
+            const subtotal = this.totalPrice;
+            if (this.voucherDetail.min_order_value && subtotal < this.voucherDetail.min_order_value) {
+                return 0;
+            }
+            let discount = 0;
+            if (this.voucherDetail.discount_type === 'percent') {
+                discount = subtotal * (this.voucherDetail.discount_amount / 100);
+                if (this.voucherDetail.max_discount && discount > this.voucherDetail.max_discount) {
+                    discount = this.voucherDetail.max_discount;
+                }
+            } else {
+                discount = Math.min(this.voucherDetail.discount_amount, subtotal);
+            }
+            return Math.round(discount);
+        },
+
         get finalPrice() {
             const appliedMemDiscount = this.disableMembershipDiscount ? 0 : this.discountAmount;
             return Math.max(0, this.totalPrice - appliedMemDiscount - this.voucherDiscount);
@@ -914,7 +932,7 @@ document.addEventListener('alpine:init', () => {
             this.voucherMessage = '';
             this.disableMembershipDiscount = false;
             if (!this.voucherCode) {
-                this.voucherDiscount = 0;
+                this.voucherDetail = null;
                 this.voucherTitle = '';
                 return;
             }
@@ -929,32 +947,39 @@ document.addEventListener('alpine:init', () => {
                 });
                 const data = await res.json();
                 if (data.success) {
-                    const discount = parseInt(data.discount);
+                    // Lưu tạm cấu hình voucher để kích hoạt tính toán động của getter
+                    this.voucherDetail = {
+                        discount_amount: parseFloat(data.discount),
+                        discount_type: data.discount_type,
+                        max_discount: parseFloat(data.max_discount) || null,
+                        min_order_value: parseFloat(data.min_order_value) || 0
+                    };
+                    
+                    const discount = this.voucherDiscount;
                     const isCombinable = data.is_combinable;
                     const memDiscount = this.discountAmount;
                     
                     if (!isCombinable && memDiscount > 0) {
                         if (discount <= memDiscount) {
-                            this.voucherDiscount = 0;
+                            this.voucherDetail = null;
                             this.voucherTitle = '';
                             this.voucherMessage = `Ưu đãi hạng thẻ (${new Intl.NumberFormat('vi-VN').format(memDiscount)}đ) cao hơn. Không áp dụng mã!`;
                         } else {
                             this.disableMembershipDiscount = true;
-                            this.voucherDiscount = discount;
                             this.voucherTitle = data.title;
                             this.voucherMessage = `Mã không áp dụng cộng dồn. Đã dùng mã (giảm ${new Intl.NumberFormat('vi-VN').format(discount)}đ)!`;
                         }
                     } else {
-                        this.voucherDiscount = discount;
                         this.voucherTitle = data.title;
                         this.voucherMessage = '';
                     }
                 } else {
-                    this.voucherDiscount = 0;
+                    this.voucherDetail = null;
                     this.voucherTitle = '';
                     this.voucherMessage = data.message;
                 }
             } catch (err) {
+                this.voucherDetail = null;
                 this.voucherMessage = 'Lỗi kiểm tra voucher.';
             }
         },
@@ -1051,10 +1076,6 @@ document.addEventListener('alpine:init', () => {
 
         get totalPrice() {
             return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-        },
-
-        get finalPrice() {
-            return this.totalPrice - this.discountAmount;
         },
 
         filterCategory(category) {

@@ -199,7 +199,15 @@ class OrderController extends Controller {
             $voucher = $voucherModel->getVoucherByCode($code, $customer_id);
             
             if ($voucher) {
-                echo json_encode(['success' => true, 'discount' => $voucher->discount_amount, 'title' => $voucher->title]);
+                echo json_encode([
+                    'success' => true, 
+                    'discount' => $voucher->discount_amount, 
+                    'discount_type' => $voucher->discount_type,
+                    'max_discount' => $voucher->max_discount,
+                    'min_order_value' => $voucher->min_order_value,
+                    'is_combinable' => $voucher->is_combinable == 1,
+                    'title' => $voucher->title
+                ]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Mã không hợp lệ hoặc đã sử dụng']);
             }
@@ -361,12 +369,25 @@ class OrderController extends Controller {
                 $grand_total = $product_total + $appointment_total;
 
                 $discount_amount = 0;
-                if ($voucher_code && $customer_id) {
+                if ($voucher_code) {
                     require_once APPROOT . '/models/Voucher.php';
                     $voucherModel = new Voucher();
                     $voucher = $voucherModel->getVoucherByCode($voucher_code, $customer_id);
                     if ($voucher) {
-                        $discount_amount = $voucher->discount_amount;
+                        $eligible_total = $product_total + $appointment_total;
+                        if ($voucher->min_order_value && $eligible_total < $voucher->min_order_value) {
+                            $discount_amount = 0;
+                        } else {
+                            if ($voucher->discount_type == 'percent') {
+                                $discount_amount = $eligible_total * ($voucher->discount_amount / 100);
+                                if (!empty($voucher->max_discount) && $discount_amount > $voucher->max_discount) {
+                                    $discount_amount = $voucher->max_discount;
+                                }
+                            } else {
+                                $discount_amount = min($voucher->discount_amount, $eligible_total);
+                            }
+                        }
+                        $discount_amount = round($discount_amount);
                         $voucherModel->markVoucherAsUsed($voucher_code);
                     }
                 }
