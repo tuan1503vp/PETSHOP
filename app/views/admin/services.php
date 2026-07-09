@@ -6,7 +6,6 @@
     selectedApp: null, 
     selectedAppDetails: null,
     loadingDetails: false,
-    appointments: <?php echo json_encode(array_merge($data['appointments'] ?? [], $data['completed_appointments'] ?? [])); ?>,
     availableDoctors: [], 
     loadingDoctors: false, 
     requiredRoleLabel: '',
@@ -42,13 +41,6 @@
         return (int)$p->category_id === 12;
     })))); ?>,
     
-    openModal(appId) { 
-        this.selectedApp = this.appointments.find(function(a) { return a.id === appId; }); 
-        this.showModal = true; 
-        this.availableDoctors = []; 
-        this.prescriptions = []; 
-        this.selectedAppDetails = null;
-    },
     async viewAppointmentDetails(apptId) {
         this.selectedApp = null;
         this.selectedAppDetails = null;
@@ -344,7 +336,7 @@
 
                             <?php elseif(!($data['is_doctor_view'] ?? false) && $_SESSION['user_role'] != 'cashier'): ?>
                             <?php /* Admin/Manager: Phân công */ ?>
-                            <button type="button" @click="openModal(<?php echo $app->id; ?>)" class="text-indigo-600 hover:text-indigo-900 font-bold text-sm">
+                            <button type="button" @click="viewAppointmentDetails(<?php echo $app->id; ?>)" class="text-indigo-600 hover:text-indigo-900 font-bold text-sm">
                                 <?php echo (in_array($_SESSION['user_role'], ['admin', 'manager'])) ? 'Phân công' : 'Xem'; ?>
                             </button>
                             <?php endif; ?>
