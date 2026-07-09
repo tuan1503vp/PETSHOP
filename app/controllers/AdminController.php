@@ -570,6 +570,7 @@ class AdminController extends Controller {
                 "ALTER TABLE vouchers MODIFY discount_amount DECIMAL(15,2) NOT NULL",
                 "ALTER TABLE vouchers MODIFY max_discount DECIMAL(15,2) DEFAULT NULL",
                 "ALTER TABLE vouchers MODIFY min_order_value DECIMAL(15,2) DEFAULT NULL",
+                "ALTER TABLE vouchers ADD COLUMN is_combinable tinyint(1) DEFAULT 0",
                 "ALTER TABLE contacts ADD COLUMN reply_message TEXT DEFAULT NULL",
                 "ALTER TABLE contacts ADD COLUMN replied_at TIMESTAMP NULL DEFAULT NULL"
             ];

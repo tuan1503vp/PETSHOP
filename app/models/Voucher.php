@@ -45,7 +45,7 @@ class Voucher {
     public function getVoucherByCode($code, $user_id) {
         // Kiểm tra voucher cá nhân (chỉ kiểm tra nếu có user_id)
         if ($user_id) {
-            $this->db->query("SELECT uv.unique_code as code, v.title, v.discount_type, v.discount_amount, v.max_discount, v.min_order_value, v.category_id, 'internal' as type 
+            $this->db->query("SELECT uv.unique_code as code, v.title, v.discount_type, v.discount_amount, v.max_discount, v.min_order_value, v.category_id, v.is_combinable, 'internal' as type 
                               FROM user_vouchers uv 
                               JOIN vouchers v ON uv.voucher_id = v.id 
                               WHERE uv.unique_code = :code AND uv.user_id = :user_id AND uv.status = 'active'");
@@ -56,7 +56,7 @@ class Voucher {
         }
 
         // Kiểm tra voucher công khai (áp dụng cho cả khách lẻ và hội viên)
-        $this->db->query("SELECT code, title, discount_type, discount_amount, max_discount, min_order_value, category_id, usage_limit, used_count, usage_per_user, 'external' as type 
+        $this->db->query("SELECT code, title, discount_type, discount_amount, max_discount, min_order_value, category_id, usage_limit, used_count, usage_per_user, is_combinable, 'external' as type 
                           FROM vouchers 
                           WHERE code = :code AND is_active = 1 
                           AND (usage_limit IS NULL OR used_count < usage_limit)
