@@ -549,6 +549,52 @@ class AdminController extends Controller {
         exit;
     }
 
+    // Route nâng cấp cơ sở dữ liệu: Thay đổi kiểu dữ liệu cột giá từ FLOAT sang DECIMAL(15,2)
+    public function update_db_schema() {
+        $this->checkAccess(['admin']);
+        
+        try {
+            // Khởi tạo đối tượng Database trực tiếp
+            $db = new Database();
+            
+            $queries = [
+                "ALTER TABLE products MODIFY price DECIMAL(15,2) NOT NULL",
+                "ALTER TABLE services MODIFY price DECIMAL(15,2) NOT NULL",
+                "ALTER TABLE appointments MODIFY final_price DECIMAL(15,2) DEFAULT NULL",
+                "ALTER TABLE order_items MODIFY unit_price DECIMAL(15,2) NOT NULL",
+                "ALTER TABLE orders MODIFY total_amount DECIMAL(15,2) NOT NULL",
+                "ALTER TABLE orders MODIFY discount_amount DECIMAL(15,2) NOT NULL DEFAULT 0.00",
+                "ALTER TABLE orders MODIFY paid_amount DECIMAL(15,2) DEFAULT NULL",
+                "ALTER TABLE vouchers MODIFY discount_amount DECIMAL(15,2) NOT NULL",
+                "ALTER TABLE vouchers MODIFY max_discount DECIMAL(15,2) DEFAULT NULL",
+                "ALTER TABLE vouchers MODIFY min_order_value DECIMAL(15,2) DEFAULT NULL"
+            ];
+            
+            $results = [];
+            foreach ($queries as $q) {
+                $db->query($q);
+                if ($db->execute()) {
+                    $results[] = "Thành công: " . $q;
+                } else {
+                    $results[] = "Thất bại: " . $q;
+                }
+            }
+            
+            echo "<h1>Kết quả nâng cấp cơ sở dữ liệu (Độ chính xác Tiền tệ)</h1>";
+            echo "<ul style='font-family: monospace;'>";
+            foreach ($results as $r) {
+                echo "<li>" . htmlspecialchars($r) . "</li>";
+            }
+            echo "</ul>";
+            echo "<br><a href='" . URLROOT . "/admin/products' style='font-weight:bold; color: #4f46e5; text-decoration: none;'>[Quay lại danh sách sản phẩm]</a>";
+            exit;
+            
+        } catch (Exception $e) {
+            echo "Lỗi: " . htmlspecialchars($e->getMessage());
+            exit;
+        }
+    }
+
     // AJAX Endpoint: Lấy thông tin chi tiết sản phẩm (JSON) cho popup chỉnh sửa
     public function get_product_json($id) {
         $this->checkAccess(['admin', 'manager']);
