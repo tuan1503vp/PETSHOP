@@ -39,7 +39,7 @@
     }, array_filter($data['products'] ?? [], function($p) {
         // Chỉ hiển thị danh mục Thuốc (category_id = 12)
         return (int)$p->category_id === 12;
-    })))); ?>,
+    })))) ?: '[]'; ?>,
     
     async viewAppointmentDetails(apptId) {
         this.selectedApp = null;
