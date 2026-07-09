@@ -71,6 +71,10 @@ class Product {
                 $sql .= ' ORDER BY p.created_at DESC';
         }
 
+        if (isset($params['limit']) && isset($params['offset'])) {
+            $sql .= ' LIMIT ' . (int)$params['limit'] . ' OFFSET ' . (int)$params['offset'];
+        }
+
         $this->db->query($sql);
 
         // Bindings
@@ -88,6 +92,75 @@ class Product {
         }
         
         return $this->db->resultSet();
+    }
+
+    // Đếm tổng số lượng sản phẩm theo bộ lọc để phân trang
+    public function getProductsCount($params = []) {
+        $sql = 'SELECT COUNT(*) as total 
+                FROM products p 
+                LEFT JOIN categories c ON p.category_id = c.id
+                WHERE p.is_deleted = 0';
+        
+        // Filter by category
+        if(!empty($params['category'])) {
+            $sql .= ' AND p.category_id = :category_id';
+        }
+
+        // Search by name
+        if(!empty($params['search'])) {
+            $sql .= ' AND p.name LIKE :search';
+        }
+
+        // Filter by min price
+        if(!empty($params['price_min'])) {
+            $sql .= ' AND p.price >= :price_min';
+        }
+
+        // Filter by max price
+        if(!empty($params['price_max'])) {
+            $sql .= ' AND p.price <= :price_max';
+        }
+
+        // Filter by target pet (Dog / Cat)
+        if(!empty($params['target_pet'])) {
+            if($params['target_pet'] === 'dog') {
+                $sql .= " AND (c.name LIKE BINARY '%Chó%' OR c.name LIKE BINARY '%chó%'
+                            OR p.name LIKE BINARY '%Chó%' OR p.name LIKE BINARY '%chó%' 
+                            OR p.name LIKE BINARY '%Cún%' OR p.name LIKE BINARY '%cún%'
+                            OR p.name LIKE '% dog %' OR p.name LIKE 'dog %' OR p.name LIKE '% dog' OR p.name = 'dog'
+                            OR p.name LIKE '% Dog %' OR p.name LIKE 'Dog %' OR p.name LIKE '% Dog' OR p.name = 'Dog'
+                            OR p.description LIKE BINARY '%Chó%' OR p.description LIKE BINARY '%chó%' 
+                            OR p.description LIKE BINARY '%Cún%' OR p.description LIKE BINARY '%cún%')";
+            } elseif($params['target_pet'] === 'cat') {
+                $sql .= " AND (c.name LIKE BINARY '%Mèo%' OR c.name LIKE BINARY '%mèo%'
+                            OR p.name LIKE BINARY '%Mèo%' OR p.name LIKE BINARY '%mèo%'
+                            OR p.name LIKE '% miu %' OR p.name LIKE 'miu %' OR p.name LIKE '% miu' OR p.name = 'miu'
+                            OR p.name LIKE '% Miu %' OR p.name LIKE 'Miu %' OR p.name LIKE '% Miu' OR p.name = 'Miu'
+                            OR p.name LIKE '% cat %' OR p.name LIKE 'cat %' OR p.name LIKE '% cat' OR p.name = 'cat'
+                            OR p.name LIKE '% Cat %' OR p.name LIKE 'Cat %' OR p.name LIKE '% Cat' OR p.name = 'Cat'
+                            OR p.description LIKE BINARY '%Mèo%' OR p.description LIKE BINARY '%mèo%'
+                            OR p.description LIKE '% miu %' OR p.description LIKE 'miu %' OR p.description LIKE '% miu' OR p.description = 'miu')";
+            }
+        }
+
+        $this->db->query($sql);
+
+        // Bindings
+        if(!empty($params['category'])) {
+            $this->db->bind(':category_id', $params['category']);
+        }
+        if(!empty($params['search'])) {
+            $this->db->bind(':search', '%' . $params['search'] . '%');
+        }
+        if(!empty($params['price_min'])) {
+            $this->db->bind(':price_min', $params['price_min']);
+        }
+        if(!empty($params['price_max'])) {
+            $this->db->bind(':price_max', $params['price_max']);
+        }
+        
+        $row = $this->db->single();
+        return $row ? (int)$row->total : 0;
     }
 
     // Lấy chi tiết sản phẩm theo ID
