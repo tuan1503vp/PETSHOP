@@ -11,6 +11,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Alpine.js Store (phải khai báo TRƯỚC khi Alpine khởi động) -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('sidebar', {
+                open: false,
+                toggle() { this.open = !this.open; },
+                show()   { this.open = true; },
+                hide()   { this.open = false; }
+            });
+        });
+    </script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <script>
@@ -53,7 +64,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans flex h-screen overflow-hidden" x-data="{ mobileSidebarOpen: false }">
+<body class="bg-gray-100 font-sans flex h-screen overflow-hidden" x-data>
     <!-- Sidebar -->
     <?php 
         $current_url = $_SERVER['REQUEST_URI'];
@@ -106,12 +117,12 @@
         }
     ?>
     <!-- Mobile Sidebar Backdrop Overlay -->
-    <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false"
+    <div x-show="$store.sidebar.open" x-cloak @click="$store.sidebar.hide()"
          class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300">
     </div>
 
     <!-- Sidebar Navigation -->
-    <aside :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+    <aside :class="$store.sidebar.open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
            class="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-dark to-darker text-white flex flex-col h-full transform md:transform-none md:relative transition-transform duration-300 ease-in-out shadow-xl z-40 md:z-20">
         <div class="p-6 flex items-center justify-between border-b border-white/5">
             <div class="flex items-center">
@@ -120,7 +131,7 @@
                 </div>
                 <span class="text-xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">PETSHOP</span>
             </div>
-            <button @click="mobileSidebarOpen = false" class="text-gray-400 hover:text-white md:hidden focus:outline-none">
+            <button @click="$store.sidebar.hide()" class="text-gray-400 hover:text-white md:hidden focus:outline-none">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
@@ -348,10 +359,10 @@
         <!-- Top header for mobile / Breadcrumbs -->
         <header class="bg-white/80 backdrop-blur-md shadow-sm z-10 flex items-center justify-between p-4 lg:px-8 h-16 border-b border-gray-100/50 sticky top-0">
             <div class="flex items-center md:hidden">
-                <button @click="mobileSidebarOpen = true" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                <button @click="$store.sidebar.show()" class="text-gray-500 hover:text-gray-700 focus:outline-none p-2 rounded-lg hover:bg-gray-100 transition">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
-                <span class="ml-4 text-lg font-bold text-gray-900">PETSHOP</span>
+                <span class="ml-3 text-lg font-bold text-gray-900">PETSHOP</span>
             </div>
             <div class="hidden md:block">
                 <?php if($_SESSION['user_role'] == 'cashier'): ?>
