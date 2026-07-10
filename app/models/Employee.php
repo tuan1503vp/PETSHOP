@@ -8,7 +8,7 @@ class Employee {
 
     // Lấy danh sách toàn bộ nhân viên (JOIN với users để lấy role)
     public function getEmployees() {
-        $this->db->query('SELECT e.*, u.email, u.role 
+        $this->db->query('SELECT e.*, u.email, u.role, u.is_active 
                           FROM employees e 
                           JOIN users u ON e.user_id = u.id 
                           ORDER BY e.created_at DESC');
@@ -17,7 +17,7 @@ class Employee {
 
     // Lấy thông tin nhân viên theo ID
     public function getEmployeeById($id) {
-        $this->db->query('SELECT e.*, u.email, u.role 
+        $this->db->query('SELECT e.*, u.email, u.role, u.is_active 
                           FROM employees e 
                           JOIN users u ON e.user_id = u.id 
                           WHERE e.id = :id');
