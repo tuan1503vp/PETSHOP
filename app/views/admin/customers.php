@@ -89,13 +89,19 @@
                                 <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider" :class="levelClass(cust.membership_level)" x-text="cust.membership_level || 'Đồng'"></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider" :class="cust.is_verified == 1 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'" x-text="cust.is_verified == 1 ? 'Đã xác minh' : 'Chờ xác minh'"></span>
+                                <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider block mb-1" :class="cust.is_active == 1 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'" x-text="cust.is_active == 1 ? 'Hoạt động' : 'Vô hiệu hóa'"></span>
+                                <span class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider block" :class="cust.is_verified == 1 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'" x-text="cust.is_verified == 1 ? 'Đã xác minh' : 'Chờ xác minh'"></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold text-gray-400" x-text="formatDate(cust.created_at)"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <div class="flex justify-end gap-2">
                                     <button @click="viewDetails(cust.id)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs" title="Xem chi tiết">
                                         <i class="fa-solid fa-circle-info"></i>
+                                    </button>
+                                    <button @click="toggleStatus(cust.id)" class="w-7 h-7 flex items-center justify-center rounded-lg text-xs transition-all" 
+                                            :class="cust.is_active == 1 ? 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white' : 'bg-green-50 text-green-600 hover:bg-green-600 hover:text-white'" 
+                                            :title="cust.is_active == 1 ? 'Vô hiệu hóa tài khoản' : 'Kích hoạt tài khoản'">
+                                        <i :class="cust.is_active == 1 ? 'fa-solid fa-user-slash' : 'fa-solid fa-user-check'"></i>
                                     </button>
                                     <form :action="'<?php echo URLROOT; ?>/admin/customer_delete/' + cust.id" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa khách hàng này? Thao tác này không thể hoàn tác.')" class="inline-block">
                                         <button type="submit" class="w-7 h-7 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-xs" title="Xóa tài khoản">
@@ -405,6 +411,25 @@ function customerManagement() {
                 console.error(e);
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async toggleStatus(id) {
+            if (!confirm('Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của tài khoản này?')) return;
+            try {
+                const res = await fetch('<?php echo URLROOT; ?>/admin/toggle_user_status/' + id);
+                const data = await res.json();
+                if (data.success) {
+                    const index = this.customers.findIndex(c => c.id === id);
+                    if (index !== -1) {
+                        this.customers[index].is_active = data.new_status;
+                    }
+                } else {
+                    alert(data.message || 'Lỗi xảy ra');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Không thể kết nối đến máy chủ.');
             }
         },
 

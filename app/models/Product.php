@@ -215,7 +215,7 @@ class Product {
     // Cập nhật sản phẩm
     public function updateProduct($data) {
         $sql = 'UPDATE products SET category_id = :category_id, name = :name, description = :description, 
-                price = :price, stock_quantity = :stock_quantity, expiry_date = :expiry_date';
+                price = :price, stock_quantity = :stock_quantity, expiry_date = :expiry_date, status = :status';
         
         if(!empty($data['image'])) {
             $sql .= ', image = :image';
@@ -232,6 +232,7 @@ class Product {
         $this->db->bind(':price', $data['price']);
         $this->db->bind(':stock_quantity', $data['stock_quantity']);
         $this->db->bind(':expiry_date', !empty($data['expiry_date']) ? $data['expiry_date'] : null);
+        $this->db->bind(':status', $data['status'] ?? 'active');
 
         if(!empty($data['image'])) {
             $this->db->bind(':image', $data['image']);

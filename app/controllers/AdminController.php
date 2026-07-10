@@ -626,6 +626,7 @@ class AdminController extends Controller {
             'description' => $product->description,
             'image' => $product->image,
             'expiry_date' => $product->expiry_date,
+            'status' => $product->status ?? 'active',
             'additional_images' => $imgs
         ]);
         exit;
@@ -726,7 +727,8 @@ class AdminController extends Controller {
                 'price' => clean_price($_POST['price']),
                 'stock_quantity' => trim($_POST['stock_quantity']),
                 'image' => $image,
-                'expiry_date' => trim($_POST['expiry_date'] ?? '')
+                'expiry_date' => trim($_POST['expiry_date'] ?? ''),
+                'status' => trim($_POST['status'] ?? 'active')
             ];
 
             if ($this->productModel->updateProduct($data)) {
@@ -784,6 +786,22 @@ class AdminController extends Controller {
     public function product_delete($id) {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Kiểm tra xem sản phẩm đã bán/sử dụng chưa
+            $db = new Database();
+            $db->query("SELECT COUNT(*) as cnt FROM order_items WHERE product_id = :product_id");
+            $db->bind(':product_id', $id);
+            $orderCount = $db->single()->cnt;
+
+            $db->query("SELECT COUNT(*) as cnt FROM health_record_prescriptions WHERE product_id = :product_id");
+            $db->bind(':product_id', $id);
+            $prescCount = $db->single()->cnt;
+
+            if ($orderCount > 0 || $prescCount > 0) {
+                flash('product_message', 'Sản phẩm này đã phát sinh giao dịch (đã bán hoặc đã được kê đơn) nên không thể xóa. Vui lòng chỉnh sửa trạng thái hoạt động của sản phẩm thành "Dừng hoạt động" thay vì xóa.', 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4');
+                header('Location: ' . URLROOT . '/admin/products');
+                exit;
+            }
+
             // Xóa ảnh phụ trên đĩa trước khi xóa sp khỏi DB (DB cascade xóa các dòng trong product_images)
             $additionalImages = $this->productModel->getProductImages($id);
             foreach ($additionalImages as $img) {
@@ -810,6 +828,7 @@ class AdminController extends Controller {
                     'Xóa sản phẩm',
                     "Đã xóa sản phẩm ID: " . $id
                 );
+                flash('product_message', 'Xóa sản phẩm thành công');
                 header('Location: ' . URLROOT . '/admin/products');
             } else {
                 die('Lỗi khi xóa.');
@@ -1375,18 +1394,9 @@ class AdminController extends Controller {
     public function customer_delete($id) {
         $this->checkAccess();
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if ($this->model('User')->deleteUser($id)) {
-                $this->activityLogModel->log(
-                    $_SESSION['user_id'],
-                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
-                    $_SESSION['user_role'],
-                    'Xóa khách hàng',
-                    "Đã xóa tài khoản khách hàng ID: " . $id
-                );
-                header('Location: ' . URLROOT . '/admin/customers');
-            } else {
-                die('Lỗi khi xóa khách hàng.');
-            }
+            flash('customer_message', 'Không nên xóa tài khoản thành viên để đảm bảo tính toàn vẹn dữ liệu lịch sử. Vui lòng chuyển trạng thái tài khoản thành "Ngừng hoạt động" thay vì xóa.', 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4');
+            header('Location: ' . URLROOT . '/admin/customers');
+            exit;
         }
     }
 
@@ -1483,20 +1493,45 @@ class AdminController extends Controller {
     public function employee_delete($id) {
         $this->checkAccess(['admin', 'manager']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $employeeModel = $this->model('Employee');
-            if ($employeeModel->deleteEmployee($id)) {
-                $this->activityLogModel->log(
-                    $_SESSION['user_id'],
-                    ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
-                    $_SESSION['user_role'],
-                    'Xóa nhân viên',
-                    "Đã xóa nhân viên ID: " . $id
-                );
-                header('Location: ' . URLROOT . '/admin/employees');
-            } else {
-                die('Lỗi khi xóa nhân viên.');
-            }
+            flash('employee_message', 'Không nên xóa tài khoản nhân viên để bảo toàn dữ liệu lịch sử. Vui lòng chuyển trạng thái hoạt động của nhân viên thành "Ngừng hoạt động" thay vì xóa.', 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4');
+            header('Location: ' . URLROOT . '/admin/employees');
+            exit;
         }
+    }
+
+    public function toggle_user_status($id) {
+        $this->checkAccess(['admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        $userModel = $this->model('User');
+        $user = $userModel->getUserById($id);
+        
+        if (!$user) {
+            echo json_encode(['success' => false, 'message' => 'Không tìm thấy người dùng.']);
+            exit;
+        }
+        
+        $new_status = ($user->is_active == 1) ? 0 : 1;
+        
+        $db = new Database();
+        $db->query("UPDATE users SET is_active = :is_active WHERE id = :id");
+        $db->bind(':is_active', $new_status);
+        $db->bind(':id', $id);
+        
+        if ($db->execute()) {
+            $status_str = $new_status == 1 ? 'Kích hoạt' : 'Vô hiệu hóa';
+            $this->activityLogModel->log(
+                $_SESSION['user_id'],
+                ($_SESSION['user_username'] ?? $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? 'system'),
+                $_SESSION['user_role'],
+                'Thay đổi trạng thái tài khoản',
+                "Đã chuyển trạng thái tài khoản ID {$id} sang: " . $status_str
+            );
+            echo json_encode(['success' => true, 'new_status' => $new_status]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi khi cập nhật trạng thái.']);
+        }
+        exit;
     }
 
     public function appointment_assign() {

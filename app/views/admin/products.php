@@ -3,6 +3,7 @@
 <style>[x-cloak] { display: none !important; }</style>
 
 <div class="p-6" x-data="productManagement()">
+    <?php flash('product_message'); ?>
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
@@ -131,6 +132,7 @@
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tồn kho</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn sử dụng</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                         <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
                     </tr>
                 </thead>
@@ -188,6 +190,11 @@
                             <?php else: ?>
                                 <span class="text-xs text-gray-400 italic">—</span>
                             <?php endif; ?>
+                        </td>
+                        <td class="px-3 py-1.5 whitespace-nowrap">
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold border <?php echo ($product->status ?? 'active') == 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' : 'bg-red-50 text-red-700 border-red-250'; ?>">
+                                <?php echo ($product->status ?? 'active') == 'active' ? 'Kinh doanh' : 'Ngừng bán'; ?>
+                            </span>
                         </td>
                         <td class="px-3 py-1.5 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end space-x-1.5">
@@ -359,6 +366,14 @@
                                     <div>
                                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Hạn sử dụng</label>
                                         <input type="date" name="expiry_date" x-model="editProduct.expiry_date" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Trạng thái hoạt động</label>
+                                        <select name="status" x-model="editProduct.status" class="w-full border-gray-200 rounded-xl shadow-sm py-1.5 px-3 focus:ring-primary focus:border-primary border transition-all text-xs">
+                                            <option value="active">Đang kinh doanh</option>
+                                            <option value="inactive">Ngừng kinh doanh</option>
+                                        </select>
                                     </div>
 
                                     <div>

@@ -1,6 +1,7 @@
 <?php require APPROOT . '/views/admin/header.php'; ?>
 
 <div class="p-6">
+    <?php flash('employee_message'); ?>
     <div class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-2xl font-black text-gray-800">Quản lý Nhân sự</h1>
@@ -75,13 +76,14 @@
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Email / Chức vụ</th>
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">CCCD</th>
                     <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Địa chỉ</th>
+                    <th class="px-8 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Trạng thái</th>
                     <th class="px-8 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-widest">Thao tác</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
                 <?php if(empty($data['employees'])): ?>
                 <tr>
-                    <td colspan="6" class="px-8 py-20 text-center text-gray-500 italic">Chưa có nhân viên nào trong danh sách.</td>
+                    <td colspan="7" class="px-8 py-20 text-center text-gray-500 italic">Chưa có nhân viên nào trong danh sách.</td>
                 </tr>
                 <?php else: ?>
                     <?php foreach($data['employees'] as $emp): ?>
@@ -127,8 +129,16 @@
                         <td class="px-8 py-6">
                             <span class="text-sm text-gray-500 line-clamp-1 max-w-xs"><?php echo $emp->address; ?></span>
                         </td>
+                        <td class="px-8 py-6 whitespace-nowrap">
+                            <span id="status-badge-<?php echo $emp->user_id; ?>" class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider <?php echo $emp->is_active == 1 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'; ?>">
+                                <?php echo $emp->is_active == 1 ? 'Hoạt động' : 'Vô hiệu hóa'; ?>
+                            </span>
+                        </td>
                         <td class="px-8 py-6 whitespace-nowrap text-right">
-                            <div class="flex justify-end gap-3">
+                            <div class="flex justify-end gap-3 items-center">
+                                <button type="button" onclick="toggleEmployeeStatus(<?php echo $emp->user_id; ?>)" class="text-gray-400 hover:text-amber-500 transition" title="Bật/Tắt hoạt động">
+                                    <i id="status-icon-<?php echo $emp->user_id; ?>" class="fa-solid <?php echo $emp->is_active == 1 ? 'fa-user-slash' : 'fa-user-check'; ?> text-lg"></i>
+                                </button>
                                 <form action="<?php echo URLROOT; ?>/admin/employee_delete/<?php echo $emp->id; ?>" method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa nhân viên này?')">
                                     <button type="submit" class="text-gray-400 hover:text-red-500 transition">
                                         <i class="fa-solid fa-trash-can text-lg"></i>
@@ -143,5 +153,34 @@
         </table>
     </div>
 </div>
+
+<script>
+function toggleEmployeeStatus(userId) {
+    if (!confirm('Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của nhân viên này?')) return;
+    fetch('<?php echo URLROOT; ?>/admin/toggle_user_status/' + userId)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const badge = document.getElementById('status-badge-' + userId);
+                const icon = document.getElementById('status-icon-' + userId);
+                if (data.new_status == 1) {
+                    badge.className = 'px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700';
+                    badge.innerText = 'Hoạt động';
+                    icon.className = 'fa-solid fa-user-slash text-lg';
+                } else {
+                    badge.className = 'px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider bg-red-50 text-red-700';
+                    badge.innerText = 'Vô hiệu hóa';
+                    icon.className = 'fa-solid fa-user-check text-lg';
+                }
+            } else {
+                alert(data.message || 'Lỗi xảy ra');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Không thể kết nối đến máy chủ.');
+        });
+}
+</script>
 
 <?php require APPROOT . '/views/admin/footer.php'; ?>
