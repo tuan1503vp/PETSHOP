@@ -7,7 +7,12 @@
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
-            <p class="text-sm text-gray-500 mt-1">Tổng cộng <span class="font-bold text-primary"><?php echo $data['total_products']; ?></span> sản phẩm trong hệ thống</p>
+            <p class="text-sm text-gray-500 mt-1">
+                Tổng cộng <span class="font-bold text-primary"><?php echo $data['total_products']; ?></span> sản phẩm | 
+                Đang hiển thị: <span class="font-bold text-indigo-600" x-text="filteredCount"></span> 
+                (<span class="text-emerald-600 font-bold" x-text="activeCount + ' đang kinh doanh'"></span> | 
+                <span class="text-red-500 font-bold" x-text="inactiveCount + ' ngừng bán'"></span>)
+            </p>
         </div>
         <div class="flex gap-3">
             <a href="<?php echo URLROOT; ?>/admin/export_products" class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition flex items-center">
@@ -15,6 +20,47 @@
             </a>
             <button type="button" @click="openAddModal()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition flex items-center">
                 <i class="fa-solid fa-plus mr-2"></i> Thêm sản phẩm mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Thanh bộ lọc sản phẩm -->
+    <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm mb-6 flex flex-wrap items-center gap-4">
+        <!-- Tìm kiếm theo tên -->
+        <div class="flex-1 min-w-[200px] relative">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Tìm kiếm theo tên</label>
+            <div class="relative">
+                <input type="text" x-model="searchQuery" placeholder="Nhập tên sản phẩm cần tìm..." 
+                       class="w-full border border-gray-200 rounded-xl px-3 py-1.5 pl-8 text-xs font-medium text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- Lọc theo danh mục -->
+        <div class="w-full sm:w-48">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Danh mục</label>
+            <select x-model="selectedCategory" class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                <option value="all">Tất cả danh mục</option>
+                <?php foreach($data['categories'] as $category): ?>
+                    <option value="<?php echo $category->id; ?>"><?php echo $category->name; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <!-- Lọc theo trạng thái -->
+        <div class="w-full sm:w-48">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Trạng thái kinh doanh</label>
+            <select x-model="selectedStatus" class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">Đang kinh doanh</option>
+                <option value="inactive">Ngừng kinh doanh</option>
+            </select>
+        </div>
+
+        <!-- Nút Reset -->
+        <div class="self-end pb-0.5">
+            <button type="button" @click="resetFilters()" class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-rotate-left"></i> Đặt lại
             </button>
         </div>
     </div>
@@ -113,13 +159,20 @@
     ?>
 
     <?php foreach($groupedProducts as $categoryName => $products): ?>
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4" x-data="{ expanded: <?php echo count($products) <= 10 ? 'true' : 'false'; ?> }">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4" 
+         x-show="hasProductsInCategory('<?php echo addslashes($categoryName); ?>')" 
+         x-data="{ expanded: <?php echo count($products) <= 10 ? 'true' : 'false'; ?> }">
         <!-- Category Header -->
         <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex justify-between items-center cursor-pointer" @click="expanded = !expanded">
             <div class="flex items-center">
                 <i class="fa-solid fa-folder-open mr-2 text-primary"></i>
                 <span class="text-sm font-bold text-gray-700"><?php echo $categoryName; ?></span>
-                <span class="ml-2 text-xs text-gray-400">(<?php echo count($products); ?> sản phẩm)</span>
+                <span class="ml-2 text-xs text-gray-400">
+                    (<span class="font-bold text-gray-600" x-text="countProductsInCategory('<?php echo addslashes($categoryName); ?>')"></span> / <?php echo count($products); ?> sản phẩm
+                    <span x-show="selectedStatus === 'all' || selectedStatus === 'active'">
+                        | <span class="font-bold text-emerald-600" x-text="countActiveProductsInCategory('<?php echo addslashes($categoryName); ?>')"></span> đang bán
+                    </span>)
+                </span>
             </div>
             <i class="fa-solid fa-chevron-down text-gray-400 text-xs transition-transform duration-200" :class="expanded ? 'rotate-180' : ''"></i>
         </div>
@@ -138,7 +191,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
                     <?php foreach($products as $product): ?>
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr x-show="matchesFilters(<?php echo $product->id; ?>)" class="hover:bg-gray-50 transition-colors">
                         <td class="px-3 py-1.5 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-8 w-8">
@@ -464,6 +517,11 @@
 <script>
 function productManagement() {
     return {
+        products: <?php echo json_encode($data['products']); ?>,
+        searchQuery: '',
+        selectedCategory: 'all',
+        selectedStatus: 'all',
+
         showAddModal: false,
         showEditModal: false,
         showAddCatModal: false,
@@ -471,6 +529,48 @@ function productManagement() {
         editProduct: null,
         errors: { name: '', category_id: '', price: '', stock_quantity: '', image: '' },
         editErrors: { name: '' },
+
+        matchesFilters(productId) {
+            const p = this.products.find(item => item.id == productId);
+            if (!p) return false;
+            
+            const query = this.searchQuery.toLowerCase().trim();
+            const matchesName = !query || p.name.toLowerCase().includes(query);
+            const matchesCategory = this.selectedCategory === 'all' || p.category_id == this.selectedCategory;
+            const matchesStatus = this.selectedStatus === 'all' || (p.status || 'active') === this.selectedStatus;
+            
+            return matchesName && matchesCategory && matchesStatus;
+        },
+
+        hasProductsInCategory(categoryName) {
+            return this.products.some(p => (p.category_name || 'Chưa phân loại') === categoryName && this.matchesFilters(p.id));
+        },
+
+        countProductsInCategory(categoryName) {
+            return this.products.filter(p => (p.category_name || 'Chưa phân loại') === categoryName && this.matchesFilters(p.id)).length;
+        },
+
+        countActiveProductsInCategory(categoryName) {
+            return this.products.filter(p => (p.category_name || 'Chưa phân loại') === categoryName && this.matchesFilters(p.id) && (p.status || 'active') === 'active').length;
+        },
+
+        get filteredCount() {
+            return this.products.filter(p => this.matchesFilters(p.id)).length;
+        },
+
+        get activeCount() {
+            return this.products.filter(p => this.matchesFilters(p.id) && (p.status || 'active') === 'active').length;
+        },
+
+        get inactiveCount() {
+            return this.products.filter(p => this.matchesFilters(p.id) && (p.status || 'active') === 'inactive').length;
+        },
+
+        resetFilters() {
+            this.searchQuery = '';
+            this.selectedCategory = 'all';
+            this.selectedStatus = 'all';
+        },
 
         openAddModal() {
             this.errors = { name: '', category_id: '', price: '', stock_quantity: '', image: '' };
