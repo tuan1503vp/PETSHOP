@@ -1,4 +1,13 @@
-<?php require APPROOT . '/views/inc/header.php'; ?>
+<?php 
+$remaining_cooldown = 0;
+if (isset($_SESSION['last_otp_time'])) {
+    $time_passed = time() - $_SESSION['last_otp_time'];
+    if ($time_passed < 30) {
+        $remaining_cooldown = 30 - $time_passed;
+    }
+}
+require APPROOT . '/views/inc/header.php'; 
+?>
 <div class="flex items-center justify-center min-h-[calc(100vh-64px)] py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
     <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
         <div>
@@ -36,14 +45,54 @@
             </div>
         </form>
         
-        <form action="<?php echo URLROOT; ?>/auth/resend_otp" method="POST" class="mt-4">
+        <form action="<?php echo URLROOT; ?>/auth/resend_otp" method="POST" class="mt-4" id="resend-form">
+            <?php echo csrf_field(); ?>
             <p class="text-center text-sm text-gray-600">
                 Không nhận được email? 
-                <button type="submit" class="font-medium text-primary hover:text-indigo-500 bg-transparent border-0 cursor-pointer p-0">
+                <button type="submit" id="btn-resend" class="font-medium text-primary hover:text-indigo-500 bg-transparent border-0 cursor-pointer p-0 disabled:text-gray-400 disabled:cursor-not-allowed disabled:no-underline">
                     Gửi lại mã
                 </button>
+                <span id="countdown-text" class="text-xs text-gray-400 ml-1 font-bold hidden"></span>
             </p>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let remaining = <?php echo $remaining_cooldown; ?>;
+    const btnResend = document.getElementById('btn-resend');
+    const countdownText = document.getElementById('countdown-text');
+    let timer = null;
+
+    function startTimer(duration) {
+        let seconds = duration;
+        btnResend.disabled = true;
+        countdownText.classList.remove('hidden');
+        countdownText.textContent = `(Gửi lại sau ${seconds}s)`;
+
+        timer = setInterval(function() {
+            seconds--;
+            if (seconds <= 0) {
+                clearInterval(timer);
+                btnResend.disabled = false;
+                countdownText.classList.add('hidden');
+            } else {
+                countdownText.textContent = `(Gửi lại sau ${seconds}s)`;
+            }
+        }, 1000);
+    }
+
+    if (remaining > 0) {
+        startTimer(remaining);
+    }
+    
+    // Khi click resend thì chạy luôn đếm ngược (đề phòng submit chậm)
+    document.getElementById('resend-form').addEventListener('submit', function() {
+        btnResend.disabled = true;
+        startTimer(30);
+    });
+});
+</script>
+
 <?php require APPROOT . '/views/inc/footer.php'; ?>

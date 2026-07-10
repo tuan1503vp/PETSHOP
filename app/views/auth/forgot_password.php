@@ -1,4 +1,13 @@
-<?php require APPROOT . '/views/inc/header.php'; ?>
+<?php 
+$remaining_cooldown = 0;
+if (isset($_SESSION['last_otp_time'])) {
+    $time_passed = time() - $_SESSION['last_otp_time'];
+    if ($time_passed < 30) {
+        $remaining_cooldown = 30 - $time_passed;
+    }
+}
+require APPROOT . '/views/inc/header.php'; 
+?>
 <style>
 /* Hiệu ứng Paws nổi lơ lửng giống trang đăng nhập */
 .paw-bg { position: absolute; font-size: 2rem; color: rgba(236, 72, 153, 0.15); z-index: 0; animation: floatPaw 8s infinite ease-in-out; }
@@ -68,15 +77,42 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    let remaining = <?php echo $remaining_cooldown; ?>;
+    const btnSubmit = document.getElementById('btn-submit');
+    const icon = document.getElementById('btn-icon');
+    const text = document.getElementById('btn-text');
+    let timer = null;
+
+    function startTimer(duration) {
+        let seconds = duration;
+        btnSubmit.disabled = true;
+        btnSubmit.classList.add('opacity-75', 'cursor-not-allowed');
+        icon.className = 'fa-solid fa-hourglass-start text-pink-300';
+        text.innerText = `Vui lòng đợi ${seconds}s`;
+
+        timer = setInterval(function() {
+            seconds--;
+            if (seconds <= 0) {
+                clearInterval(timer);
+                btnSubmit.disabled = false;
+                btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+                icon.className = 'fa-solid fa-envelope text-pink-400';
+                text.innerText = 'Gửi mã khôi phục';
+            } else {
+                text.innerText = `Vui lòng đợi ${seconds}s`;
+            }
+        }, 1000);
+    }
+
+    if (remaining > 0) {
+        startTimer(remaining);
+    }
+
     const form = document.querySelector('form');
     form.addEventListener('submit', function() {
-        const btn = document.getElementById('btn-submit');
-        const icon = document.getElementById('btn-icon');
-        const text = document.getElementById('btn-text');
+        if (btnSubmit.disabled) return false;
         
-        if (btn.disabled) return false;
-        
-        btn.disabled = true;
+        btnSubmit.disabled = true;
         icon.className = 'fa-solid fa-spinner fa-spin text-pink-200';
         text.innerText = 'Đang gửi mã...';
     });

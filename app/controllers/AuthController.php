@@ -251,7 +251,7 @@ class AuthController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['verify_email'])) {
             verify_csrf_token();
             
-            $cooldown = 60;
+            $cooldown = 30;
             if (isset($_SESSION['last_otp_time']) && (time() - $_SESSION['last_otp_time'] < $cooldown)) {
                 $remaining = $cooldown - (time() - $_SESSION['last_otp_time']);
                 flash('verify_msg', 'Vui lòng đợi ' . $remaining . ' giây trước khi gửi lại mã.', 'error');
@@ -285,7 +285,7 @@ class AuthController extends Controller {
             verify_csrf_token();
             $email = trim($_POST['email']);
             
-            $cooldown = 60;
+            $cooldown = 30;
             if (isset($_SESSION['last_otp_time']) && (time() - $_SESSION['last_otp_time'] < $cooldown)) {
                 $remaining = $cooldown - (time() - $_SESSION['last_otp_time']);
                 $data = ['email_err' => 'Vui lòng đợi ' . $remaining . ' giây trước khi gửi lại mã.'];
