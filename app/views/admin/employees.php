@@ -97,15 +97,15 @@
                                         <?php echo strtoupper(substr($emp->fullname, 0, 1)); ?>
                                     </div>
                                 <?php endif; ?>
-                                <span class="text-sm font-bold text-gray-900"><?php echo $emp->fullname; ?></span>
+                                <span class="text-sm font-bold text-gray-900"><?php echo e($emp->fullname); ?></span>
                             </div>
                         </td>
                         <td class="px-8 py-6 whitespace-nowrap">
-                            <span class="text-xs font-black text-indigo-500 bg-indigo-50 px-2 py-1 rounded-lg"><?php echo $emp->employee_code; ?></span>
+                            <span class="text-xs font-black text-indigo-500 bg-indigo-50 px-2 py-1 rounded-lg"><?php echo e($emp->employee_code); ?></span>
                         </td>
                         <td class="px-8 py-6 whitespace-nowrap">
                             <div class="flex flex-col">
-                                <span class="text-sm text-gray-600"><?php echo $emp->email; ?></span>
+                                <span class="text-sm text-gray-600"><?php echo e($emp->email); ?></span>
                                 <span class="text-[10px] font-black uppercase <?php 
                                     if($emp->role == 'admin') echo 'text-red-500';
                                     elseif($emp->role == 'manager') echo 'text-purple-500';
@@ -124,10 +124,10 @@
                             </div>
                         </td>
                         <td class="px-8 py-6 whitespace-nowrap text-sm text-gray-600">
-                            <?php echo $emp->cccd; ?>
+                            <?php echo e($emp->cccd); ?>
                         </td>
                         <td class="px-8 py-6">
-                            <span class="text-sm text-gray-500 line-clamp-1 max-w-xs"><?php echo $emp->address; ?></span>
+                            <span class="text-sm text-gray-500 line-clamp-1 max-w-xs"><?php echo e($emp->address); ?></span>
                         </td>
                         <td class="px-8 py-6 whitespace-nowrap">
                             <span id="status-badge-<?php echo $emp->user_id; ?>" class="px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider <?php echo $emp->is_active == 1 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'; ?>">

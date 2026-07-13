@@ -333,7 +333,7 @@
 <script>
 function customerManagement() {
     return {
-        customers: <?php echo json_encode($data['customers']); ?>,
+        customers: <?php echo json_encode($data['customers'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>,
         showModal: false, 
         loading: false,
         activeTab: 'pets',

@@ -6,9 +6,9 @@ if ($host === 'localhost' || strpos($host, '127.0.0.1') !== false) {
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 } else {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(0);
 }
 
 // Cấu hình Session Cookie tự động hết hạn khi đóng trình duyệt (0)
@@ -41,6 +41,12 @@ require_once '../app/helpers/Mailer.php';
 
 // Gọi hàm kiểm tra bảo mật Session chống Hijacking
 checkSessionSecurity();
+
+// Kích hoạt Output Buffering để tự động chèn CSRF Token vào các form POST
+ob_start('inject_csrf_token');
+
+// Xác thực CSRF Token cho tất cả các yêu cầu POST toàn hệ thống
+verify_csrf_token();
 
 require_once '../app/core/Database.php';
 require_once '../app/core/Controller.php';

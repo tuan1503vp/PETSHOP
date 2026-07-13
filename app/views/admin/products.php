@@ -198,8 +198,8 @@
                                     <img class="h-8 w-8 rounded-lg object-cover border border-gray-100" src="<?php echo !empty($product->image) ? URLROOT . '/public/images/' . $product->image : 'https://placehold.co/100x100?text=' . urlencode($product->name); ?>" alt="">
                                 </div>
                                 <div class="ml-3">
-                                    <div class="text-sm font-bold text-gray-900"><?php echo $product->name; ?></div>
-                                    <div class="text-xs text-gray-500 truncate max-w-[200px]"><?php echo $product->description; ?></div>
+                                    <div class="text-sm font-bold text-gray-900"><?php echo e($product->name); ?></div>
+                                    <div class="text-xs text-gray-500 truncate max-w-[200px]"><?php echo e($product->description); ?></div>
                                 </div>
                             </div>
                         </td>
