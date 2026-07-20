@@ -54,9 +54,10 @@ class AiController extends Controller {
         
         // Danh sách các model dự phòng chạy bằng vòng lặp PHP (Chắc chắn hoạt động kể cả tài khoản free)
         $models = [
-            "meta-llama/llama-3.3-70b-instruct:free",
+            "openrouter/free",
             "google/gemma-4-31b-it:free",
-            "openrouter/free" // Tự động định tuyến tới model free bất kỳ đang hoạt động ổn định nhất
+            "google/gemma-4-26b-a4b-it:free",
+            "tencent/hy3:free"
         ];
 
         foreach ($models as $model) {
@@ -305,9 +306,10 @@ class AiController extends Controller {
         $url = 'https://openrouter.ai/api/v1/chat/completions';
         
         $models = [
-            "meta-llama/llama-3.3-70b-instruct:free",
+            "openrouter/free",
             "google/gemma-4-31b-it:free",
-            "openrouter/free"
+            "google/gemma-4-26b-a4b-it:free",
+            "tencent/hy3:free"
         ];
 
         // Xây dựng messages payload động
@@ -511,9 +513,10 @@ class AiController extends Controller {
         $url = 'https://openrouter.ai/api/v1/chat/completions';
         
         $models = [
-            "meta-llama/llama-3.3-70b-instruct:free",
+            "openrouter/free",
             "google/gemma-4-31b-it:free",
-            "openrouter/free" // Tự động định tuyến tới model free bất kỳ đang hoạt động ổn định nhất
+            "google/gemma-4-26b-a4b-it:free",
+            "tencent/hy3:free"
         ];
 
         // Xây dựng danh sách tin nhắn bao gồm cả lịch sử trò chuyện để giữ ngữ cảnh
