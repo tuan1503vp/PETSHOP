@@ -141,73 +141,10 @@ class AiController extends Controller {
             return "Dạ PetShop hiện đang có địa chỉ tại:\n📍 **Số 3, Vũ Công Đán, P.Tứ Minh, Hải Phòng**\n📞 **Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n⏰ **Giờ mở cửa:** 8:00 - 21:00 mỗi ngày.\n\n👉 Quý khách có thể xem bản đồ và để lại lời nhắn tại [Trang Liên Hệ](" . URLROOT . "/contact) ạ!";
         }
         
-        // Hỏi về bác sĩ / y tế / bệnh
-        if (strpos($msg_lower, 'bệnh') !== false || strpos($msg_no_accent, 'benh') !== false || strpos($msg_lower, 'ốm') !== false || strpos($msg_no_accent, 'om') !== false || strpos($msg_lower, 'bác sĩ') !== false || strpos($msg_lower, 'bác sỹ') !== false || strpos($msg_no_accent, 'bac si') !== false || strpos($msg_no_accent, 'bac sy') !== false || strpos($msg_lower, 'khám') !== false || strpos($msg_no_accent, 'kham') !== false || strpos($msg_lower, 'tiêm') !== false || preg_match('/\b(tiem phong|tiem vacxin|tiem ngua)\b/i', $msg_no_accent)) {
-            return "Dạ đối với các vấn đề về y tế và khám chữa bệnh, Quý khách nên đăng ký lịch hẹn để Bác sĩ Thú y kiểm tra trực tiếp cho bé ạ.\n\n👉 Quý khách có thể xem và đặt lịch tại đây: [Dịch vụ Khám & Chữa bệnh](" . URLROOT . "/service/book/5)\n👉 Hoặc sử dụng tính năng [Bác sĩ AI](" . URLROOT . "/ai) để được tư vấn phác đồ phòng bệnh chuyên sâu nhé!";
-        }
-        
-        // Hỏi về dịch vụ spa / tắm
-        if (strpos($msg_lower, 'tắm') !== false || strpos($msg_no_accent, 'tam') !== false || strpos($msg_lower, 'spa') !== false || strpos($msg_lower, 'cắt tỉa') !== false || strpos($msg_no_accent, 'cat tia') !== false || strpos($msg_lower, 'vệ sinh') !== false || strpos($msg_no_accent, 've sinh') !== false || strpos($msg_lower, 'lông') !== false || strpos($msg_no_accent, 'long') !== false) {
-            return "Dạ PetShop có cung cấp dịch vụ Spa tắm gội và cắt tỉa lông chuyên nghiệp giúp các bé luôn thơm tho, sạch sẽ, lông bồng bềnh ạ.\n\n👉 Mời Quý khách tham khảo và đặt lịch ngay tại đây: [Dịch vụ Chăm sóc Spa](" . URLROOT . "/service/book/6)";
-        }
-        
-        // Hỏi về vắc xin
-        if (strpos($msg_lower, 'vắc xin') !== false || strpos($msg_no_accent, 'vac xin') !== false || strpos($msg_lower, 'vaccine') !== false || strpos($msg_lower, 'vắc-xin') !== false || strpos($msg_lower, 'tiêm phòng') !== false || strpos($msg_no_accent, 'tiem phong') !== false) {
-            $db->query("SELECT id, name, price FROM products WHERE category_id = 13 LIMIT 5");
-            $products = $db->resultSet();
-            if(count($products) > 0) {
-                $reply = "Dạ hiện tại kho của PetShop đang có sẵn các loại Vắc-xin chuẩn Y khoa cực kỳ chất lượng sau đây ạ:\n\n";
-                foreach($products as $p) {
-                    $reply .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
-                }
-                $reply .= "\n👉 Quý khách có thể xem thêm tại [Kho hàng Sản phẩm](" . URLROOT . "/shop) hoặc liên hệ Bác sĩ Thú y để được tư vấn lịch tiêm chi tiết nhất nhé!";
-                return $reply;
-            }
-        }
-
-        // Hỏi về thức ăn / hạt / pate
-        if (strpos($msg_lower, 'thức ăn') !== false || strpos($msg_no_accent, 'thuc an') !== false || strpos($msg_lower, 'hạt') !== false || preg_match('/\bhat\b/i', $msg_no_accent) || strpos($msg_lower, 'pate') !== false || strpos($msg_lower, 'đồ ăn') !== false || strpos($msg_no_accent, 'do an') !== false) {
-            // Lấy 4 sản phẩm ngẫu nhiên thuộc danh mục thức ăn chó / mèo (1, 2)
-            $db->query("SELECT id, name, price FROM products WHERE category_id IN (1, 2) ORDER BY RAND() LIMIT 4");
-            $products = $db->resultSet();
-            
-            $reply = "Dạ hệ thống cửa hàng em đang có rất nhiều loại thức ăn thơm ngon và giàu dinh dưỡng. Em xin gợi ý ngẫu nhiên một vài sản phẩm bán chạy nhất hiện tại:\n\n";
-            foreach($products as $p) {
-                $reply .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
-            }
-            $reply .= "\n👉 Quý khách có thể xem toàn bộ danh mục đồ ăn tại [Cửa hàng](" . URLROOT . "/shop) ạ.";
-            return $reply;
-        }
-
-        // Hỏi về đơn hàng / giao hàng
-        if (strpos($msg_lower, 'đơn hàng') !== false || strpos($msg_no_accent, 'don hang') !== false || strpos($msg_lower, 'giao hàng') !== false || strpos($msg_no_accent, 'giao hang') !== false || strpos($msg_lower, 'vận chuyển') !== false || strpos($msg_lower, 'mua hàng') !== false) {
-            return "Dạ để theo dõi tình trạng đơn hàng hoặc lịch sử mua sắm, Quý khách vui lòng truy cập vào phần **[Đơn hàng của tôi](" . URLROOT . "/order/history)** trên hệ thống ạ. PetShop cam kết giao hàng hỏa tốc trong nội thành và ship COD toàn quốc nhé!";
-        }
-
-        // Hỏi về hội viên / tích điểm / giảm giá / vip
-        if (strpos($msg_lower, 'hội viên') !== false || strpos($msg_no_accent, 'hoi vien') !== false || strpos($msg_lower, 'tích điểm') !== false || strpos($msg_no_accent, 'tich diem') !== false || strpos($msg_lower, 'giảm giá') !== false || strpos($msg_no_accent, 'giam gia') !== false || strpos($msg_lower, 'vip') !== false) {
-            $db->query("SELECT membership_level, discount_percent, benefit_text FROM membership_benefits ORDER BY discount_percent ASC");
-            $memberships = $db->resultSet();
-            if(count($memberships) > 0) {
-                $reply = "Dạ PetShop có chương trình **Hội viên Thân thiết** với vô vàn đặc quyền ưu đãi dành cho Quý khách ạ:\n\n";
-                foreach($memberships as $m) {
-                    $reply .= "- 🌟 **Hạng " . $m->membership_level . ":** Giảm " . $m->discount_percent . "% toàn bộ hóa đơn (" . $m->benefit_text . ")\n";
-                }
-                $reply .= "\n👉 Hệ thống sẽ tự động tích điểm mỗi khi Quý khách mua sắm hoặc sử dụng dịch vụ ạ!";
-                return $reply;
-            }
-        }
-
-        // Hỏi về hồ sơ thú cưng
-        if (strpos($msg_lower, 'hồ sơ') !== false || strpos($msg_no_accent, 'ho so') !== false || strpos($msg_lower, 'thú cưng') !== false || strpos($msg_no_accent, 'thu cung') !== false || strpos($msg_lower, 'sổ khám') !== false) {
-            return "Dạ PetShop có hệ thống **Sổ sức khỏe điện tử** dành riêng cho từng bé thú cưng. Ở đó Quý khách có thể theo dõi cân nặng, nhắc lịch tiêm, và chat riêng với AI Dinh dưỡng.\n\n👉 Mời Quý khách truy cập tại đây: **[Hồ sơ Thú cưng](" . URLROOT . "/pet)**";
-        }
-        
-        // Tìm kiếm thông minh qua Database (Danh mục, Sản phẩm, Dịch vụ)
+        // Tìm kiếm thông minh qua Database để cấp thêm ngữ cảnh (Sản phẩm, Dịch vụ)
         $keywords = explode(" ", $msg_lower);
         $searchWord = "";
-        // Bỏ qua các từ nối tiếng Việt
-        $stopwords = ['cho', 'và', 'của', 'có', 'không', 'em', 'anh', 'chị', 'bạn', 'mua', 'bán', 'tìm', 'ở', 'đâu', 'như', 'thế', 'nào'];
+        $stopwords = ['cho', 'và', 'của', 'có', 'không', 'em', 'anh', 'chị', 'bạn', 'mua', 'bán', 'tìm', 'ở', 'đâu', 'như', 'thế', 'nào', 'gì', 'làm', 'sao', 'con'];
         foreach($keywords as $k) {
             if(mb_strlen($k, 'UTF-8') > 2 && !in_array($k, $stopwords)) {
                 $searchWord = $k;
@@ -215,82 +152,88 @@ class AiController extends Controller {
             }
         }
         
+        $dynamicContext = "";
+        
         if($searchWord) {
-            // Kiểm tra xem từ khóa có khớp với tên danh mục nào không
+            // Kiểm tra khớp danh mục
             $db->query("SELECT id, name FROM categories WHERE name LIKE :word LIMIT 1");
             $db->bind(':word', "%$searchWord%");
             $categoryMatch = $db->single();
             
             if ($categoryMatch) {
-                $db->query("SELECT id, name, price FROM products WHERE category_id = :cid LIMIT 4");
+                $db->query("SELECT id, name, price FROM products WHERE category_id = :cid LIMIT 5");
                 $db->bind(':cid', $categoryMatch->id);
                 $p_results = $db->resultSet();
-                
                 if(count($p_results) > 0) {
-                    $reply = "Dạ em thấy Quý khách đang quan tâm đến danh mục **" . $categoryMatch->name . "**. Đây là một số sản phẩm nổi bật:\n\n";
+                    $dynamicContext .= "SẢN PHẨM KHỚP VỚI TỪ KHÓA (Danh mục: " . $categoryMatch->name . "):\n";
                     foreach($p_results as $p) {
-                        $reply .= "- 🛍️ [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
+                        $dynamicContext .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
                     }
-                    $reply .= "\n👉 Bấm vào từng sản phẩm để xem chi tiết hoặc ghé thăm [Cửa hàng](" . URLROOT . "/shop) ạ.";
-                    return $reply;
+                }
+            } else {
+                // Không khớp danh mục, tìm trực tiếp sản phẩm & dịch vụ
+                $db->query("SELECT id, name, price FROM products WHERE name LIKE :word LIMIT 4");
+                $db->bind(':word', "%$searchWord%");
+                $p_results = $db->resultSet();
+                if(count($p_results) > 0) {
+                    $dynamicContext .= "SẢN PHẨM KHỚP VỚI TỪ KHÓA:\n";
+                    foreach($p_results as $p) {
+                        $dynamicContext .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
+                    }
+                }
+                
+                $db->query("SELECT id, name, price FROM services WHERE name LIKE :word LIMIT 2");
+                $db->bind(':word', "%$searchWord%");
+                $s_results = $db->resultSet();
+                if(count($s_results) > 0) {
+                    $dynamicContext .= "DỊCH VỤ KHỚP VỚI TỪ KHÓA:\n";
+                    foreach($s_results as $s) {
+                        $dynamicContext .= "- [" . $s->name . "](" . URLROOT . "/service/book/" . $s->id . ") - Giá: " . number_format($s->price, 0, ',', '.') . "đ\n";
+                    }
                 }
             }
+        }
 
-            // Nếu không khớp danh mục, tìm trực tiếp sản phẩm & dịch vụ
-            $db->query("SELECT id, name, price FROM products WHERE name LIKE :word LIMIT 3");
-            $db->bind(':word', "%$searchWord%");
-            $p_results = $db->resultSet();
-            
-            $db->query("SELECT id, name, price FROM services WHERE name LIKE :word LIMIT 2");
-            $db->bind(':word', "%$searchWord%");
-            $s_results = $db->resultSet();
-            
-            if(count($p_results) > 0 || count($s_results) > 0) {
-                $reply = "Dạ dựa theo từ khóa '**" . htmlspecialchars($searchWord) . "**', hệ thống AI nội bộ đã trích xuất được một số kết quả phù hợp đang có tại cửa hàng:\n\n";
-                foreach($p_results as $p) {
-                    $reply .= "- 🛍️ Sản phẩm: [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
+        // Lấy thêm chính sách hạng thành viên nếu user hỏi
+        if (strpos($msg_lower, 'hội viên') !== false || strpos($msg_no_accent, 'vip') !== false || strpos($msg_lower, 'giảm giá') !== false) {
+            $db->query("SELECT membership_level, discount_percent, benefit_text FROM membership_benefits ORDER BY discount_percent ASC");
+            $memberships = $db->resultSet();
+            if(count($memberships) > 0) {
+                $dynamicContext .= "\nCHÍNH SÁCH HỘI VIÊN:\n";
+                foreach($memberships as $m) {
+                    $dynamicContext .= "- Hạng " . $m->membership_level . ": Giảm " . $m->discount_percent . "% (" . $m->benefit_text . ")\n";
                 }
-                foreach($s_results as $s) {
-                    $reply .= "- 🗓️ Dịch vụ: [" . $s->name . "](" . URLROOT . "/service/book/" . $s->id . ") - Giá: " . number_format($s->price, 0, ',', '.') . "đ\n";
-                }
-                return $reply;
             }
         }
-        $apiKey = defined('GEMINI_API_KEY') ? trim(GEMINI_API_KEY) : '';
-        if (empty($apiKey)) {
-            return "Dạ Pawsy xin lỗi, hình như em chưa hiểu rõ ý của Quý khách lắm ạ. Quý khách có thể vui lòng diễn đạt lại câu hỏi cụ thể hơn giúp em được không ạ?\n\n💬 **Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n🌐 Hoặc xem thêm thông tin tại [Trang Liên Hệ](" . URLROOT . "/contact) ạ!";
-        }
 
-        // Lấy danh sách sản phẩm mẫu làm ngữ cảnh
-        $db->query("SELECT p.id, p.name, p.price, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id = c.id LIMIT 10");
+        // Lấy danh sách ngẫu nhiên 5 sản phẩm nổi bật làm context cơ bản
+        $db->query("SELECT p.id, p.name, p.price, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY RAND() LIMIT 5");
         $products = $db->resultSet();
         $productsList = "";
         foreach ($products as $p) {
-            $productsList .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ (Danh mục: " . $p->cat_name . ")\n";
+            $productsList .= "- [" . $p->name . "](" . URLROOT . "/product/show/" . $p->id . ") - Giá: " . number_format($p->price, 0, ',', '.') . "đ\n";
         }
 
-        // Lấy danh sách dịch vụ mẫu
-        $db->query("SELECT s.id, s.name, s.price, c.name as cat_name FROM services s LEFT JOIN categories c ON s.category_id = c.id LIMIT 8");
-        $services = $db->resultSet();
-        $servicesList = "";
-        foreach ($services as $s) {
-            $servicesList .= "- [" . $s->name . "](" . URLROOT . "/service/book/" . $s->id . ") - Giá: " . number_format($s->price, 0, ',', '.') . "đ (Danh mục: " . $s->cat_name . ")\n";
-        }
-
-        $systemPrompt = "Bạn là Pawsy - Trợ lý ảo AI chính thức và thông minh của PetShop.\n"
-                      . "Nhiệm vụ của bạn là giải đáp các thắc mắc của khách hàng về cửa hàng PetShop, hỗ trợ họ tìm kiếm thông tin sản phẩm, dịch vụ và giải quyết các câu hỏi chung.\n\n"
-                      . "THÔNG TIN CỬA HÀNG PETSHOP:\n"
-                      . "- Địa chỉ: Số 3, Vũ Công Đán, P.Tứ Minh, Hải Phòng.\n"
-                      . "- Hotline: 0947647052.\n"
-                      . "- Email: nmtvp11223311@gmail.com.\n"
-                      . "- Giờ mở cửa: 8:00 - 21:00 hàng ngày.\n\n"
-                      . "DANH SÁCH SẢN PHẨM NỔI BẬT:\n" . $productsList . "\n"
-                      . "DANH SÁCH DỊCH VỤ NỔI BẬT:\n" . $servicesList . "\n\n"
+        $systemPrompt = "Bạn là Pawsy - Trợ lý ảo AI chính thức của PetShop.\n"
+                      . "Nhiệm vụ: Giải đáp thắc mắc, tư vấn sản phẩm, dịch vụ và giải quyết câu hỏi của khách hàng một cách tự nhiên, thân thiện và linh hoạt nhất.\n\n"
+                      . "THÔNG TIN CỬA HÀNG:\n"
+                      . "- Địa chỉ: Số 3, Vũ Công Đán, P.Tứ Minh, Hải Phòng\n"
+                      . "- Hotline: 0947647052 - Email: nmtvp11223311@gmail.com - Giờ mở cửa: 8:00 - 21:00\n\n"
+                      . "HƯỚNG DẪN CÁC ĐƯỜNG LINK QUAN TRỌNG (Hãy gợi ý link này nếu khách có nhu cầu tương ứng):\n"
+                      . "- Bệnh, khám, tiêm phòng: Đặt lịch tại [Khám & Chữa bệnh](" . URLROOT . "/service/book/5) hoặc dùng [Bác sĩ AI](" . URLROOT . "/ai).\n"
+                      . "- Tắm, spa, cắt tỉa: Đặt lịch tại [Chăm sóc Spa](" . URLROOT . "/service/book/6).\n"
+                      . "- Theo dõi đơn hàng: [Đơn hàng của tôi](" . URLROOT . "/order/history).\n"
+                      . "- Sổ y bạ/hồ sơ thú cưng: [Hồ sơ Thú cưng](" . URLROOT . "/pet).\n\n"
+                      . "NGỮ CẢNH DỮ LIỆU TỪ HỆ THỐNG (Dựa trên câu hỏi của khách):\n"
+                      . $dynamicContext . "\n"
+                      . "MỘT SỐ SẢN PHẨM KHÁC TẠI CỬA HÀNG:\n"
+                      . $productsList . "\n\n"
                       . "QUY TẮC PHẢN HỒI:\n"
-                      . "- Trả lời ngắn gọn, lịch sự, thân thiện. Luôn xưng hô là 'Dạ Pawsy nghe', gọi khách hàng là 'Quý khách' hoặc 'Anh/Chị'.\n"
-                      . "- Đối với các câu hỏi về giá cả, hãy đề xuất đúng sản phẩm/dịch vụ của cửa hàng kèm link Markdown chính xác (không tự bịa link).\n"
-                      . "- Đối với các câu hỏi về bệnh tật của thú cưng, hãy lịch sự khuyên họ mang bé đến cửa hàng để Bác sĩ Thú y kiểm tra trực tiếp hoặc đặt lịch tại [Dịch vụ Khám & Chữa bệnh](" . URLROOT . "/service/book/5).\n"
-                      . "- Hỗ trợ trả lời bằng tiếng Việt, xuống dòng rõ ràng, dễ đọc bằng Markdown.";
+                      . "1. Trả lời trực tiếp đúng trọng tâm câu hỏi. KHÔNG sử dụng văn mẫu cứng nhắc kiểu 'Dạ em thấy Quý khách đang quan tâm...'. Hãy trò chuyện tự nhiên như một tư vấn viên thực thụ.\n"
+                      . "2. Nếu tư vấn sản phẩm/dịch vụ, hãy dùng thông tin trong phần 'NGỮ CẢNH DỮ LIỆU TỪ HỆ THỐNG' để giới thiệu và chèn đúng link định dạng Markdown.\n"
+                      . "3. Nếu khách hỏi kiến thức chăm sóc thú cưng, hãy trả lời bằng kiến thức của bạn và sau đó khéo léo lồng ghép giới thiệu sản phẩm liên quan có trong ngữ cảnh.\n"
+                      . "4. Xưng hô là 'Dạ Pawsy nghe', gọi khách hàng là 'Quý khách' hoặc 'Anh/Chị'.\n"
+                      . "5. Hỗ trợ trả lời bằng tiếng Việt, xuống dòng rõ ràng, dễ đọc bằng Markdown.";
 
         $apiKey = defined('GEMINI_API_KEY') ? trim(GEMINI_API_KEY) : '';
         if (empty($apiKey)) return false;
