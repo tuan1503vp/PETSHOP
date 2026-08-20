@@ -233,7 +233,7 @@
     <!-- Alpine.js AI Chatbot Script -->
     <script>
         function aiChatbot(isLoggedIn) {
-            const storageKey = 'pawsy_chat_history_<?php echo isset($_SESSION['login_time']) ? $_SESSION['login_time'] : session_id(); ?>';
+            const storageKey = 'pawsy_chat_history_<?php echo session_id(); ?>';
             return {
                 loggedIn: isLoggedIn,
                 open: false,

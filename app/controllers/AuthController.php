@@ -377,7 +377,6 @@ class AuthController extends Controller {
     public function createUserSession($user) {
         // Tắt session_regenerate_id(true) trên host dùng chung để tránh mất session khi chuyển hướng
         // session_regenerate_id(true);
-        $_SESSION['login_time'] = time(); // Dùng để làm mới chat history frontend
         
         $_SESSION['user_id'] = $user->id;
         $_SESSION['user_email'] = $user->email;

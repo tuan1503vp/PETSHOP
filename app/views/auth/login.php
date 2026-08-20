@@ -1,4 +1,20 @@
 <?php require APPROOT . '/views/inc/header.php'; ?>
+<script>
+    // Xóa toàn bộ lịch sử chat khi ở trang đăng nhập (đảm bảo phiên trước đã kết thúc)
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith('pawsy_chat_history_')) {
+            sessionStorage.removeItem(key);
+        }
+    }
+    // Xóa lịch sử AI Doctor / Pet Care nếu cần
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('pawsy_chat_history_')) {
+            localStorage.removeItem(key);
+        }
+    }
+</script>
 <style>
 /* Hiệu ứng Paws nổi lơ lửng */
 .paw-bg { position: absolute; font-size: 2rem; color: rgba(236, 72, 153, 0.15); z-index: 0; animation: floatPaw 8s infinite ease-in-out; }
