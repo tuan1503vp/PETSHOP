@@ -44,70 +44,60 @@ class AiController extends Controller {
     }
 
     private function callOpenRouterApi($symptoms) {
-        $apiKey = trim(OPENROUTER_API_KEY);
+        // Hàm này giờ sẽ sử dụng Google Gemini API thay vì OpenRouter
+        $apiKey = defined('GEMINI_API_KEY') ? trim(GEMINI_API_KEY) : '';
         
-        if (empty($apiKey) || strpos($apiKey, 'sk-or') !== 0) {
+        if (empty($apiKey)) {
             return "*(Đây là phản hồi mẫu do chưa cấu hình API Key)*\n\nDựa trên triệu chứng **\"" . htmlspecialchars($symptoms) . "\"**, có thể thú cưng của bạn đang gặp vấn đề về tiêu hóa hoặc thay đổi thời tiết. \n\n**Lời khuyên:** Hãy theo dõi thêm trong 24h. Cung cấp đủ nước uống. Nếu tình trạng không cải thiện, vui lòng đặt lịch khám ngay lập tức.";
         }
 
-        $url = 'https://openrouter.ai/api/v1/chat/completions';
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey;
         
-        // Danh sách model dự phòng (ưu tiên model đang hoạt động ổn định nhất)
-        $models = [
-            "nvidia/nemotron-3-super-120b-a12b:free",
-            "nvidia/nemotron-3-nano-30b-a3b:free",
-            "nvidia/nemotron-nano-12b-v2-vl:free",
-            "openrouter/free"
+        $payload = [
+            "system_instruction" => [
+                "parts" => [
+                    "text" => "Bạn là bác sĩ thú y chuyên nghiệp tại PetShop. Hãy phân tích triệu chứng khách hàng cung cấp và đưa ra phản hồi bằng tiếng Việt. Bố cục gồm: 1. Phân tích triệu chứng, 2. Nguyên nhân có thể, 3. Mức độ khẩn cấp, 4. Lời khuyên chăm sóc tại nhà. Luôn nhắc nhở đây chỉ là tư vấn tham khảo."
+                ]
+            ],
+            "contents" => [
+                [
+                    "role" => "user",
+                    "parts" => [
+                        ["text" => "Triệu chứng thú cưng của tôi: " . $symptoms]
+                    ]
+                ]
+            ],
+            "generationConfig" => [
+                "temperature" => 0.7
+            ]
         ];
 
-        foreach ($models as $model) {
-            $payload = [
-                "model" => $model,
-                "messages" => [
-                    [
-                        "role" => "system",
-                        "content" => "Bạn là bác sĩ thú y chuyên nghiệp tại PetShop. Hãy phân tích triệu chứng khách hàng cung cấp và đưa ra phản hồi bằng tiếng Việt. Bố cục gồm: 1. Phân tích triệu chứng, 2. Nguyên nhân có thể, 3. Mức độ khẩn cấp, 4. Lời khuyên chăm sóc tại nhà. Luôn nhắc nhở đây chỉ là tư vấn tham khảo."
-                    ],
-                    [
-                        "role" => "user",
-                        "content" => "Triệu chứng thú cưng của tôi: " . $symptoms
-                    ]
-                ],
-                "temperature" => 0.7
-            ];
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 22);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); // Ngắt kết nối nhanh trong 4 giây nếu server lỗi hoặc không phản hồi
-            curl_setopt($ch, CURLOPT_TIMEOUT, 22); // Cho phép tối đa 22 giây để model phản hồi dữ liệu (tránh bị max_execution_time của host ngắt)
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
-                'HTTP-Referer: https://petshop.id.vn', 
-                'X-Title: PetShop AI Doctor'
-            ]);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        $err = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
-            $response = curl_exec($ch);
-            $err = curl_error($ch);
-            curl_close($ch);
-
-            if (!$err && $response) {
-                $responseData = json_decode($response, true);
-                if (isset($responseData['choices'][0]['message']['content'])) {
-                    // Thành công thì trả về kết quả ngay
-                    return $responseData['choices'][0]['message']['content'];
-                }
-                error_log("OpenRouter Model $model Error: " . json_encode($responseData));
-            } else {
-                error_log("CURL Error for model $model: " . $err);
+        if (!$err && $httpCode == 200 && $response) {
+            $responseData = json_decode($response, true);
+            if (isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+                return $responseData['candidates'][0]['content']['parts'][0]['text'];
             }
-            // Nếu lỗi, vòng lặp tiếp tục tự động chuyển qua model kế tiếp
+            error_log("Gemini API Parse Error: " . json_encode($responseData));
+        } else {
+            error_log("Gemini API Error (HTTP $httpCode): " . ($err ? $err : $response));
         }
 
-        // Nếu tất cả models đều thất bại
         return false;
     }
 
@@ -303,72 +293,68 @@ class AiController extends Controller {
                       . "- Đối với các câu hỏi về bệnh tật của thú cưng, hãy lịch sự khuyên họ mang bé đến cửa hàng để Bác sĩ Thú y kiểm tra trực tiếp hoặc đặt lịch tại [Dịch vụ Khám & Chữa bệnh](" . URLROOT . "/service/book/5).\n"
                       . "- Hỗ trợ trả lời bằng tiếng Việt, xuống dòng rõ ràng, dễ đọc bằng Markdown.";
 
-        $url = 'https://openrouter.ai/api/v1/chat/completions';
-        
-        $models = [
-            "nvidia/nemotron-3-super-120b-a12b:free",
-            "nvidia/nemotron-3-nano-30b-a3b:free",
-            "nvidia/nemotron-nano-12b-v2-vl:free",
-            "openrouter/free"
-        ];
+        $apiKey = defined('GEMINI_API_KEY') ? trim(GEMINI_API_KEY) : '';
+        if (empty($apiKey)) return false;
+
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey;
 
         // Xây dựng messages payload động
-        $messagesPayload = [
-            [
-                "role" => "system",
-                "content" => $systemPrompt
-            ]
-        ];
+        $contents = [];
 
         // Thêm lịch sử hội thoại gần nhất
         $recentHistory = array_slice($history, -10);
         foreach ($recentHistory as $msg) {
             if (!empty($msg['sender']) && !empty($msg['text'])) {
-                $role = ($msg['sender'] === 'user') ? 'user' : 'assistant';
-                $messagesPayload[] = [
+                $role = ($msg['sender'] === 'user') ? 'user' : 'model';
+                $contents[] = [
                     "role" => $role,
-                    "content" => $msg['text']
+                    "parts" => [["text" => $msg['text']]]
                 ];
             }
         }
 
         // Thêm tin nhắn hiện tại
-        $messagesPayload[] = [
+        $contents[] = [
             "role" => "user",
-            "content" => $message
+            "parts" => [["text" => $message]]
         ];
 
-        foreach ($models as $model) {
-            $payload = [
-                "model" => $model,
-                "messages" => $messagesPayload,
+        $payload = [
+            "system_instruction" => [
+                "parts" => [
+                    "text" => $systemPrompt
+                ]
+            ],
+            "contents" => $contents,
+            "generationConfig" => [
                 "temperature" => 0.7
-            ];
+            ]
+        ];
 
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 22);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
-                'HTTP-Referer: https://petshop.id.vn',
-                'X-Title: PetShop Global Assistant'
-            ]);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 22);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-            $response = curl_exec($ch);
-            $err = curl_error($ch);
-            curl_close($ch);
+        $response = curl_exec($ch);
+        $err = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
-            if (!$err && $response) {
-                $responseData = json_decode($response, true);
-                if (!empty($responseData['choices'][0]['message']['content'])) {
-                    return $responseData['choices'][0]['message']['content'];
-                }
+        if (!$err && $httpCode == 200 && $response) {
+            $responseData = json_decode($response, true);
+            if (!empty($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+                return $responseData['candidates'][0]['content']['parts'][0]['text'];
             }
+            error_log("Gemini Chat API Parse Error: " . json_encode($responseData));
+        } else {
+            error_log("Gemini Chat API Error (HTTP $httpCode): " . ($err ? $err : $response));
         }
 
         return "Dạ Pawsy xin lỗi, hình như em chưa hiểu rõ ý của Quý khách lắm ạ. Quý khách có thể vui lòng diễn đạt lại câu hỏi cụ thể hơn giúp em được không ạ?\n\n💬 **Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n🌐 Hoặc xem thêm thông tin tại [Trang Liên Hệ](" . URLROOT . "/contact) ạ!";
@@ -510,22 +496,13 @@ class AiController extends Controller {
                       . "- Đề xuất đúng sản phẩm/thức ăn cho chó nếu bé là chó, và cho mèo nếu bé là mèo. Không nhầm lẫn giữa thức ăn chó và mèo.\n"
                       . "- Trình bày câu trả lời gọn gàng, đẹp mắt bằng Markdown, xuống dòng rõ ràng, dễ đọc.";
 
-        $url = 'https://openrouter.ai/api/v1/chat/completions';
-        
-        $models = [
-            "nvidia/nemotron-3-super-120b-a12b:free",
-            "nvidia/nemotron-3-nano-30b-a3b:free",
-            "nvidia/nemotron-nano-12b-v2-vl:free",
-            "openrouter/free"
-        ];
+        $apiKey = defined('GEMINI_API_KEY') ? trim(GEMINI_API_KEY) : '';
+        if (empty($apiKey)) return false;
+
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey;
 
         // Xây dựng danh sách tin nhắn bao gồm cả lịch sử trò chuyện để giữ ngữ cảnh
-        $messagesPayload = [
-            [
-                "role" => "system",
-                "content" => $systemPrompt
-            ]
-        ];
+        $contents = [];
 
         // Lấy tối đa 10 tin nhắn lịch sử gần nhất để gửi kèm
         $recentHistory = array_slice($history, -10);
@@ -536,57 +513,59 @@ class AiController extends Controller {
                     continue;
                 }
                 
-                $role = ($msg['sender'] === 'user') ? 'user' : 'assistant';
-                $messagesPayload[] = [
+                $role = ($msg['sender'] === 'user') ? 'user' : 'model';
+                $contents[] = [
                     "role" => $role,
-                    "content" => $msg['text']
+                    "parts" => [["text" => $msg['text']]]
                 ];
             }
         }
 
         // Thêm tin nhắn mới nhất của người dùng
-        $messagesPayload[] = [
+        $contents[] = [
             "role" => "user",
-            "content" => $message
+            "parts" => [["text" => $message]]
         ];
 
-        foreach ($models as $model) {
-            $payload = [
-                "model" => $model,
-                "messages" => $messagesPayload,
+        $payload = [
+            "system_instruction" => [
+                "parts" => [
+                    "text" => $systemPrompt
+                ]
+            ],
+            "contents" => $contents,
+            "generationConfig" => [
                 "temperature" => 0.7
-            ];
+            ]
+        ];
 
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); // Ngắt kết nối nhanh trong 4 giây nếu server lỗi hoặc không phản hồi
-            curl_setopt($ch, CURLOPT_TIMEOUT, 22); // Cho phép tối đa 22 giây để model phản hồi dữ liệu (tránh bị max_execution_time của host ngắt)
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
-                'HTTP-Referer: https://petshop.id.vn',
-                'X-Title: PetShop AI Pet Care'
-            ]);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); // Ngắt kết nối nhanh trong 4 giây nếu server lỗi hoặc không phản hồi
+        curl_setopt($ch, CURLOPT_TIMEOUT, 22); // Cho phép tối đa 22 giây để model phản hồi dữ liệu
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-            $response = curl_exec($ch);
-            $err = curl_error($ch);
-            curl_close($ch);
+        $response = curl_exec($ch);
+        $err = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
-            if (!$err && $response) {
-                $responseData = json_decode($response, true);
-                if (isset($responseData['choices'][0]['message']['content'])) {
-                    return $responseData['choices'][0]['message']['content'];
-                }
-                error_log("OpenRouter PetChat Model $model Error: " . json_encode($responseData));
-            } else {
-                error_log("CURL Error in PetChat for model $model: " . $err);
+        if (!$err && $httpCode == 200 && $response) {
+            $responseData = json_decode($response, true);
+            if (isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+                return $responseData['candidates'][0]['content']['parts'][0]['text'];
             }
+            error_log("Gemini PetChat Parse Error: " . json_encode($responseData));
+        } else {
+            error_log("Gemini PetChat API Error (HTTP $httpCode): " . ($err ? $err : $response));
         }
 
-        // Nếu tất cả models trong danh sách đều lỗi
+        // Nếu lỗi
         return "Dạ Pawsy xin lỗi, hiện tại toàn bộ hệ thống máy chủ AI bên ngoài đang quá tải hoặc gặp sự cố kết nối. Xin quý khách vui lòng gửi lại câu hỏi sau ít phút ạ!";
     }
 
