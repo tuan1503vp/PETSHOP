@@ -240,26 +240,8 @@ class AiController extends Controller {
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey;
 
-        // Xây dựng messages payload động
-        $contents = [];
-
-        // Thêm lịch sử hội thoại gần nhất
-        $recentHistory = array_slice($history, -10);
-        foreach ($recentHistory as $msg) {
-            if (!empty($msg['sender']) && !empty($msg['text'])) {
-                $role = ($msg['sender'] === 'user') ? 'user' : 'model';
-                $contents[] = [
-                    "role" => $role,
-                    "parts" => [["text" => $msg['text']]]
-                ];
-            }
-        }
-
-        // Thêm tin nhắn hiện tại
-        $contents[] = [
-            "role" => "user",
-            "parts" => [["text" => $message]]
-        ];
+        // Xây dựng messages payload động chuẩn Gemini (Bắt buộc luân phiên user -> model)
+        $contents = $this->sanitizeGeminiContents($history, $message);
 
         $payload = [
             "system_instruction" => [
@@ -443,31 +425,8 @@ class AiController extends Controller {
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . $apiKey;
 
-        // Xây dựng danh sách tin nhắn bao gồm cả lịch sử trò chuyện để giữ ngữ cảnh
-        $contents = [];
-
-        // Lấy tối đa 10 tin nhắn lịch sử gần nhất để gửi kèm
-        $recentHistory = array_slice($history, -10);
-        foreach ($recentHistory as $msg) {
-            if (!empty($msg['sender']) && !empty($msg['text'])) {
-                // Bỏ qua tin nhắn loading tạm thời
-                if (strpos($msg['text'], '*(Hệ thống đang thu thập') !== false) {
-                    continue;
-                }
-                
-                $role = ($msg['sender'] === 'user') ? 'user' : 'model';
-                $contents[] = [
-                    "role" => $role,
-                    "parts" => [["text" => $msg['text']]]
-                ];
-            }
-        }
-
-        // Thêm tin nhắn mới nhất của người dùng
-        $contents[] = [
-            "role" => "user",
-            "parts" => [["text" => $message]]
-        ];
+        // Xây dựng danh sách tin nhắn chuẩn luân phiên Gemini API
+        $contents = $this->sanitizeGeminiContents($history, $message);
 
         $payload = [
             "system_instruction" => [
@@ -584,5 +543,55 @@ class AiController extends Controller {
             echo json_encode(['status' => 'success', 'data' => $html]);
             return;
         }
+    }
+
+    /**
+     * Chuẩn hóa danh sách tin nhắn tuân thủ nghiêm ngặt quy tắc luân phiên role 'user' -> 'model' của Google Gemini API.
+     */
+    private function sanitizeGeminiContents($history, $newMessage = '') {
+        $contents = [];
+        $recentHistory = is_array($history) ? array_slice($history, -10) : [];
+
+        foreach ($recentHistory as $msg) {
+            if (!empty($msg['sender']) && !empty($msg['text'])) {
+                // Bỏ qua tin nhắn thông báo tạm thời
+                if (strpos($msg['text'], '*(Hệ thống đang thu thập') !== false) {
+                    continue;
+                }
+                
+                $role = ($msg['sender'] === 'user') ? 'user' : 'model';
+                
+                // Gộp các tin nhắn liên tiếp trùng role
+                $count = count($contents);
+                if ($count > 0 && $contents[$count - 1]['role'] === $role) {
+                    $contents[$count - 1]['parts'][0]['text'] .= "\n" . $msg['text'];
+                } else {
+                    $contents[] = [
+                        "role" => $role,
+                        "parts" => [["text" => $msg['text']]]
+                    ];
+                }
+            }
+        }
+
+        // Đảm bảo tin nhắn mở đầu phải từ 'user'
+        while (count($contents) > 0 && $contents[0]['role'] !== 'user') {
+            array_shift($contents);
+        }
+
+        // Thêm tin nhắn mới nhất từ phía người dùng
+        if (!empty($newMessage)) {
+            $count = count($contents);
+            if ($count > 0 && $contents[$count - 1]['role'] === 'user') {
+                $contents[$count - 1]['parts'][0]['text'] .= "\n" . $newMessage;
+            } else {
+                $contents[] = [
+                    "role" => "user",
+                    "parts" => [["text" => $newMessage]]
+                ];
+            }
+        }
+
+        return $contents;
     }
 }
