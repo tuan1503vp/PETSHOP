@@ -256,9 +256,8 @@ class AiController extends Controller {
                 return $reply;
             }
         }
-        // Fallback gọi OpenRouter để trả lời mọi câu hỏi tự do
-        $apiKey = trim(OPENROUTER_API_KEY);
-        if (empty($apiKey) || strpos($apiKey, 'sk-or') !== 0) {
+        $apiKey = defined('GEMINI_API_KEY') ? trim(GEMINI_API_KEY) : '';
+        if (empty($apiKey)) {
             return "Dạ Pawsy xin lỗi, hình như em chưa hiểu rõ ý của Quý khách lắm ạ. Quý khách có thể vui lòng diễn đạt lại câu hỏi cụ thể hơn giúp em được không ạ?\n\n💬 **Hotline:** 0947647052\n📧 **Email:** nmtvp11223311@gmail.com\n🌐 Hoặc xem thêm thông tin tại [Trang Liên Hệ](" . URLROOT . "/contact) ạ!";
         }
 
