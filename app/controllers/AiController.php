@@ -52,12 +52,12 @@ class AiController extends Controller {
 
         $url = 'https://openrouter.ai/api/v1/chat/completions';
         
-        // Danh sách các model dự phòng chạy bằng vòng lặp PHP (Chắc chắn hoạt động kể cả tài khoản free)
+        // Danh sách model dự phòng (ưu tiên model đang hoạt động ổn định nhất)
         $models = [
-            "openrouter/free",
-            "google/gemma-4-31b-it:free",
-            "google/gemma-4-26b-a4b-it:free",
-            "tencent/hy3:free"
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "nvidia/nemotron-3-nano-30b-a3b:free",
+            "nvidia/nemotron-nano-12b-v2-vl:free",
+            "openrouter/free"
         ];
 
         foreach ($models as $model) {
@@ -306,10 +306,10 @@ class AiController extends Controller {
         $url = 'https://openrouter.ai/api/v1/chat/completions';
         
         $models = [
-            "openrouter/free",
-            "google/gemma-4-31b-it:free",
-            "google/gemma-4-26b-a4b-it:free",
-            "tencent/hy3:free"
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "nvidia/nemotron-3-nano-30b-a3b:free",
+            "nvidia/nemotron-nano-12b-v2-vl:free",
+            "openrouter/free"
         ];
 
         // Xây dựng messages payload động
@@ -513,10 +513,10 @@ class AiController extends Controller {
         $url = 'https://openrouter.ai/api/v1/chat/completions';
         
         $models = [
-            "openrouter/free",
-            "google/gemma-4-31b-it:free",
-            "google/gemma-4-26b-a4b-it:free",
-            "tencent/hy3:free"
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "nvidia/nemotron-3-nano-30b-a3b:free",
+            "nvidia/nemotron-nano-12b-v2-vl:free",
+            "openrouter/free"
         ];
 
         // Xây dựng danh sách tin nhắn bao gồm cả lịch sử trò chuyện để giữ ngữ cảnh
